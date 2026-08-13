@@ -1,0 +1,25 @@
+# Disable LiteSpeed Server Cache for HTML
+<IfModule LiteSpeed>
+  CacheLookup off
+</IfModule>
+
+DirectoryIndex index.html index.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Exclude /admin directory from player app rewrites
+  RewriteRule ^admin(/.*)?$ - [L]
+
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0, s-maxage=0"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</IfModule>

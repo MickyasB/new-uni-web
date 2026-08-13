@@ -1,0 +1,26 @@
+{
+  "rules": {
+    "rooms": {
+      "$roomId": {
+        ".read": "auth != null",
+        ".write": false,
+        "players": {
+          "$uid": {
+            "connected": {
+              ".write": "auth != null && auth.uid == $uid"
+            },
+            "lastSeen": {
+              ".write": "auth != null && auth.uid == $uid"
+            }
+          }
+        },
+        "reactions": {
+          "$uid": {
+            ".write": "auth != null && auth.uid == $uid",
+            ".validate": "newData.hasChildren(['emoji', 'timestamp']) && newData.child('timestamp').isNumber()"
+          }
+        }
+      }
+    }
+  }
+}

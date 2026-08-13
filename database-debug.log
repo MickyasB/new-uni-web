@@ -1,0 +1,9 @@
+09:13:32.242 [NamespaceSystem-akka.actor.default-dispatcher-4] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
+09:13:40.054 [main] INFO com.firebase.server.forge.App$ - Listening at 127.0.0.1:9000
+09:14:19.488 [NamespaceSystem-akka.actor.default-dispatcher-4] INFO com.firebase.core.namespace.NamespaceActor - bingo-platform-prod-default-rtdb successfully activated FBKV (SurveyIdle(0)) wait: 384ms, init: 0ms
+09:14:19.802 [NamespaceSystem-blocking-namespace-operation-dispatcher-6] INFO com.firebase.core.namespace.StateManager - Namespace bingo-platform-prod-default-rtdb status Active to Active
+09:18:26.838 [FirebaseWorkerPool-1-3] WARN com.firebase.core.persistence.backend.dummy.EmulatorMetadataPersistence - Multiple projectIds are not recommended in single project mode. Requested 
+namespace bingo-platform-prod, but the emulator is configured for bingo-platform-prod-default-rtdb. To 
+opt-out of single project mode add/set the singleProjectMode: false property in 
+the firebase.json emulators config. 
+09:18:26.951 [NamespaceSystem-akka.actor.default-dispatcher-10] INFO com.firebase.core.namespace.NamespaceActor - bingo-platform-prod successfully activated FBKV (SurveyIdle(0)) wait: 45ms, init: 0ms

@@ -1,0 +1,675 @@
+BINGO PLATFORM
+Full Technical Specification — Revised
+Web  •  Android  •  iOS
+JAN Solutions  |  Gym General Trading
+Version 3.0  |  July 2026  |  Confidential
+1. Platform &amp; Technology Stack
+1.1 Cross-Platform Architecture
+A single shared codebase (Capacitor 6) delivers three outputs simultaneously — Web, Android, and iOS — with zero duplicate development effort.
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="2200"/><w:gridCol w:w="3400"/><w:gridCol w:w="3280"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Layer
+<w:tcPr><w:tcW w:type="dxa" w:w="3400"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Technology
+<w:tcPr><w:tcW w:type="dxa" w:w="3280"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Coverage
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Frontend
+<w:tcPr><w:tcW w:type="dxa" w:w="3400"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">React PWA (mobile-first)
+<w:tcPr><w:tcW w:type="dxa" w:w="3280"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Web, Android shell, iOS shell
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Native Wrapper
+<w:tcPr><w:tcW w:type="dxa" w:w="3400"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Capacitor 6
+<w:tcPr><w:tcW w:type="dxa" w:w="3280"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Android APK + iOS IPA — one codebase
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Backend / Auth
+<w:tcPr><w:tcW w:type="dxa" w:w="3400"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firebase / GCP
+<w:tcPr><w:tcW w:type="dxa" w:w="3280"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Cloud Functions, Auth, App Check
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Live Game State
+<w:tcPr><w:tcW w:type="dxa" w:w="3400"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firebase Realtime Database (RTDB)
+<w:tcPr><w:tcW w:type="dxa" w:w="3280"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Multiplayer card sync &lt; 300 ms
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Persistent Data
+<w:tcPr><w:tcW w:type="dxa" w:w="3400"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firestore
+<w:tcPr><w:tcW w:type="dxa" w:w="3280"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Users, transactions, ledger, leaderboards, audit logs
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Push Notifications
+<w:tcPr><w:tcW w:type="dxa" w:w="3400"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firebase (FCM + APNs)
+<w:tcPr><w:tcW w:type="dxa" w:w="3280"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Android + iOS from one integration
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">CDN / Hosting
+<w:tcPr><w:tcW w:type="dxa" w:w="3400"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">GCP Global CDN
+<w:tcPr><w:tcW w:type="dxa" w:w="3280"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Fast load on 2G/3G connections
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Ethiopic Fonts
+<w:tcPr><w:tcW w:type="dxa" w:w="3400"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Noto Serif Ethiopic (bundled)
+<w:tcPr><w:tcW w:type="dxa" w:w="3280"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Amharic, Tigrinya — works offline
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Fraud Layer
+<w:tcPr><w:tcW w:type="dxa" w:w="3400"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firebase App Check
+<w:tcPr><w:tcW w:type="dxa" w:w="3280"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Only authorised app binaries can call Cloud Functions
+1.2 Firebase Architecture — RTDB vs Firestore Split
+Firebase Realtime Database and Firestore serve different roles. Using each for its intended purpose avoids architectural bottlenecks in the admin dashboard and reporting layer.
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="2960"/><w:gridCol w:w="1760"/><w:gridCol w:w="4160"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2960"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Data Domain
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Store
+<w:tcPr><w:tcW w:type="dxa" w:w="4160"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Reason
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2960"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Live number broadcast
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">RTDB
+<w:tcPr><w:tcW w:type="dxa" w:w="4160"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Sub-100 ms fan-out to all players in room
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2960"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Per-card marking state (active game)
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">RTDB
+<w:tcPr><w:tcW w:type="dxa" w:w="4160"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">High-frequency writes; JSON tree per room
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2960"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Room presence / player list (active)
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">RTDB
+<w:tcPr><w:tcW w:type="dxa" w:w="4160"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">.onDisconnect() hooks for leave detection
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2960"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">User accounts &amp; KYC status
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firestore
+<w:tcPr><w:tcW w:type="dxa" w:w="4160"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Compound queries; role filtering
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2960"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Wallet ledger &amp; transactions
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firestore
+<w:tcPr><w:tcW w:type="dxa" w:w="4160"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Atomic transactions; idempotency keys
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2960"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Game history &amp; audit logs
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firestore
+<w:tcPr><w:tcW w:type="dxa" w:w="4160"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Range queries by date, player, gateway
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2960"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Leaderboards (weekly + all-time)
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firestore
+<w:tcPr><w:tcW w:type="dxa" w:w="4160"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Aggregation-friendly; collection group queries
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2960"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Bonus records &amp; referral trees
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firestore
+<w:tcPr><w:tcW w:type="dxa" w:w="4160"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Relational-style queries required
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2960"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Admin reports
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firestore
+<w:tcPr><w:tcW w:type="dxa" w:w="4160"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Date-range filtering not possible in RTDB
+1.3 iOS Strategy
+Day 1 Setup: npx cap add ios — both Android and iOS platforms scaffolded from the start
+Immediate iOS Coverage: PWA via Safari &apos;Add to Home Screen&apos; — available at Android launch day, zero extra cost
+App Store Launch: ~1–2 weeks after Android (Apple review typically 1–3 business days)
+iOS Payments: In-app Safari browser sheet (@capacitor/browser) — Apple-compliant, no IAP required
+Push Notifications: APNs certificates configured Week 1 alongside FCM — one Firebase setup covers both
+Apple Developer Account: Client registers before Week 4 — US $99/yr, paid directly by client
+Build Requirement: Mac with Xcode in CI/CD pipeline (GitHub Actions macOS runner recommended)
+1.4 Infrastructure &amp; Scalability
+Concurrent Connection Planning
+Firebase RTDB on the Blaze plan supports up to 200,000 concurrent connections per database instance, but the default limit is lower and must be raised explicitly before launch. Capacity planning must be done before architecture is finalised.
+Define peak concurrent user target before Week 2 — even a rough cap (e.g. max 20 simultaneous rooms × 50 players = 1,000 connections) determines whether sharding is needed.
+If demand exceeds one RTDB instance, shard by room: create one RTDB instance per active game room. Firebase supports multiple named DB instances per project.
+Model RTDB read fan-out: N players × M number calls per game × average session length = total download volume per month.
+Cloud Functions Cold Starts
+Cloud Functions on the critical game path (card purchase, win validation, prize crediting) can experience 1–3 second cold starts. Mitigation:
+Set minimum-instances = 1 on card-purchase, win-validate, and prize-credit functions to keep them warm.
+Estimated cost: ~$5–15/month per kept-warm function — justified for game-critical paths.
+Non-critical functions (bonus crediting, referral tracking) can remain cold-start.
+Firebase Cost Model (Approximate)
+All financial projections for the platform must include Firebase operating costs. The table below uses placeholder assumptions and must be refined once peak user targets are set.
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="2200"/><w:gridCol w:w="1760"/><w:gridCol w:w="2400"/><w:gridCol w:w="2520"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Resource
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Free Tier
+<w:tcPr><w:tcW w:type="dxa" w:w="2400"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Blaze Pay-As-You-Go
+<w:tcPr><w:tcW w:type="dxa" w:w="2520"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Note
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">RTDB storage
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">1 GB
+<w:tcPr><w:tcW w:type="dxa" w:w="2400"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">$5 / GB / month
+<w:tcPr><w:tcW w:type="dxa" w:w="2520"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Game state is transient; keep lean
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">RTDB downloads
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">10 GB / month
+<w:tcPr><w:tcW w:type="dxa" w:w="2400"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">$1 / GB
+<w:tcPr><w:tcW w:type="dxa" w:w="2520"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Number broadcast fan-out is the driver
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firestore reads
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">50K / day
+<w:tcPr><w:tcW w:type="dxa" w:w="2400"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">$0.06 / 100K
+<w:tcPr><w:tcW w:type="dxa" w:w="2520"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Admin reports and ledger queries
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firestore writes
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">20K / day
+<w:tcPr><w:tcW w:type="dxa" w:w="2400"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">$0.18 / 100K
+<w:tcPr><w:tcW w:type="dxa" w:w="2520"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Each card purchase = ~3–5 writes
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Cloud Functions
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">2M calls / month
+<w:tcPr><w:tcW w:type="dxa" w:w="2400"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">$0.40 / million
+<w:tcPr><w:tcW w:type="dxa" w:w="2520"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Include prize + payment webhooks
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">GCP CDN egress
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Generous free tier
+<w:tcPr><w:tcW w:type="dxa" w:w="2400"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">$0.08 / GB
+<w:tcPr><w:tcW w:type="dxa" w:w="2520"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Bundled fonts add ~500 KB per install
+Backup &amp; Disaster Recovery
+Enable Firebase automatic daily exports to Cloud Storage (Blaze plan feature — must be configured explicitly).
+RTDB: in-progress game state is ephemeral. Define the policy for interrupted games: if Firebase is unreachable &gt; 30 seconds, the game is cancelled and all entry fees refunded to wallet.
+RTO target: 15 minutes (resume normal operations after outage). RPO target: 24 hours (maximum data loss window).
+Game audit logs in Firestore are the source of truth for dispute resolution after any outage.
+2. Game Configuration
+2.1 Number Calling Modes
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="2200"/><w:gridCol w:w="3340"/><w:gridCol w:w="3340"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Feature
+<w:tcPr><w:tcW w:type="dxa" w:w="3340"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Mode A — Auto Generate
+<w:tcPr><w:tcW w:type="dxa" w:w="3340"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Mode B — Manual Input
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Number Source
+<w:tcPr><w:tcW w:type="dxa" w:w="3340"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Server-side CSRNG (Node.js crypto.randomInt)
+<w:tcPr><w:tcW w:type="dxa" w:w="3340"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Human operator entry
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Broadcast
+<w:tcPr><w:tcW w:type="dxa" w:w="3340"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Instant, automated
+<w:tcPr><w:tcW w:type="dxa" w:w="3340"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">On operator submission
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Speed Control
+<w:tcPr><w:tcW w:type="dxa" w:w="3340"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Configurable (10 / 20 / 30s)
+<w:tcPr><w:tcW w:type="dxa" w:w="3340"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Operator-set pace
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Best For
+<w:tcPr><w:tcW w:type="dxa" w:w="3340"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">High-volume automated sessions
+<w:tcPr><w:tcW w:type="dxa" w:w="3340"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Live events, Bingo halls
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Audit Trail
+<w:tcPr><w:tcW w:type="dxa" w:w="3340"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Seed committed before game; revealed after (see §4.2)
+<w:tcPr><w:tcW w:type="dxa" w:w="3340"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Input log with timestamps
+2.2 Bingo Card Generation
+Cards per Player: Up to 6 cards per session — each card purchased separately at the entry fee
+Card Range: Classic 1–75 number grid (5×5, centre FREE)
+Card Assignment: Randomly generated server-side per player per session — uniqueness guaranteed within a room
+Card Generation Algorithm
+Each column is populated using the standard Bingo column-range convention:
+B: 1–15  |  I: 16–30  |  N: 31–45  |  G: 46–60  |  O: 61–75
+For each column, draw 5 numbers (4 for N column — centre is FREE) without replacement from that column&apos;s range using Fisher-Yates shuffle seeded by crypto.randomInt.
+Uniqueness within a room: after generation, compare the card&apos;s ordered number sequence against all existing cards in the room. If a collision is detected, regenerate. Expected collision probability is negligible for rooms under 200 players.
+Card fingerprint (SHA-256 of ordered number array) stored server-side per session for audit.
+2.3 Win Patterns — Three Prize Tiers
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="1320"/><w:gridCol w:w="4560"/><w:gridCol w:w="3000"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1320"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Tier
+<w:tcPr><w:tcW w:type="dxa" w:w="4560"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Win Pattern
+<w:tcPr><w:tcW w:type="dxa" w:w="3000"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Prize Share of Pot
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1320"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">1st Win
+<w:tcPr><w:tcW w:type="dxa" w:w="4560"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Any single line (horizontal, vertical, or diagonal)
+<w:tcPr><w:tcW w:type="dxa" w:w="3000"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">20%
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1320"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">2nd Win
+<w:tcPr><w:tcW w:type="dxa" w:w="4560"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Four corners of the card covered
+<w:tcPr><w:tcW w:type="dxa" w:w="3000"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">30%
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1320"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">3rd Win
+<w:tcPr><w:tcW w:type="dxa" w:w="4560"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Full house — every number on the card covered
+<w:tcPr><w:tcW w:type="dxa" w:w="3000"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">50%
+Game continues until all three tiers are claimed. Simultaneous winners at the same tier split that tier&apos;s prize equally.
+2.4 Win Detection &amp; Edge Cases
+Detection Order
+Win patterns are evaluated server-side after every number call, in tier order (Line → Corners → Full House). This prevents a Full House from being credited before a Line is claimed.
+Simultaneous Winners
+Multiple players with a winning pattern on the same call split that tier&apos;s prize equally.
+Prize split is calculated in integer santim (see §5.6). Any indivisible remainder is added to the next-highest tier&apos;s prize pool.
+Example: 1st Win prize = 10,200 santim (102 ETB), 3 simultaneous winners → 3,400 santim each. Zero remainder.
+Example: 1st Win prize = 10,300 santim, 3 winners → 3,433 / 3,433 / 3,434 santim. The 1-santim remainder goes to the player whose card fingerprint is lexicographically last (deterministic, auditable).
+All-Tiers-Simultaneous
+If a single call triggers all three tiers simultaneously (theoretically possible on the last number of a Full House game), tiers are credited in sequence: Line winner(s) → Corners winner(s) → Full House winner(s). Server processes them in a single Firestore transaction.
+2.5 Room Types
+Open Lobby: Players join anytime — game starts the moment 2 or more players are in the room
+Scheduled Tournaments: Fixed start times set by operator (e.g. 8PM, 10PM daily); countdown timer visible in lobby
+Minimum Players: 2 players required to start any game. High-stake rooms (Gold 100 ETB) require a minimum of 5 players to reduce collusion risk (see §4.5)
+Unfilled Scheduled Rooms: Operator decides per room: cancel with full refund to wallet, or start with present players
+2.6 Disconnection Handling
+A player losing network connectivity during a live game must not result in a lost win or a locked game state.
+Server-side card marking continues automatically — the player&apos;s card is marked by the Cloud Function on every number call, regardless of client connectivity.
+On reconnect, the client receives the full game state diff since disconnection via RTDB.
+If a win occurs on a disconnected player&apos;s card: the win is credited to their wallet exactly as if they were connected. They receive a push notification.
+If a player is disconnected for more than 90 seconds, their presence record in RTDB is removed via .onDisconnect(). Their cards remain active for the duration of the game.
+Operator dashboard shows &apos;disconnected&apos; status per player in real-time game view.
+3. Financial Model
+3.1 Entry Fees — Tiered Stakes
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="1320"/><w:gridCol w:w="2120"/><w:gridCol w:w="3120"/><w:gridCol w:w="2320"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1320"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Tier
+<w:tcPr><w:tcW w:type="dxa" w:w="2120"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Entry Fee (per card)
+<w:tcPr><w:tcW w:type="dxa" w:w="3120"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Example Pot (10 players, 1 card each)
+<w:tcPr><w:tcW w:type="dxa" w:w="2320"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Player Payout (85%)
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1320"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Bronze
+<w:tcPr><w:tcW w:type="dxa" w:w="2120"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">10 ETB
+<w:tcPr><w:tcW w:type="dxa" w:w="3120"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">100 ETB
+<w:tcPr><w:tcW w:type="dxa" w:w="2320"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">85 ETB total
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1320"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Silver
+<w:tcPr><w:tcW w:type="dxa" w:w="2120"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">50 ETB
+<w:tcPr><w:tcW w:type="dxa" w:w="3120"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">500 ETB
+<w:tcPr><w:tcW w:type="dxa" w:w="2320"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">425 ETB total
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1320"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Gold
+<w:tcPr><w:tcW w:type="dxa" w:w="2120"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">100 ETB
+<w:tcPr><w:tcW w:type="dxa" w:w="3120"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">1,000 ETB
+<w:tcPr><w:tcW w:type="dxa" w:w="2320"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">850 ETB total
+3.2 Prize Calculation — Percentage of Total Pot
+House Cut: 15% of total pot retained per game
+Player Prize Pool: 85% of total pot distributed across 3 win tiers
+Formula: Total Pot = entry fee × total cards purchased across all players in the room
+Example: 8 players join a 50 ETB room. 4 players buy 2 cards each, 4 buy 1 card = 12 cards total. Pot = 600 ETB. House = 90 ETB. Prize pool = 510 ETB split: 1st line = 102 ETB, corners = 153 ETB, full house = 255 ETB.
+All prize arithmetic is performed in integer santim (1 ETB = 100 santim). See §5.6 for the full monetary arithmetic specification.
+3.3 Wallet &amp; Payout Flow
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="1760"/><w:gridCol w:w="4120"/><w:gridCol w:w="3000"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Action
+<w:tcPr><w:tcW w:type="dxa" w:w="4120"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Flow
+<w:tcPr><w:tcW w:type="dxa" w:w="3000"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Approval Required
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Deposit
+<w:tcPr><w:tcW w:type="dxa" w:w="4120"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Chapa / WeBirr / Telebirr / CBE → in-app wallet (webhook-verified)
+<w:tcPr><w:tcW w:type="dxa" w:w="3000"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">No — instant on verified webhook
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">iOS Deposit
+<w:tcPr><w:tcW w:type="dxa" w:w="4120"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Safari in-app browser sheet → app-resume status check → wallet credit
+<w:tcPr><w:tcW w:type="dxa" w:w="3000"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">No — instant on confirmed status
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Winnings Credit
+<w:tcPr><w:tcW w:type="dxa" w:w="4120"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Game engine credits winner wallet after win verification
+<w:tcPr><w:tcW w:type="dxa" w:w="3000"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Yes — operator reviews flagged wins before credit
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Withdrawal
+<w:tcPr><w:tcW w:type="dxa" w:w="4120"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Player requests → operator approves → transfer to Telebirr / CBE
+<w:tcPr><w:tcW w:type="dxa" w:w="3000"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Yes — operator must approve
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Referral Bonus
+<w:tcPr><w:tcW w:type="dxa" w:w="4120"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Auto-credited when referred friend completes first full game
+<w:tcPr><w:tcW w:type="dxa" w:w="3000"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">No — automatic (requires game completion, not just deposit)
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">First Deposit Bonus
+<w:tcPr><w:tcW w:type="dxa" w:w="4120"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Auto-credited on player&apos;s first ever top-up
+<w:tcPr><w:tcW w:type="dxa" w:w="3000"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">No — automatic (one bonus per verified phone number)
+3.4 Bonus System
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="2200"/><w:gridCol w:w="3580"/><w:gridCol w:w="3100"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Bonus
+<w:tcPr><w:tcW w:type="dxa" w:w="3580"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Trigger
+<w:tcPr><w:tcW w:type="dxa" w:w="3100"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Reward
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">First Deposit Bonus
+<w:tcPr><w:tcW w:type="dxa" w:w="3580"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Player tops up wallet for the first time (one per verified phone number)
+<w:tcPr><w:tcW w:type="dxa" w:w="3100"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Operator-defined (e.g. 10% match up to 50 ETB)
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Referral Bonus
+<w:tcPr><w:tcW w:type="dxa" w:w="3580"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Referred friend completes their first full game (not just deposit)
+<w:tcPr><w:tcW w:type="dxa" w:w="3100"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Credited to referrer wallet automatically
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Referral Tracking
+<w:tcPr><w:tcW w:type="dxa" w:w="3580"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Unique referral link per user
+<w:tcPr><w:tcW w:type="dxa" w:w="3100"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Tracked server-side — no manual action needed
+Bonus Abuse Prevention
+First Deposit Bonus is tied to phone number (verified via OTP), not device or account — one bonus per number.
+Referral Bonus requires the referred user to complete at least one full paid game, preventing deposit-and-withdraw cycles.
+Velocity rule: accounts that claim a bonus and request withdrawal within 60 minutes without playing a game are auto-flagged for admin review.
+Admin dashboard shows &apos;bonus-to-withdrawal ratio&apos; per user — sortable metric for fraud triage.
+4. Security &amp; Fraud Prevention
+This section defines all security controls for the platform. These requirements are non-negotiable and must be implemented before beta launch.
+4.1 Identity &amp; Account Security
+Multi-Accounting Prevention
+Phone number is the unique identity anchor — one account per OTP-verified number.
+Device fingerprinting on registration (FingerprintJS or equivalent). Flag accounts sharing a device fingerprint with an existing account for admin review; do not auto-block (shared phones are common).
+If a flagged device creates a second account and claims a bonus within the first session, auto-suspend the newer account and notify admin.
+Session Security
+Firebase Auth JWT tokens expire after 1 hour — client must handle silent token refresh.
+All Cloud Function endpoints verify Firebase Auth ID token on every invocation. Client-side state is never trusted for financial operations.
+Firestore Security Rules: players can only read/write their own user document, wallet, and cards. Cross-player reads are prohibited. Admin reads are gated by a custom claim role field.
+Admin panel enforces a separate Firebase Auth tenant (or project) from the player app — admin credentials cannot be used in the player app.
+4.2 RNG Integrity &amp; Audit Trail
+Algorithm Specification
+Mode A (Auto Generate) uses Node.js crypto.randomInt, which wraps the OS CSPRNG (urandom on Linux). This is cryptographically secure and does not require a third-party library.
+Commit-Reveal Scheme
+To allow post-game auditability by players and regulators, the following protocol is used:
+Before a game starts: generate the full number sequence for the session. Compute SHA-256 of the sequence. Store seed, sequence, and hash in Firestore (write-once, append-only collection).
+Publish the hash to all players at game start (visible in game UI as &apos;Game ID / Seed Hash&apos;).
+After the game ends: reveal the full sequence. Any player can verify SHA-256(revealed sequence) == published hash.
+This provides provably fair verification without requiring a third-party RNG audit service at launch.
+Audit Log Fields
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="2000"/><w:gridCol w:w="3080"/><w:gridCol w:w="3800"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2000"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Field
+<w:tcPr><w:tcW w:type="dxa" w:w="3080"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Value
+<w:tcPr><w:tcW w:type="dxa" w:w="3800"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Notes
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2000"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">game_id
+<w:tcPr><w:tcW w:type="dxa" w:w="3080"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">UUID v4
+<w:tcPr><w:tcW w:type="dxa" w:w="3800"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Primary key
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2000"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">room_id
+<w:tcPr><w:tcW w:type="dxa" w:w="3080"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Room reference
+<w:tcPr><w:tcW w:type="dxa" w:w="3800"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Links to room config
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2000"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">seed
+<w:tcPr><w:tcW w:type="dxa" w:w="3080"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">crypto.randomBytes(32).hex()
+<w:tcPr><w:tcW w:type="dxa" w:w="3800"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Never exposed until game end
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2000"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">sequence
+<w:tcPr><w:tcW w:type="dxa" w:w="3080"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Array[75] of int 1–75
+<w:tcPr><w:tcW w:type="dxa" w:w="3800"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Full draw order stored pre-game
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2000"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">seed_hash
+<w:tcPr><w:tcW w:type="dxa" w:w="3080"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">SHA-256(sequence.join(&apos;,&apos;))
+<w:tcPr><w:tcW w:type="dxa" w:w="3800"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Published to players at game start
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2000"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">revealed_at
+<w:tcPr><w:tcW w:type="dxa" w:w="3080"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">ISO 8601 timestamp
+<w:tcPr><w:tcW w:type="dxa" w:w="3800"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Set when game ends
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2000"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">winners
+<w:tcPr><w:tcW w:type="dxa" w:w="3080"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Array of {player_id, tier, amount_santim}
+<w:tcPr><w:tcW w:type="dxa" w:w="3800"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Immutable after credit
+4.3 Fraud Detection &amp; Win Verification
+Automatic Win Flagging Criteria
+Wins matching any of the following criteria are held for operator review before wallet credit:
+Player wins more than 3 games in a rolling 6-hour window across any room.
+Player&apos;s win rate in the last 20 games exceeds 30% (statistically improbable at scale).
+Multiple wins claimed from the same device fingerprint within one 24-hour period across different accounts.
+First-time depositor wins on their very first game (high bonus-abuse signal — review, do not auto-block).
+Game had fewer than 4 unique player device fingerprints (possible collusion ring).
+Operator SLA for Flagged Wins
+Flagged wins must be reviewed within 30 minutes of flagging. If no operator action is taken within 30 minutes, the win is auto-approved and credited, with a permanent audit log entry noting the auto-approval. This prevents legitimate winners from being blocked indefinitely.
+4.4 API &amp; Session Security
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="2200"/><w:gridCol w:w="4080"/><w:gridCol w:w="2600"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Control
+<w:tcPr><w:tcW w:type="dxa" w:w="4080"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Implementation
+<w:tcPr><w:tcW w:type="dxa" w:w="2600"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Scope
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firebase App Check
+<w:tcPr><w:tcW w:type="dxa" w:w="4080"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Enforce on all Cloud Functions — only signed app binaries (Android APK + iOS IPA + web domain) can call the API
+<w:tcPr><w:tcW w:type="dxa" w:w="2600"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">All Cloud Functions
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Rate limiting — card purchase
+<w:tcPr><w:tcW w:type="dxa" w:w="4080"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Max 6 card purchases per user per minute (matches 6-card cap)
+<w:tcPr><w:tcW w:type="dxa" w:w="2600"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Cloud Function
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Rate limiting — withdrawals
+<w:tcPr><w:tcW w:type="dxa" w:w="4080"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Max 3 withdrawal requests per user per 24-hour window
+<w:tcPr><w:tcW w:type="dxa" w:w="2600"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Cloud Function
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Rate limiting — login attempts
+<w:tcPr><w:tcW w:type="dxa" w:w="4080"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firebase Auth built-in: 10 failed attempts triggers CAPTCHA
+<w:tcPr><w:tcW w:type="dxa" w:w="2600"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Auth layer
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Webhook endpoint protection
+<w:tcPr><w:tcW w:type="dxa" w:w="4080"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Verify HMAC signature on all incoming gateway webhooks (see §5.2)
+<w:tcPr><w:tcW w:type="dxa" w:w="2600"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Payment webhooks
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Admin panel access
+<w:tcPr><w:tcW w:type="dxa" w:w="4080"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">2FA mandatory + IP allowlisting (see §6.1)
+<w:tcPr><w:tcW w:type="dxa" w:w="2600"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Admin web interface
+4.5 Collusion Detection
+A minimum of 2 players can start a game. At this minimum, coordinated play can create a near-guaranteed win loop. The following controls mitigate this:
+Gold tier rooms (100 ETB) require a minimum of 5 players to start. Silver tier requires 3. Bronze tier minimum remains at 2.
+Flag for admin review: any two accounts that have played together in more than 10 games in a 7-day period.
+Flag for admin review: rapid deposit-then-withdrawal cycles (deposit → play → withdraw within 2 hours, profit &gt; 0) across multiple sessions.
+Admin dashboard provides &apos;co-play graph&apos; view: shows which player accounts frequently appear in the same room.
+5. Payment Gateway Integration
+5.1 Gateway Overview &amp; Credentials Timeline
+Four payment gateways are in scope. Merchant account registration for Ethiopian gateways requires business documentation and approval that must begin before development starts. Delayed credentials will block payment integration and slip the launch timeline.
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="1540"/><w:gridCol w:w="1980"/><w:gridCol w:w="2800"/><w:gridCol w:w="2560"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1540"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Gateway
+<w:tcPr><w:tcW w:type="dxa" w:w="1980"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Typical Onboarding Time
+<w:tcPr><w:tcW w:type="dxa" w:w="2800"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Requirements
+<w:tcPr><w:tcW w:type="dxa" w:w="2560"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Action Owner
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1540"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Chapa
+<w:tcPr><w:tcW w:type="dxa" w:w="1980"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">3–7 business days
+<w:tcPr><w:tcW w:type="dxa" w:w="2800"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Business registration docs + TIN
+<w:tcPr><w:tcW w:type="dxa" w:w="2560"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Client (Gym General Trading)
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1540"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Telebirr (Ethio Telecom)
+<w:tcPr><w:tcW w:type="dxa" w:w="1980"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">2–4 weeks
+<w:tcPr><w:tcW w:type="dxa" w:w="2800"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Formal B2B API agreement
+<w:tcPr><w:tcW w:type="dxa" w:w="2560"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Client — initiate immediately
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1540"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">CBE (Commercial Bank)
+<w:tcPr><w:tcW w:type="dxa" w:w="1980"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">2–6 weeks
+<w:tcPr><w:tcW w:type="dxa" w:w="2800"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">In-person bank visit + API agreement
+<w:tcPr><w:tcW w:type="dxa" w:w="2560"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Client — initiate immediately
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1540"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">WeBirr
+<w:tcPr><w:tcW w:type="dxa" w:w="1980"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">1–2 weeks
+<w:tcPr><w:tcW w:type="dxa" w:w="2800"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Business registration + online application
+<w:tcPr><w:tcW w:type="dxa" w:w="2560"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Client
+If all four applications are not initiated on Day 1 of the project, payment integration cannot begin until Week 2–3 at the earliest. This is the single highest-probability cause of timeline slippage.
+5.2 Webhook Security
+Payment gateways notify the platform of completed deposits via HTTP webhooks. An unsecured webhook endpoint allows an attacker to POST a fake deposit confirmation and credit arbitrary wallet balances.
+Required Implementation
+Each gateway provides an HMAC secret key during merchant onboarding. Store these in Firebase Secret Manager — never in code or environment variables committed to version control.
+On every incoming webhook: compute HMAC-SHA256(raw request body, gateway_secret) and compare to the signature in the webhook header. Reject any request where signatures do not match — return HTTP 400 and log the attempt with source IP.
+Webhook endpoints must only accept POST requests from the gateway&apos;s documented IP ranges (whitelist at Cloud Function or GCP firewall level).
+Log every incoming webhook: gateway, transaction_id, signature_valid (bool), processing_result, timestamp.
+5.3 Idempotency Design
+Network instability or gateway retry logic can cause the same webhook to fire multiple times for a single transaction. Without idempotency controls, a single deposit can credit the wallet twice.
+Required Implementation
+Each gateway transaction has a unique transaction_id in the webhook payload. Store this as a document ID in a Firestore &apos;processed_webhooks&apos; collection on first successful processing.
+On every webhook receipt: attempt to create the Firestore document using the transaction_id as the document ID. If the create fails (document already exists), the webhook is a duplicate — return HTTP 200 (acknowledge receipt) without processing and log as duplicate.
+Use a Firestore transaction (atomic read-check-write) when crediting the wallet to guarantee race-condition safety if two webhook calls arrive simultaneously.
+The &apos;processed_webhooks&apos; collection is append-only and serves as the canonical deposit ledger.
+5.4 iOS Safari Payment — Failure Handling
+The iOS payment flow uses @capacitor/browser to open a Safari sheet. The user may close the sheet mid-payment, force-quit the app, or lose connectivity before the app receives a return callback.
+Required Implementation
+Before opening the browser sheet: write a &apos;pending_payment&apos; record to Firestore with the gateway, amount, and a unique payment reference ID.
+On app resume after browser sheet close (App.addListener(&apos;appStateChange&apos;) or Browser.addListener(&apos;browserFinished&apos;)): query the gateway&apos;s transaction status API using the payment reference ID.
+Show a &apos;Checking payment status…&apos; screen during the status query — never assume success or failure before querying.
+If gateway confirms payment successful but wallet is not yet credited: the pending_payment record is picked up by a scheduled Cloud Function reconciliation job (runs every 5 minutes) and credited.
+If gateway confirms payment failed or cancelled: dismiss the pending_payment record and notify the user.
+If the status query fails (network unavailable): leave the pending_payment record open. It will be caught by the next reconciliation run.
+5.5 Transaction Reconciliation
+Four gateways with independent settlement cycles will produce discrepancies between gateway records and internal wallet records over time. A reconciliation process is required.
+Scheduled Cloud Function runs daily at 02:00 EAT: download the prior day&apos;s settlement report from each active gateway API.
+Compare each gateway transaction_id against the processed_webhooks Firestore collection.
+Flag mismatches to admin dashboard: gateway records a successful transaction not found in processed_webhooks (missed credit) or vice versa (phantom credit).
+Admin resolves flagged items manually. Audit log entry required for every manual reconciliation action.
+Monthly reconciliation summary report exported to admin dashboard (total deposits per gateway vs. total wallet credits).
+5.6 Monetary Arithmetic — Integer (Santim) Model
+All financial values are stored and calculated in integer santim (1 ETB = 100 santim). JavaScript floating-point arithmetic must never be used for monetary calculations.
+All entry fees, wallet balances, pot values, prize amounts, house cuts, and bonus values are stored as integer santim in Firestore.
+Display layer only: convert santim to ETB for UI display (santim / 100, formatted to 2 decimal places). Never store or calculate using the display value.
+Prize split calculation: (total_pot_santim * prize_percentage_numerator) / prize_percentage_denominator — use integer division throughout. Remainder allocation is defined in §2.4.
+Withdrawal amounts: player enters ETB in UI, convert to santim on submission, validate as integer, store as integer.
+Example: 10 ETB entry fee = 1,000 santim. 15% house cut = 150 santim. 85% player pool = 850 santim. Line prize (20%) = 170 santim = 1.70 ETB.
+6. Admin / Operator Dashboard
+A full web-based admin panel is included in scope. This is a separate interface from the player app, accessible only to operators and administrators. It runs on a separate subdomain (e.g. admin.bingo-platform.com).
+6.1 Authentication &amp; Access Control
+Authentication Requirements
+Mandatory two-factor authentication (TOTP via Google Authenticator or Authy) for all admin accounts. Password-only login is not permitted.
+Admin panel login is restricted to a pre-approved IP allowlist (operator office IPs). Login attempts from outside the allowlist are rejected with HTTP 403.
+Failed login attempts: 5 consecutive failures locks the account for 30 minutes and sends an alert to the super-admin email.
+Role Hierarchy
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="1320"/><w:gridCol w:w="5280"/><w:gridCol w:w="2280"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1320"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Role
+<w:tcPr><w:tcW w:type="dxa" w:w="5280"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Capabilities
+<w:tcPr><w:tcW w:type="dxa" w:w="2280"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Notes
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1320"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Viewer
+<w:tcPr><w:tcW w:type="dxa" w:w="5280"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Read-only: analytics, reports, game history, transaction ledger
+<w:tcPr><w:tcW w:type="dxa" w:w="2280"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Suitable for accountant / auditor access
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1320"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Operator
+<w:tcPr><w:tcW w:type="dxa" w:w="5280"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">All Viewer capabilities + approve/reject withdrawals and wins, send notifications, manage rooms
+<w:tcPr><w:tcW w:type="dxa" w:w="2280"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Day-to-day operations role
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1320"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Super-Admin
+<w:tcPr><w:tcW w:type="dxa" w:w="5280"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">All Operator capabilities + user banning, bonus configuration, role management, IP allowlist changes
+<w:tcPr><w:tcW w:type="dxa" w:w="2280"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Maximum 2 accounts; owned by client principals
+Audit Trail
+Every action taken in the admin panel is logged immutably in Firestore with: actor_id, role, action_type, target (user/game/transaction), before_value, after_value, timestamp. Audit logs cannot be deleted by any role including Super-Admin.
+6.2 Module Capabilities
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="2200"/><w:gridCol w:w="6680"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Module
+<w:tcPr><w:tcW w:type="dxa" w:w="6680"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Key Capabilities
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">User Management
+<w:tcPr><w:tcW w:type="dxa" w:w="6680"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">View / suspend / ban players; KYC status; wallet balances; full game history per user; device fingerprint; co-play graph; bonus-to-withdrawal ratio
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Game Room Control
+<w:tcPr><w:tcW w:type="dxa" w:w="6680"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Create, edit, cancel open rooms and scheduled tournaments; configure stakes, mode, minimum players, and card limits
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Transaction Ledger
+<w:tcPr><w:tcW w:type="dxa" w:w="6680"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Full log of all deposits, winnings, withdrawals, bonuses — filterable by date, player, gateway, and transaction type. Daily reconciliation report.
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Payout Approvals
+<w:tcPr><w:tcW w:type="dxa" w:w="6680"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Review and approve or reject player withdrawal and winning payout requests; bulk approve; SLA countdown (30-min auto-approve on flagged wins)
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Win Verification
+<w:tcPr><w:tcW w:type="dxa" w:w="6680"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Review flagged wins (auto-flagging criteria listed in §4.3); full game replay log per session; seed hash verification; 30-min SLA timer per item
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Reports &amp; Analytics
+<w:tcPr><w:tcW w:type="dxa" w:w="6680"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Revenue by day/week/month; platform split (web/Android/iOS); active users; room fill rates; Firebase cost dashboard
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Bonus Management
+<w:tcPr><w:tcW w:type="dxa" w:w="6680"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Set first-deposit bonus percentage; enable/disable referral program; view referral trees; flag suspected bonus abuse accounts
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Notifications
+<w:tcPr><w:tcW w:type="dxa" w:w="6680"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Send scheduled announcements to players in all 4 languages; push notification campaigns; in-app message broadcast
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Fraud &amp; Collusion
+<w:tcPr><w:tcW w:type="dxa" w:w="6680"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Co-play graph; velocity alerts; multi-account flags; deposit-withdrawal cycle reports; IP-cluster view
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Reconciliation
+<w:tcPr><w:tcW w:type="dxa" w:w="6680"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Daily gateway vs. wallet diff report; manual reconciliation actions (with audit log); monthly summary export
+7. Social &amp; Engagement Features
+7.1 In-Game Communication
+Text Chat: None — excluded to avoid moderation complexity and abuse risk
+Emoji Reactions: Reaction bar available during game (e.g. 🎉 😮 👏 😂 🔥) — visible to all players in real-time via RTDB
+7.2 Leaderboards
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="1760"/><w:gridCol w:w="2560"/><w:gridCol w:w="2080"/><w:gridCol w:w="2480"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Leaderboard
+<w:tcPr><w:tcW w:type="dxa" w:w="2560"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Scope
+<w:tcPr><w:tcW w:type="dxa" w:w="2080"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Resets
+<w:tcPr><w:tcW w:type="dxa" w:w="2480"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Where Displayed
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Per-Room
+<w:tcPr><w:tcW w:type="dxa" w:w="2560"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Rankings within one game session only
+<w:tcPr><w:tcW w:type="dxa" w:w="2080"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">After each game ends
+<w:tcPr><w:tcW w:type="dxa" w:w="2480"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">End-of-game results screen
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Global — Weekly
+<w:tcPr><w:tcW w:type="dxa" w:w="2560"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Top winners across all games this week
+<w:tcPr><w:tcW w:type="dxa" w:w="2080"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Every Monday 00:00 EAT
+<w:tcPr><w:tcW w:type="dxa" w:w="2480"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Dedicated leaderboard tab
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Global — All-Time
+<w:tcPr><w:tcW w:type="dxa" w:w="2560"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Top winners since platform launch
+<w:tcPr><w:tcW w:type="dxa" w:w="2080"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Never
+<w:tcPr><w:tcW w:type="dxa" w:w="2480"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Dedicated leaderboard tab
+8. Localisation &amp; Languages
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="2000"/><w:gridCol w:w="1760"/><w:gridCol w:w="2640"/><w:gridCol w:w="2480"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2000"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Language
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Script
+<w:tcPr><w:tcW w:type="dxa" w:w="2640"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Font
+<w:tcPr><w:tcW w:type="dxa" w:w="2480"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Native Review Deadline
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2000"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">English
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Latin
+<w:tcPr><w:tcW w:type="dxa" w:w="2640"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Calibri (system default)
+<w:tcPr><w:tcW w:type="dxa" w:w="2480"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">N/A
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2000"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Amharic (አማርኛ)
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Ethiopic / Ge&apos;ez
+<w:tcPr><w:tcW w:type="dxa" w:w="2640"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Noto Serif Ethiopic (bundled in app)
+<w:tcPr><w:tcW w:type="dxa" w:w="2480"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Week 3
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2000"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Tigrinya (ትግርኛ)
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Ethiopic / Ge&apos;ez
+<w:tcPr><w:tcW w:type="dxa" w:w="2640"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Noto Serif Ethiopic (bundled in app)
+<w:tcPr><w:tcW w:type="dxa" w:w="2480"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Week 3
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2000"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Afaan Oromoo
+<w:tcPr><w:tcW w:type="dxa" w:w="1760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Latin (extended chars)
+<w:tcPr><w:tcW w:type="dxa" w:w="2640"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Calibri (system default)
+<w:tcPr><w:tcW w:type="dxa" w:w="2480"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Week 4
+All 4 languages cover: game UI, number call announcements, push notifications, payment receipts, admin panel, and App Store / Play Store listings.
+Machine translation is not used — native speaker review is mandatory for all Ethiopic script content. Reviewers must be identified and contracted by the client no later than Day 5 of the project.
+9. Compliance &amp; Legal
+This section identifies legal and regulatory obligations. JAN Solutions is responsible for implementing the technical controls listed below. Legal interpretation and licence applications are the client&apos;s responsibility.
+9.1 Gambling Licensing
+Bingo for real money in Ethiopia is a regulated activity. The platform must not accept deposits or run paid games until the client confirms that the required licence or authorisation from the relevant Ethiopian authority (currently the Ethiopian Revenues and Customs Authority / National Lottery Administration) is in place.
+Technical control: a platform-level kill switch in Firestore config allows the Super-Admin to disable all real-money game creation and deposits instantly, without a deployment. This must be implemented in Week 1.
+9.2 Age Verification
+Gambling platforms must restrict access to adults. The minimum age for gambling in Ethiopia is 18.
+Players must declare their date of birth at registration. The platform must reject registrations that calculate to under 18 years old.
+Date-of-birth is stored and flagged if inconsistent with KYC documents (when KYC is implemented).
+Age verification is a registration-time check only at launch — full KYC document verification is a post-launch enhancement.
+9.3 Anti-Money Laundering (AML)
+The platform handles cash-equivalent value and must apply basic AML controls.
+Transaction monitoring: flag any single deposit &gt; 10,000 ETB or aggregate deposits &gt; 50,000 ETB in a 30-day period for admin review.
+Withdrawal monitoring: flag withdrawal requests within 2 hours of deposit where the player&apos;s net gaming activity shows no or minimal game play.
+Record-keeping: all deposit, withdrawal, and win records must be retained for a minimum of 7 years in Firestore with no deletion capability below Super-Admin level.
+9.4 Data Protection
+The Ethiopian Personal Data Protection Proclamation (2022) applies to this platform.
+Player personal data (name, phone, DOB, transaction history) is stored only in Firebase (GCP), which offers data residency options — confirm with client whether data must be hosted in-region.
+Privacy Policy and Terms &amp; Conditions must be displayed at registration and linked in app footer. These must be drafted by the client&apos;s legal counsel before launch.
+Players must have a mechanism to request account deletion. Implement a &apos;Delete My Account&apos; flow that anonymises personal data while retaining financial records for AML compliance.
+10. Development Timeline
+The 5-week contract timeline assumes all client dependencies (see §10.2) are delivered on schedule. Any slippage in payment gateway credentials or Apple Developer Account registration directly impacts the delivery date.
+10.1 Phase Plan
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="1540"/><w:gridCol w:w="980"/><w:gridCol w:w="3180"/><w:gridCol w:w="3180"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1540"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Phase
+<w:tcPr><w:tcW w:type="dxa" w:w="980"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Timing
+<w:tcPr><w:tcW w:type="dxa" w:w="3180"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Android + Web
+<w:tcPr><w:tcW w:type="dxa" w:w="3180"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">iOS
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1540"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Phase 1 — Foundations
+<w:tcPr><w:tcW w:type="dxa" w:w="980"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Days 1–3
+<w:tcPr><w:tcW w:type="dxa" w:w="3180"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firebase setup (RTDB + Firestore), Capacitor scaffold, CI/CD pipeline, kill switch, App Check
+<w:tcPr><w:tcW w:type="dxa" w:w="3180"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">cap add ios Day 1; APNs certs; Apple Dev account initiated by client
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1540"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Phase 2 — Core Build
+<w:tcPr><w:tcW w:type="dxa" w:w="980"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Wks 1–3
+<w:tcPr><w:tcW w:type="dxa" w:w="3180"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Auth + age check, game engine (RNG + commit-reveal), card generation, room management, localisation skeleton
+<w:tcPr><w:tcW w:type="dxa" w:w="3180"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">iOS build pipeline; FCM + APNs; Safari payment sheet (@capacitor/browser); status-check on app resume
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1540"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Phase 3 — Payments &amp; Admin
+<w:tcPr><w:tcW w:type="dxa" w:w="980"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Wks 2–4
+<w:tcPr><w:tcW w:type="dxa" w:w="3180"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">All gateway webhooks + HMAC verification + idempotency; wallet logic (santim model); admin panel (all 10 modules); bonus engine
+<w:tcPr><w:tcW w:type="dxa" w:w="3180"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">IPA signed; internal TestFlight build for QA team
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1540"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Phase 4 — QA
+<w:tcPr><w:tcW w:type="dxa" w:w="980"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Wks 4–5
+<w:tcPr><w:tcW w:type="dxa" w:w="3180"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Automated tests, 2G/3G simulation, fraud rule testing, beta rollout, reconciliation job
+<w:tcPr><w:tcW w:type="dxa" w:w="3180"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">iOS device testing on iPhone SE/12/15; APNs delivery; Safari payment flow QA
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1540"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Phase 5 — Launch
+<w:tcPr><w:tcW w:type="dxa" w:w="980"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Week 5
+<w:tcPr><w:tcW w:type="dxa" w:w="3180"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Android APK + Web live on CDN
+<w:tcPr><w:tcW w:type="dxa" w:w="3180"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">PWA live on iOS Day 1; App Store submission dispatched
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="1540"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Post-Launch
+<w:tcPr><w:tcW w:type="dxa" w:w="980"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Wks 6–7
+<w:tcPr><w:tcW w:type="dxa" w:w="3180"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Monitoring, bug fixes, reconciliation review, Ethiopia-wide rollout
+<w:tcPr><w:tcW w:type="dxa" w:w="3180"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">iOS App Store live after Apple review (1–3 business days)
+10.2 Client Dependency Register
+The following items are outside JAN Solutions&apos; control. Each has a hard deadline — missing any of these delays the corresponding platform feature.
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="2760"/><w:gridCol w:w="1440"/><w:gridCol w:w="1440"/><w:gridCol w:w="3240"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2760"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Item
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Owner
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Required By
+<w:tcPr><w:tcW w:type="dxa" w:w="3240"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Consequence if Late
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Chapa merchant account credentials
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Client
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Day 1
+<w:tcPr><w:tcW w:type="dxa" w:w="3240"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Payment integration cannot start; blocks all wallet testing
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Telebirr B2B API agreement initiated
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Client
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Day 1
+<w:tcPr><w:tcW w:type="dxa" w:w="3240"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Telebirr integration delayed 2–4 weeks
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">CBE API agreement initiated
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Client
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Day 1
+<w:tcPr><w:tcW w:type="dxa" w:w="3240"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">CBE integration delayed 2–6 weeks
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">WeBirr account application submitted
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Client
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Day 3
+<w:tcPr><w:tcW w:type="dxa" w:w="3240"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">WeBirr integration delayed 1–2 weeks
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Apple Developer Account registered ($99)
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Client
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Day 3
+<w:tcPr><w:tcW w:type="dxa" w:w="3240"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">iOS TestFlight blocked; App Store submission blocked
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Amharic native speaker reviewer identified
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Client
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Day 5
+<w:tcPr><w:tcW w:type="dxa" w:w="3240"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Language QA for Amharic cannot begin Week 3
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Tigrinya native speaker reviewer identified
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Client
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Day 5
+<w:tcPr><w:tcW w:type="dxa" w:w="3240"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Language QA for Tigrinya cannot begin Week 3
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Gambling licence / authorisation confirmed
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Client (legal)
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Before live deposits
+<w:tcPr><w:tcW w:type="dxa" w:w="3240"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Real-money games must not go live without licence confirmation
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2760"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">KYC documentation requirements confirmed
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Client (legal)
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Week 2
+<w:tcPr><w:tcW w:type="dxa" w:w="3240"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">KYC fields in admin panel cannot be finalised
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2760"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Privacy Policy + T&amp;Cs drafted
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Client (legal)
+<w:tcPr><w:tcW w:type="dxa" w:w="1440"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Week 4
+<w:tcPr><w:tcW w:type="dxa" w:w="3240"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">App Store submission and registration flow blocked
+10.3 Definition of Done &amp; Acceptance Criteria
+Phase 2 Complete (End of Week 3)
+A full game session can be played end-to-end: room created → cards purchased → numbers called → win detected → winner notified.
+All 4 languages render correctly in game UI on both Android and iOS.
+RNG commit-reveal: seed hash displayed before game, sequence revealed after, SHA-256 verification passes.
+Disconnection test: player client killed mid-game; win on their card is detected and credited correctly.
+Phase 3 Complete (End of Week 4)
+At least one payment gateway completes a full sandbox deposit → wallet credit → withdrawal cycle.
+Webhook idempotency test: same webhook payload sent twice; wallet credited exactly once.
+HMAC signature test: webhook with invalid signature is rejected with HTTP 400.
+Admin panel: all 10 modules accessible with correct role restrictions (viewer vs operator vs super-admin).
+Flagged win flow: win matching auto-flag criteria is held; operator approves; wallet credited. Auto-approve after 30 minutes fires correctly.
+Phase 4 Complete — Go / No-Go for Android + Web Launch
+All payment gateways with confirmed credentials complete sandbox cycle.
+2G/3G simulation: full game session completes under 300ms card sync latency.
+Card sync latency &lt; 300ms measured at 50 simultaneous simulated clients.
+Firebase App Check blocks unauthenticated Cloud Function calls.
+Admin 2FA and IP allowlisting verified — login from non-allowlisted IP rejected.
+Age check rejects registration for DOB &lt; 18 years.
+Kill switch verified: Super-Admin can disable all paid game creation in &lt; 1 minute via Firestore config.
+iOS App Store Submission Checklist
+TestFlight build tested on iPhone SE (small screen), iPhone 12, and iPhone 15.
+APNs push notification delivery verified on physical device.
+Safari payment sheet opens, completes, and app-resume status check credits wallet correctly.
+App Store metadata (screenshots, description) provided in English and Amharic.
+Privacy Policy URL live and accessible.
+11. Key Decisions Summary
+<w:tblPr><w:tblW w:type="dxa" w:w="8880"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4"/><w:left w:val="single" w:color="auto" w:sz="4"/><w:bottom w:val="single" w:color="auto" w:sz="4"/><w:right w:val="single" w:color="auto" w:sz="4"/><w:insideH w:val="single" w:color="auto" w:sz="4"/><w:insideV w:val="single" w:color="auto" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="2200"/><w:gridCol w:w="3200"/><w:gridCol w:w="3480"/></w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Decision
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Choice
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="1F3864" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Implication
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">iOS Approach
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Capacitor 6 — shared codebase from Day 1
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">One build, two native outputs; no duplicate dev
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">iOS Payments
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Safari in-app browser sheet with app-resume status check
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Apple-compliant; no IAP; no 30% Apple commission; handles mid-payment app closure
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firebase Architecture
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">RTDB for live game state; Firestore for all persistent records
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Correct tool per use case; enables admin reporting and compound queries
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Monetary Arithmetic
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Integer santim throughout (1 ETB = 100 santim)
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Eliminates floating-point rounding errors in all prize calculations
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Webhook Security
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">HMAC-SHA256 signature verification on all gateway webhooks
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Prevents fake deposit injection attacks
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Idempotency
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Gateway transaction_id as Firestore document ID; atomic write-once
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Prevents double-credit on webhook retry
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">RNG Integrity
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Commit-reveal: SHA-256 hash published pre-game; sequence revealed post-game
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Provably fair; auditable without third-party RNG service
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Fraud Detection
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Auto-flagging criteria + 30-min operator SLA + auto-approve fallback
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Balances fraud protection with winner UX
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Admin Security
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">2FA mandatory + IP allowlist + role hierarchy (3 levels)
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Prevents unauthorised payout approvals
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Bonus Abuse
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Phone-number anchor + game-completion trigger for referral bonus
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Multi-accounting and deposit-cycle abuse closed
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Collusion
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Minimum player counts by tier; co-play graph in admin
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Reduces two-person loop risk in Gold rooms
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Admin Panel
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Full panel: 10 modules including fraud, reconciliation, compliance
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Separate web interface included in scope
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Cards per Player
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Up to 6 per session
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Each card = separate entry fee; major revenue lever
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Game Rooms
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Open lobby + scheduled tournaments
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Dual room type engine required from Day 1
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Entry Fee Model
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Tiered stakes: 10 / 50 / 100 ETB
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Operator sets tier when creating each room
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Win Patterns
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Line + Corners + Full House (3 tiers)
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Pot split: 20% / 30% / 50% across tiers
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Prize Model
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">85% of pot to players; 15% house
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Self-balancing — zero operator financial risk
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Payout Method
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Manual operator approval before wallet credit
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Approval workflow in admin panel with SLA timer
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Disconnection
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Server-side card marking continues; win credited on reconnect or via push
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="FFFFFF" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Players never lose a win due to connectivity
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="2200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Legal Kill Switch
+<w:tcPr><w:tcW w:type="dxa" w:w="3200"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Firestore config flag disables paid games instantly
+<w:tcPr><w:tcW w:type="dxa" w:w="3480"/><w:shd w:fill="EEF3FA" w:color="auto" w:val="clear"/></w:tcPr><w:p><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">Allows immediate compliance response without deployment

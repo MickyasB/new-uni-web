@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: bingo-backend
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: pnpm install --frozen-lockfile=false && pnpm --filter @bingo/shared build && pnpm --filter @bingo/backend build
+    startCommand: node packages/backend/dist/index.js
+    envVars:
+      - key: PORT
+        value: 4000
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        value: 162.244.95.11
+      - key: DB_NAME
+        value: gymtragh_bingo
+      - key: DB_USER
+        value: gymtragh_bingo
+      - key: DB_PASS
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true

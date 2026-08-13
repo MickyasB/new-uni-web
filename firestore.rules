@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: caller is authenticated
+    function isAuth() { return request.auth != null; }
+
+    // Helper: caller owns the resource
+    function isOwner(uid) { return request.auth.uid == uid; }
+
+    // Helper: caller has admin role (custom claim)
+    function hasRole(role) {
+      return isAuth() && request.auth.token.role == role;
+    }
+    function isAdmin() {
+      return hasRole('viewer') || hasRole('operator') || hasRole('super-admin');
+    }
+    function isSuperAdmin() { return hasRole('super-admin'); }
+
+    // Users: players read/write own doc; admins read all
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if false; // Cloud Functions only
+    }
+
+    // Wallet ledger: players read own entries; NO client writes ever
+    match /walletLedger/{docId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Pending payments: player reads own; no writes
+    match /pendingPayments/{docId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Processed webhooks: no client access
+    match /processedWebhooks/{docId} {
+      allow read, write: if false;
+    }
+
+    // Games: authenticated players read; NO client writes
+    match /games/{gameId} {
+      allow read: if isAuth();
+      allow write: if false;
+    }
+
+    // Rooms: authenticated players read; NO client writes
+    match /rooms/{roomId} {
+      allow read: if isAuth();
+      allow write: if false;
+
+      match /cards/{cardId} {
+        allow read: if isAuth() && (resource.data.userId == request.auth.uid || isAdmin());
+        allow write: if false;
+      }
+    }
+
+    // Flagged wins: operators and above read; no client writes
+    match /flaggedWins/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // Withdrawal requests: player reads own; no client writes
+    match /withdrawalRequests/{docId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Admin audit log: admins read; NOBODY writes (Cloud Functions only)
+    match /adminAuditLog/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // Platform config: super-admin reads; no client writes
+    match /platformConfig/{docId} {
+      allow read: if isSuperAdmin();
+      allow write: if false;
+    }
+
+    // Leaderboards: subcollection pattern
+    match /leaderboards/{period}/entries/{userId} {
+      allow read: if isAuth();
+      allow write: if false;
+    }
+
+    // Referral links: authenticated players read own
+    match /referralLinks/{code} {
+      allow read: if isAuth() && resource.data.ownerId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Bonus records: player reads own
+    match /bonusRecords/{docId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+  }
+}
