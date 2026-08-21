@@ -1,15 +1,29 @@
-/**
- * REST API client for the PostgreSQL backend.
- * All calls go to the Express server (default: http://localhost:4000/api).
- */
+import { Capacitor } from '@capacitor/core';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+/**
+ * Determine API Base URL depending on environment.
+ * On native mobile (Capacitor), default to live production API.
+ * In local dev (port 3000), default to /api proxy or localhost.
+ */
+export const IS_NATIVE = Capacitor.isNativePlatform() || (
+  typeof window !== 'undefined' && (
+    window.location.protocol === 'file:' ||
+    (window.location.hostname === 'localhost' && window.location.port !== '3000' && window.location.port !== '5173')
+  )
+);
+
+export const DEFAULT_PROD_URL = 'https://bingo.gymtradingplc.com';
+
+export const API_BASE_URL = import.meta.env.VITE_API_URL || (
+  IS_NATIVE ? `${DEFAULT_PROD_URL}/api` : '/api'
+);
 
 export async function apiRequest<T = any>(
   endpoint: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
   body?: any,
-  token?: string
+  token?: string,
+  timeoutMs: number = 9000
 ): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -20,19 +34,33 @@ export async function apiRequest<T = any>(
     headers['Authorization'] = `Bearer ${storedToken}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  const data = await response.json();
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    });
 
-  if (!response.ok) {
-    throw new Error(data.error || 'API Request failed');
+    clearTimeout(timeoutId);
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || `Request failed with status ${response.status}`);
+    }
+
+    return data;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('Network timeout: Server took too long to respond');
+    }
+    throw err;
   }
-
-  return data;
 }
 
 export const api = {

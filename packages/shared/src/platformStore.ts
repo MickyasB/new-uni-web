@@ -1,4 +1,5 @@
 import { RoomRecord, UserRecord, RoomTier, RoomStatus } from './types';
+import { assignRandomPatternForTier } from './patterns';
 
 const STORAGE_ROOMS_KEY = 'bingo_platform_global_rooms_v2';
 const STORAGE_USERS_KEY = 'bingo_platform_global_users_v2';
@@ -13,7 +14,7 @@ if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
   }
 }
 
-// Initial default rooms if none exist
+// Initial default rooms with assigned winning rules
 const DEFAULT_ROOMS: RoomRecord[] = [
   {
     id: 'room-bronze-101',
@@ -26,6 +27,7 @@ const DEFAULT_ROOMS: RoomRecord[] = [
     status: RoomStatus.WAITING,
     playerCount: 0,
     potSantim: 0,
+    patternId: 'line_horizontal_any',
     createdAt: Date.now() - 60000,
   },
   {
@@ -39,7 +41,22 @@ const DEFAULT_ROOMS: RoomRecord[] = [
     status: RoomStatus.WAITING,
     playerCount: 0,
     potSantim: 0,
+    patternId: 'the_kite',
     createdAt: Date.now() - 30000,
+  },
+  {
+    id: 'room-gold-303',
+    tier: RoomTier.GOLD,
+    entryFeeSantim: 10000, // 100 ETB
+    mode: 'auto',
+    type: 'open',
+    minPlayers: 5,
+    maxCards: 100,
+    status: RoomStatus.WAITING,
+    playerCount: 0,
+    potSantim: 0,
+    patternId: 'crazy_t',
+    createdAt: Date.now() - 10000,
   }
 ];
 
@@ -59,7 +76,7 @@ export const PlatformStore = {
     }
   },
 
-  createRoom(tier: RoomTier | 'bronze' | 'silver' | 'gold', mode: 'auto' | 'manual' = 'auto', type: 'open' | 'scheduled' = 'open', scheduledAt?: number): RoomRecord {
+  createRoom(tier: RoomTier | 'bronze' | 'silver' | 'gold', mode: 'auto' | 'manual' = 'auto', type: 'open' | 'scheduled' = 'open', scheduledAt?: number, customPatternId?: string): RoomRecord {
     const tierConfigs = {
       bronze: { entryFeeSantim: 1000, minPlayers: 2 },
       silver: { entryFeeSantim: 5000, minPlayers: 3 },
@@ -68,6 +85,9 @@ export const PlatformStore = {
 
     const config = tierConfigs[tier as keyof typeof tierConfigs] || tierConfigs.bronze;
     const roomId = 'room-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+    
+    // Automatically assign a specialty rule for this game if not custom selected
+    const assignedPattern = customPatternId ? { id: customPatternId } : assignRandomPatternForTier(tier);
 
     const newRoom: RoomRecord = {
       id: roomId,
@@ -81,6 +101,7 @@ export const PlatformStore = {
       status: RoomStatus.WAITING,
       playerCount: 0,
       potSantim: 0,
+      patternId: assignedPattern.id,
       createdAt: Date.now(),
     };
 
@@ -132,5 +153,50 @@ export const PlatformStore = {
       window.removeEventListener('storage', handleStorageEvent);
       clearInterval(intervalId);
     };
+  },
+
+  getConfig(): any {
+    const DEFAULT_CONFIG = {
+      platformCommissionPercent: 15,
+      callingIntervalSeconds: 3,
+      maxCardsPerPlayer: 10,
+      minDepositEtb: 10,
+      minWithdrawalEtb: 50,
+      firstDepositBonusPercent: 100,
+      amlSingleThresholdEtb: 10000,
+      maintenanceMode: false,
+      pauseGameCreation: false,
+      gateways: {
+        telebirr: true,
+        cbe: true,
+        chapa: true,
+      }
+    };
+    if (typeof window === 'undefined') return DEFAULT_CONFIG;
+    try {
+      const raw = localStorage.getItem('bingo_platform_global_settings_v1');
+      if (!raw) {
+        localStorage.setItem('bingo_platform_global_settings_v1', JSON.stringify(DEFAULT_CONFIG));
+        return DEFAULT_CONFIG;
+      }
+      return { ...DEFAULT_CONFIG, ...JSON.parse(raw) };
+    } catch (e) {
+      return DEFAULT_CONFIG;
+    }
+  },
+
+  saveConfig(updated: any): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const current = this.getConfig();
+      const merged = { ...current, ...updated };
+      localStorage.setItem('bingo_platform_global_settings_v1', JSON.stringify(merged));
+      if (bc) {
+        bc.postMessage({ type: 'CONFIG_CHANGED', config: merged });
+      }
+    } catch (e) {
+      console.error('Config save error:', e);
+    }
   }
 };
+

@@ -3,11 +3,24 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../store';
 import { api } from '../api';
-import { RoomStatus, GameRecord, RoomRecord, generateBingoCard } from '@bingo/shared';
+import { 
+  RoomStatus, 
+  RoomTier, 
+  GameRecord, 
+  RoomRecord, 
+  generateBingoCard,
+  BingoPattern,
+  getPatternById,
+  assignRandomPatternForTier,
+  verifyPatternMatch,
+  formatUserDisplayId
+} from '@bingo/shared';
 
 import GameHeader from '../components/GameHeader';
 import BingoCard from '../components/BingoCard';
 import PatternHintsModal from '../components/PatternHintsModal';
+import { Target, Zap, Volume2, VolumeX, Eye, Trophy, Sparkles, RotateCw, Boxes, Layers, Lock, Crown, Gamepad2, CheckCircle2, XCircle, Search } from 'lucide-react';
+import { soundFX } from '../utils/soundEffects';
 
 // Helper to compute SHA-256 hash in JS
 async function sha256(message: string): Promise<string> {
@@ -91,7 +104,14 @@ export default function Room() {
   const [blockedCards, setBlockedCards] = useState<Set<string>>(new Set());
   const [isAutoDaub, setIsAutoDaub] = useState(true);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
-  const [activePattern, setActivePattern] = useState<'line' | 'corners' | 'x' | 'full'>('line');
+
+  const activeGamePattern: BingoPattern = useMemo(() => {
+    if (roomRecord?.patternId) {
+      const found = getPatternById(roomRecord.patternId);
+      if (found) return found;
+    }
+    return assignRandomPatternForTier(roomRecord?.tier || 'bronze');
+  }, [roomRecord?.patternId, roomRecord?.tier]);
 
   const prevNumberRef = useRef<number | null>(null);
   const buyPanelRef = useRef<HTMLDivElement>(null);
@@ -102,9 +122,6 @@ export default function Room() {
     setTimeout(() => setToastMessage(null), 4000);
   }, []);
 
-  const isLocalhost = import.meta.env.DEV && typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
   const [localDemoGame, setLocalDemoGame] = useState<{
     active: boolean;
     calledNumbers: number[];
@@ -113,15 +130,22 @@ export default function Room() {
   const handleDevStartGame = async () => {
     if (!roomId) return;
     setStartLoading(true);
+    // Guarantee player has at least 2 cards before starting
+    if (cards.length === 0) {
+      setCards([
+        { id: `card-auto-${Date.now()}-1`, numbers: generateBingoCard() },
+        { id: `card-auto-${Date.now()}-2`, numbers: generateBingoCard() },
+      ]);
+    }
     try {
       await api.startGame(roomId);
     } catch (err: any) {
-      console.warn('startGame failed, initiating local demo game loop:', err);
-      setLocalDemoGame({ active: true, calledNumbers: [] });
-      showToast('🎮 Game Started! Calling numbers...', 'success');
-    } finally {
-      setStartLoading(false);
+      console.warn('startGame API notice (initiating browser game loop):', err);
     }
+    // Always start local game loop so solo testers can play immediately
+    setLocalDemoGame({ active: true, calledNumbers: [] });
+    showToast('🎮 Game Started! Calling numbers...', 'success');
+    setStartLoading(false);
   };
 
   useEffect(() => {
@@ -267,6 +291,28 @@ export default function Room() {
         }
       } catch (err) {
         console.warn('Failed to fetch room data:', err);
+        if (roomId?.includes('demo') || !roomRecord) {
+          setRoomRecord((prev) => prev || ({
+            id: roomId || 'room-bronze-demo',
+            tier: (roomId?.includes('gold') ? RoomTier.GOLD : roomId?.includes('silver') ? RoomTier.SILVER : RoomTier.BRONZE) as any,
+            status: RoomStatus.WAITING,
+            mode: 'auto',
+            type: 'open',
+            entryFeeSantim: roomId?.includes('gold') ? 10000 : roomId?.includes('silver') ? 5000 : 1000,
+            potSantim: roomId?.includes('gold') ? 50000 : roomId?.includes('silver') ? 25000 : 5000,
+            minPlayers: 2,
+            maxCards: 6,
+            playerCount: 1,
+            createdAt: Date.now(),
+          } as any));
+          setCards((prev) => {
+            if (prev.length > 0) return prev;
+            return [
+              { id: `card-demo-${Date.now()}-1`, numbers: generateBingoCard() },
+              { id: `card-demo-${Date.now()}-2`, numbers: generateBingoCard() }
+            ];
+          });
+        }
       }
     };
 
@@ -329,6 +375,9 @@ export default function Room() {
     // Flash the number on cards
     setFlashNumber(currentNumber);
     setTimeout(() => setFlashNumber(null), 1200);
+
+    // Audio chime effect
+    soundFX.playBallDrop();
 
     // Vibration feedback (mobile) — stronger for matching numbers
     const isOnCard = isNumberOnPlayerCards(currentNumber);
@@ -488,16 +537,17 @@ export default function Room() {
     if (!isGameActive) return [];
 
     const grid = getCardMarkedGrid(cardId, cardNumbers);
+    
+    // 1. Verify against the active room pattern rule (Crazy rotations & anywhere blocks handled automatically)
+    const isSpecialtyMatch = verifyPatternMatch(grid, activeGamePattern);
+    if (isSpecialtyMatch) return ['line'];
+
+    // 2. Also check standard line completeness as safety fallback
     const winCheck = checkCardCompleteness(grid);
+    if (winCheck.line || winCheck.corners || winCheck.fullHouse) return ['line'];
 
-    if (activePattern === 'line' && winCheck.line) return ['line'];
-    if (activePattern === 'corners' && winCheck.corners) return ['corners'];
-    if (activePattern === 'x' && winCheck.letterX) return ['line'];
-    if (activePattern === 'full' && winCheck.fullHouse) return ['full_house'];
-
-    if (winCheck.line) return ['line'];
     return [];
-  }, [isGameActive, getCardMarkedGrid, checkCardCompleteness, activePattern]);
+  }, [isGameActive, getCardMarkedGrid, activeGamePattern, checkCardCompleteness]);
 
   // Helper to compute completeness score for sorting cards
   const getCardChanceScore = (markedGrid: boolean[][]): number => {
@@ -649,24 +699,6 @@ export default function Room() {
         ))}
       </div>
 
-      {/* ─── Sticky Floating Current Number Pill + ARIA Live Region (Fix #6) ─── */}
-      {isGameActive && currentNumber && (() => {
-        const styles = getBallStyles(currentNumber);
-        return (
-          <div className="sticky-number-pill" role="status" aria-live="assertive" aria-label={`Current number: ${styles.letter} ${currentNumber}. ${calledNumbers.length} of 75 drawn.`}>
-            <div
-              className={`bingo-ball-3d sticky-pill-ball ${styles.glowClass}`}
-              style={{ background: styles.gradient }}
-            >
-              <span className="ball-stripe" />
-              <span className="ball-letter">{styles.letter}</span>
-              <span className="ball-number">{currentNumber}</span>
-            </div>
-            <span className="sticky-pill-count">{calledNumbers.length}/75</span>
-          </div>
-        );
-      })()}
-
       {/* ─── Toast Notification Overlay ─── */}
       {toastMessage && (
         <div className={`toast-notification ${toastMessage.type}`}>
@@ -729,32 +761,10 @@ export default function Room() {
       {/* ─── Scrollable Content ─── */}
       <div className="game-room-scroll">
 
-        {/* Dev tools */}
-        {isLocalhost && (
-          <div className="dev-panel">
-            <button
-              className="btn btn-secondary"
-              onClick={handleDevAddBots}
-              disabled={botsLoading}
-              style={{ flex: 1, borderColor: '#f59e0b', color: '#f59e0b', background: 'rgba(245,158,11,0.05)' }}
-            >
-              {botsLoading ? 'Adding...' : 'Dev: Add 3 Bots'}
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={handleDevStartGame}
-              disabled={startLoading}
-              style={{ flex: 1 }}
-            >
-              {startLoading ? 'Starting...' : 'Dev: Force Start'}
-            </button>
-          </div>
-        )}
-
         {/* ─── Waiting Lobby State — Buy Cards ─── */}
         {isGameWaiting && (
           <div className="waiting-lobby-container">
-            {/* Waiting animation */}
+            {/* Waiting animation & Action Center */}
             <div className="waiting-animation-section">
               <div className="waiting-spinner" />
               <h3 className="waiting-title">
@@ -764,6 +774,7 @@ export default function Room() {
                 {t('lobby.playersJoined', { count: roomRecord?.playerCount || 0, min: roomRecord?.minPlayers })
                   || `${roomRecord?.playerCount || 0} / ${roomRecord?.minPlayers} players joined`}
               </p>
+
               {/* Scheduled game countdown */}
               {countdown && (
                 <div className="countdown-badge">
@@ -771,29 +782,32 @@ export default function Room() {
                   <span className="countdown-value">{countdown}</span>
                 </div>
               )}
+
+              {/* Instant Start & Bot Controls */}
+              <div className="waiting-start-action-box">
+                <button
+                  onClick={handleDevStartGame}
+                  disabled={startLoading}
+                  className="btn-ui btn-ui-gold btn-ui-lg waiting-start-btn"
+                >
+                  {startLoading ? '⏳ Starting...' : '🎮 Start Game Now'}
+                </button>
+                <button
+                  onClick={handleDevAddBots}
+                  disabled={botsLoading}
+                  className="btn-ui btn-ui-secondary btn-ui-sm waiting-bot-btn"
+                >
+                  {botsLoading ? 'Adding...' : '🤖 Add 3 Bot Players'}
+                </button>
+              </div>
             </div>
 
             {/* Collapsible Buy Cards Panel Header / Summary */}
             {cards.length > 0 && (
-              <div className="buy-panel-header" style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div className="buy-panel-header">
                 <span className="buy-panel-cards-count">
                   ✓ {t('lobby.alreadyHaveCards', { count: cards.length }) || `${cards.length} cards purchased`}
                 </span>
-                <button
-                  onClick={handleDevStartGame}
-                  disabled={startLoading || localDemoGame.active}
-                  className="buy-panel-toggle-btn"
-                  style={{
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    color: '#ffffff',
-                    border: 'none',
-                    fontWeight: 700,
-                    boxShadow: '0 2px 8px rgba(16,185,129,0.4)',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {localDemoGame.active ? '⚡ Game In Progress...' : '▶ Start Live Game'}
-                </button>
                 <button
                   onClick={() => setShowBuyPanel(!showBuyPanel)}
                   className="buy-panel-toggle-btn"
@@ -824,9 +838,9 @@ export default function Room() {
                       width: '36px',
                       height: '36px',
                       borderRadius: '8px',
-                      border: '1px solid rgba(255,255,255,0.2)',
-                      background: 'rgba(255,255,255,0.1)',
-                      color: '#ffffff',
+                      border: '1px solid var(--card-border)',
+                      background: 'var(--surface-raised)',
+                      color: 'var(--text-light)',
                       fontSize: '1.2rem',
                       fontWeight: 800,
                       cursor: buyCardCount <= 1 ? 'not-allowed' : 'pointer'
@@ -851,9 +865,9 @@ export default function Room() {
                       fontSize: '1.1rem',
                       fontWeight: 800,
                       borderRadius: '8px',
-                      border: '2px solid #6366f1',
-                      background: 'rgba(15, 23, 42, 0.8)',
-                      color: '#ffffff'
+                      border: '2px solid var(--primary-amber)',
+                      background: 'var(--input-bg)',
+                      color: 'var(--input-text)'
                     }}
                   />
                   <button
@@ -866,9 +880,9 @@ export default function Room() {
                       width: '36px',
                       height: '36px',
                       borderRadius: '8px',
-                      border: '1px solid rgba(255,255,255,0.2)',
-                      background: 'rgba(255,255,255,0.1)',
-                      color: '#ffffff',
+                      border: '1px solid var(--card-border)',
+                      background: 'var(--surface-raised)',
+                      color: 'var(--text-light)',
                       fontSize: '1.2rem',
                       fontWeight: 800,
                       cursor: buyCardCount >= (roomRecord?.maxCards || 100) ? 'not-allowed' : 'pointer'
@@ -944,34 +958,29 @@ export default function Room() {
           </div>
         )}
 
-        {/* ─── Called Numbers Display ─── */}
+        {/* ─── Called Numbers Showcase ─── */}
         {(isGameActive || isGameEnded) && calledNumbers.length > 0 && (
           <div className="called-number-banner">
             <div className="called-header">
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <span style={{
-                  width: '7px', height: '7px', borderRadius: '50%',
-                  background: isGameActive ? '#10b981' : '#ef4444',
-                  boxShadow: isGameActive ? '0 0 8px rgba(16,185,129,0.7)' : 'none',
-                  display: 'inline-block',
-                  animation: isGameActive ? 'pulse-accent 1.5s ease infinite' : 'none'
-                }} />
-                {t('game.calledNumbers') || 'Called Numbers'}
-              </span>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.75rem', color: '#818cf8' }}>
-                  {t('game.drawnCount', { count: calledNumbers.length }) || `Drawn: ${calledNumbers.length}`}/75
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <span className="live-pulse-dot" />
+                <span style={{ fontWeight: 800, fontSize: '0.78rem', color: 'var(--text-light)', fontFamily: 'var(--font-heading)' }}>
+                  CALLED NUMBERS
                 </span>
-                <button
-                  className="show-more-btn"
-                  onClick={() => setShowAllNumbers(!showAllNumbers)}
-                >
-                  {showAllNumbers ? `${t('common.showLess') || 'Show Less'} ▴` : `${t('common.showMore') || 'All'} ▾`}
-                </button>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                  ({calledNumbers.length}/75)
+                </span>
               </div>
+              <button
+                className="show-more-btn"
+                onClick={() => setShowAllNumbers(!showAllNumbers)}
+                style={{ fontFamily: 'var(--font-heading)' }}
+              >
+                {showAllNumbers ? 'Hide Board ▴' : 'View Board ▾'}
+              </button>
             </div>
 
-            {/* Current Number Showcase (large) + History Row */}
+            {/* Current Number Showcase + History Rack */}
             <div className="called-layout">
               {/* Current Large Ball */}
               {currentNumber && (() => {
@@ -982,34 +991,28 @@ export default function Room() {
                 };
                 return (
                   <div className="current-ball-showcase">
-                    <div className="current-ball-label">Now</div>
-                    <div className="latest-ball-wrapper">
-                      <div
-                        className={`bingo-ball-3d latest current-ball-main ${styles.glowClass} ${ballClicked ? 'clicked' : ''}`}
-                        onClick={handleBallClick}
-                        style={{ background: styles.gradient }}
-                      >
-                        <span className="ball-stripe" />
-                        <span className="ball-letter">{styles.letter}</span>
-                        <span className="ball-number">{currentNumber}</span>
-                      </div>
+                    <div
+                      className={`bingo-ball-3d latest current-ball-main ${styles.glowClass} ${ballClicked ? 'clicked' : ''}`}
+                      onClick={handleBallClick}
+                      style={{ background: styles.gradient }}
+                    >
+                      <span className="ball-stripe" />
+                      <span className="ball-letter">{styles.letter}</span>
+                      <span className="ball-number">{currentNumber}</span>
                     </div>
                   </div>
                 );
               })()}
 
-              {/* Divider */}
-              <div className="called-divider" />
-
-              {/* History Balls Row */}
+              {/* History Balls Rack */}
               <div className="balls-row history-balls-row">
-                {calledNumbers.slice(0, -1).reverse().slice(0, 9).map((num, i) => {
+                {calledNumbers.slice(0, -1).reverse().slice(0, 6).map((num, i) => {
                   const styles = getBallStyles(num);
                   return (
                     <div
                       key={`${num}-${i}`}
                       className={`bingo-ball-3d history-ball ${styles.glowClass}`}
-                      style={{ background: styles.gradient, width: '32px', height: '32px', fontSize: '0.6rem', opacity: 1 - i * 0.07 }}
+                      style={{ background: styles.gradient }}
                     >
                       <span className="ball-stripe" />
                       <span className="ball-number history-ball-num">{num}</span>
@@ -1054,145 +1057,158 @@ export default function Room() {
           </div>
         )}
 
-        {/* ─── Game Control & Stats Bar ─── */}
-        {(isGameActive || isGameEnded) && (
-          <div className="game-stats-bar" style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            <div className="stats-row" style={{ flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <span className="stats-icon success">✓</span>
-                <span>{t('game.cards') || 'Cards:'}</span>
-                <span className="stats-badge green">{cards.length}</span>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                {/* Auto-Daub Toggle */}
-                <button
-                  onClick={() => setIsAutoDaub(!isAutoDaub)}
-                  style={{
-                    padding: '0.25rem 0.6rem',
-                    borderRadius: '9999px',
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    border: 'none',
-                    background: isAutoDaub ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'rgba(255,255,255,0.1)',
-                    color: '#ffffff',
-                    cursor: 'pointer',
-                    boxShadow: isAutoDaub ? '0 0 10px rgba(16,185,129,0.5)' : 'none'
-                  }}
-                >
-                  ⚡ Auto-Daub: {isAutoDaub ? 'ON' : 'OFF'}
-                </button>
-
-                {/* Voice Toggle */}
-                <button
-                  onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
-                  style={{
-                    padding: '0.25rem 0.6rem',
-                    borderRadius: '9999px',
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    border: 'none',
-                    background: isVoiceEnabled ? 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)' : 'rgba(255,255,255,0.1)',
-                    color: '#ffffff',
-                    cursor: 'pointer',
-                    boxShadow: isVoiceEnabled ? '0 0 10px rgba(139,92,246,0.5)' : 'none'
-                  }}
-                >
-                  {isVoiceEnabled ? '🔊 Voice: ON' : '🔇 Voice: OFF'}
-                </button>
-
-                {/* Pattern Hints Modal Trigger */}
-                <button
-                  onClick={() => setShowPatternHints(true)}
-                  className="pattern-hints-btn"
-                >
-                  💡 {t('game.patternHints') || 'Patterns'}
-                </button>
-              </div>
+        {/* ─── Compact Unified Game Controls & Winning Rule Ribbon ─── */}
+        {isGameActive && (
+          <div className="game-active-rule-strip" style={{ margin: '0.4rem 0', padding: '0.35rem 0.6rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'nowrap', gap: '0.4rem' }}>
+            <div className="active-rule-left" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', minWidth: 0, overflow: 'hidden' }}>
+              <Target size={15} style={{ color: 'var(--primary-amber)', flexShrink: 0 }} />
+              <span style={{ whiteSpace: 'nowrap', fontSize: '0.75rem', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>
+                <span style={{ color: 'var(--primary-amber)' }}>{activeGamePattern.name}</span>
+              </span>
+              <button 
+                className="btn-pattern-preview" 
+                onClick={() => setShowPatternHints(true)}
+                style={{ padding: '2px 6px', fontSize: '0.65rem', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
+              >
+                <Eye size={12} />
+                <span>Rule</span>
+              </button>
             </div>
 
-            {/* Pattern Mode Selector */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.3rem',
-              overflowX: 'auto',
-              paddingBottom: '0.2rem'
-            }}>
-              <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, whiteSpace: 'nowrap' }}>Pattern:</span>
-              {[
-                { id: 'line', label: '📐 Any Line' },
-                { id: 'corners', label: '🔲 4 Corners' },
-                { id: 'x', label: '✖️ Letter X' },
-                { id: 'full', label: '🏆 Full House' }
-              ].map((pattern) => {
-                const isActive = activePattern === pattern.id;
-                return (
-                  <button
-                    key={pattern.id}
-                    onClick={() => {
-                      setActivePattern(pattern.id as any);
-                      showToast(`Target pattern set to: ${pattern.label}`, 'info');
-                    }}
-                    style={{
-                      padding: '0.2rem 0.55rem',
-                      borderRadius: '6px',
-                      fontSize: '0.7rem',
-                      fontWeight: isActive ? 800 : 500,
-                      border: isActive ? '1px solid #fbbf24' : '1px solid rgba(255,255,255,0.1)',
-                      background: isActive ? 'linear-gradient(135deg, rgba(245,158,11,0.25), rgba(217,119,6,0.25))' : 'rgba(255,255,255,0.03)',
-                      color: isActive ? '#fbbf24' : '#cbd5e1',
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    {pattern.label}
-                  </button>
-                );
-              })}
+            {/* Quick action icons */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}>
+              <button
+                onClick={() => setIsAutoDaub(!isAutoDaub)}
+                title="Toggle Auto-Daub"
+                style={{
+                  padding: '3px 7px',
+                  borderRadius: '12px',
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  border: 'none',
+                  background: isAutoDaub ? 'linear-gradient(135deg, #00C853, #009638)' : 'rgba(100,116,139,0.2)',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '3px'
+                }}
+              >
+                <Zap size={11} />
+                <span>{isAutoDaub ? 'Auto' : 'Manual'}</span>
+              </button>
+
+              <button
+                onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
+                title="Toggle Caller Voice"
+                style={{
+                  padding: '3px 7px',
+                  borderRadius: '12px',
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  border: 'none',
+                  background: isVoiceEnabled ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)' : 'rgba(100,116,139,0.2)',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center'
+                }}
+              >
+                {isVoiceEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
+              </button>
+
+              <span className="stats-badge green" style={{ padding: '2px 6px', fontSize: '0.68rem', fontWeight: 800, borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                <Layers size={11} />
+                <span>{cards.length} {cards.length === 1 ? 'Card' : 'Cards'}</span>
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* ─── Pre-Game Rule Announcement ─── */}
+        {!isGameActive && !isGameEnded && (
+          <div className="pregame-rule-card">
+            <div className="pregame-rule-header">
+              <div className="pregame-rule-badge">
+                <Target size={14} style={{ marginRight: '4px' }} />
+                <span>GAME WINNING PATTERN</span>
+              </div>
+              <span className="pregame-rule-lock">
+                <Lock size={12} style={{ verticalAlign: 'middle', marginRight: '3px' }} />
+                RULE LOCKED BEFORE 1ST BALL
+              </span>
+            </div>
+
+            <div className="pregame-rule-content">
+              {/* 5x5 Mini Illuminated Pattern Matrix */}
+              <div className="pregame-matrix-container">
+                <div className="pregame-matrix-grid">
+                  {activeGamePattern.grid.map((row, rIdx) =>
+                    row.map((cell, cIdx) => {
+                      const isFree = rIdx === 2 && cIdx === 2;
+                      const isActive = cell;
+                      return (
+                        <div
+                          key={`prm-${rIdx}-${cIdx}`}
+                          className={`pregame-matrix-cell ${isActive ? 'active' : ''} ${isFree ? 'free' : ''}`}
+                        >
+                          {isFree && !isActive ? '★' : ''}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+                <span className="pregame-matrix-label">Target Pattern</span>
+              </div>
+
+              {/* Pattern Info & Instructions */}
+              <div className="pregame-rule-info">
+                <div className="pregame-pattern-name" style={{ fontFamily: 'var(--font-heading)' }}>
+                  <Trophy size={18} style={{ color: 'var(--primary-amber)', flexShrink: 0 }} />
+                  <span>{activeGamePattern.name}</span>
+                </div>
+
+                <p className="pregame-pattern-desc">
+                  {activeGamePattern.description}
+                </p>
+
+                <div className="pregame-rule-tags">
+                  {activeGamePattern.isCrazy && (
+                    <span className="pregame-tag crazy" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                      <RotateCw size={11} /> Any 90° Rotation (0°, 90°, 180°, 270°)
+                    </span>
+                  )}
+                  {activeGamePattern.isAnywhereBlock && (
+                    <span className="pregame-tag anywhere" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                      <Boxes size={11} /> Anywhere Block (Any Valid Placement)
+                    </span>
+                  )}
+                  {!activeGamePattern.isCrazy && !activeGamePattern.isAnywhereBlock && (
+                    <span className="pregame-tag standard" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                      <Sparkles size={11} /> Fixed Winning Matrix
+                    </span>
+                  )}
+                </div>
+
+                <div className="pregame-user-id-chip">
+                  <span>Player User ID:</span>
+                  <strong style={{ fontFamily: 'var(--font-mono)' }}>{user?.uid ? `SB-${user.uid.slice(-5).toUpperCase()}` : 'SB-00000'}</strong>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
         {/* ─── Game Status Banners ─── */}
         {isGameEnded && (
-          <div className="game-status-banner finished">
-            {t('game.finishedBanner') || 'Bingo window finished!'}
+          <div className="game-status-banner finished" style={{ margin: '0.4rem 0', padding: '0.4rem' }}>
+            {t('game.finishedBanner') || 'Bingo round finished! Winner declared.'}
           </div>
         )}
 
-        {isGameActive && (
-          <div className="game-status-banner active" style={{ fontSize: '0.8rem' }}>
-            {t('game.activeBanner') || 'Game in progress — numbers being called'}
-          </div>
-        )}
-
-        {/* ─── Single Winner Grand Prize Panel ─── */}
-        {gameRecord && (isGameActive || isGameEnded) && (
-          <div className="winners-panel">
-            <div className="winners-panel-title">🏆 Single Grand Winner Pot</div>
-            <div className={`winner-row ${(roomLiveState?.winner || gameRecord?.winners?.[0]) ? 'claimed-row' : ''}`}>
-              <span className="tier-label">
-                <span className="tier-icon">🔥</span>
-                Single Winner Jackpot <span style={{ color: '#fbbf24', fontWeight: 700, fontSize: '0.72rem' }}>(100% Player Pot)</span>
-              </span>
-              {(roomLiveState?.winner || gameRecord?.winners?.[0]) ? (
-                <span className="tier-status claimed">
-                  🏆 WINNER DECLARED (+{(((roomRecord?.potSantim || 0) * 85) / 10000).toFixed(0)} ETB)
-                </span>
-              ) : (
-                <span className="tier-status waiting" style={{ color: '#fbbf24', animation: 'goldGlowPulse 1.5s infinite alternate' }}>
-                  ⚡ First Valid BINGO Wins Entire Pot!
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ─── Bingo Cards — Responsive Grid ─── */}
+        {/* ─── Bingo Cards — 2 Cards Per Row Horizontal Grid ─── */}
         {cards.length > 0 ? (
-          <div className={`cards-grid ${cards.length <= 2 ? 'single-col' : 'multi-col'}`}>
+          <div className={`cards-grid ${cards.length === 1 ? 'single-card' : 'two-col-grid'}`}>
             {sortedCards.map((card, index) => {
               const grid = getCardMarkedGrid(card.id, card.numbers);
               const score = getCardChanceScore(grid);
@@ -1279,20 +1295,21 @@ export default function Room() {
         {/* ─── Post-game Fairness Verification ─── */}
         {gameRecord && isGameEnded && (
           <div className="verification-panel">
-            <h4 className="verify-title">
-              🔎 {t('game.postGameVerify') || 'Fairness Verification'}
+            <h4 className="verify-title" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontFamily: 'var(--font-heading)' }}>
+              <Search size={16} style={{ color: 'var(--primary-amber)' }} />
+              <span>{t('game.postGameVerify') || 'Fairness Verification'}</span>
             </h4>
             <div className="verify-data-section">
               <div>
                 <span className="verify-label">{t('game.commitSeed') || 'Pre-game Commit Seed Hash:'}</span>
-                <p className="verify-hash">
+                <p className="verify-hash" style={{ fontFamily: 'var(--font-mono)' }}>
                   {gameRecord.seedHash}
                 </p>
               </div>
               {gameRecord.sequence && (
                 <div className="verify-sequence-wrapper">
                   <span className="verify-label">{t('game.revealedSequence') || 'Revealed Game Sequence:'}</span>
-                  <p className="verify-sequence">
+                  <p className="verify-sequence" style={{ fontFamily: 'var(--font-mono)' }}>
                     {JSON.stringify(gameRecord.sequence)}
                   </p>
                 </div>
@@ -1302,25 +1319,33 @@ export default function Room() {
               <button
                 className="btn btn-secondary verify-btn"
                 onClick={handleVerifyFairness}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
               >
-                {t('game.verifySeedMatch') || 'Verify Seed Match'}
+                <Search size={15} />
+                <span>{t('game.verifySeedMatch') || 'Verify Seed Match'}</span>
               </button>
               {verifyStatus === 'verifying' && (
                 <p className="verify-computing">{t('game.computingHash') || 'Computing SHA-256 hash...'}</p>
               )}
               {verifyStatus === 'valid' && (
-                <div className="verify-result-valid">
-                  {t('game.verificationPassed') || '✅ Verification PASSED! Hash matches pre-committed seed.'}
-                  <p className="verify-hash">
+                <div className="verify-result-valid" style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 800 }}>
+                    <CheckCircle2 size={16} />
+                    <span>{t('game.verificationPassed') || 'Verification PASSED! Hash matches pre-committed seed.'}</span>
+                  </div>
+                  <p className="verify-hash" style={{ fontFamily: 'var(--font-mono)' }}>
                     Hash: {calculatedHash}
                   </p>
                 </div>
               )}
               {verifyStatus === 'invalid' && (
-                <div className="verify-result-invalid">
-                  {t('game.verificationFailed') || '❌ Verification FAILED! Hash does not match.'}
+                <div className="verify-result-invalid" style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 800 }}>
+                    <XCircle size={16} />
+                    <span>{t('game.verificationFailed') || 'Verification FAILED! Hash does not match.'}</span>
+                  </div>
                   {calculatedHash && (
-                    <p className="verify-hash">
+                    <p className="verify-hash" style={{ fontFamily: 'var(--font-mono)' }}>
                       Hash: {calculatedHash}
                     </p>
                   )}
@@ -1331,7 +1356,7 @@ export default function Room() {
         )}
       </div>
 
-      {/* ─── Floating Action Button — scrolls to buy panel ─── */}
+      {/* ─── Floating Action Button ─── */}
       {isGameWaiting && cards.length > 0 && !showBuyPanel && (
         <button
           className="fab"
@@ -1353,7 +1378,7 @@ export default function Room() {
         />
       )}
 
-      {/* ─── Single Winner Victory Modal (Fix #1 — dismissible) ─── */}
+      {/* ─── Single Winner Victory Modal ─── */}
       {showVictoryModal && (() => {
         const winnerRecord = roomLiveState?.winner || gameRecord?.winners?.[0];
         if (!winnerRecord) return null;
@@ -1373,7 +1398,7 @@ export default function Room() {
                   style={{
                     left: `${(i * 3.33) % 100}%`,
                     animationDelay: `${(i * 0.1) % 2}s`,
-                    backgroundColor: ['#f59e0b', '#10b981', '#6366f1', '#ec4899', '#3b82f6'][i % 5]
+                    backgroundColor: ['#E5A100', '#00C853', '#6366f1', '#ec4899', '#3b82f6'][i % 5]
                   }}
                 />
               ))}
@@ -1404,31 +1429,39 @@ export default function Room() {
               >
                 ✕
               </button>
-              <div className="victory-crown">{isCurrentWinner ? '👑' : '🏆'}</div>
-              <h2 className="victory-title">
+
+              <div className="victory-crown" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#E5A100' }}>
+                {isCurrentWinner ? <Crown size={48} /> : <Trophy size={48} />}
+              </div>
+
+              <h2 className="victory-title" style={{ fontFamily: 'var(--font-heading)' }}>
                 {isCurrentWinner ? 'JACKPOT BINGO WINNER!' : 'GAME OVER — WINNER DECLARED!'}
               </h2>
               <p className="victory-subtitle">
                 {isCurrentWinner
-                  ? '🎉 CONGRATULATIONS! YOU CLAIMED BINGO FIRST AND WON THE GRAND POT!'
-                  : `A player claimed BINGO first and won the grand jackpot!`}
+                  ? 'CONGRATULATIONS! YOU CLAIMED BINGO FIRST AND WON THE GRAND POT!'
+                  : 'A player claimed BINGO first and won the grand jackpot!'}
               </p>
 
               <div className="victory-prize-box">
                 <span className="prize-label">GRAND PRIZE PAYOUT</span>
-                <span className="prize-value">+{prizeEtb} ETB</span>
+                <span className="prize-value" style={{ fontFamily: 'var(--font-mono)' }}>+{prizeEtb} ETB</span>
               </div>
 
-              <div className="victory-meta">
-                <span>🎯 Winning Card: <strong style={{ color: '#fbbf24' }}>{winnerRecord.cardId.slice(0, 8)}...</strong></span>
-                <span>⚡ Calls Taken: <strong>{calledNumbers.length}</strong> / 75</span>
+              <div className="victory-meta" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', background: 'rgba(0,0,0,0.3)', padding: '0.65rem', borderRadius: '10px', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
+                <span>Winner: <strong style={{ color: '#E5A100' }}>{winnerRecord.displayName || (isCurrentWinner ? user?.displayName : 'Player')} ({formatUserDisplayId(winnerRecord.userId)})</strong></span>
+                <span>Rule: <strong style={{ color: '#60a5fa' }}>{winnerRecord.patternName || activeGamePattern.name}</strong></span>
+                <span>Card ID: <strong style={{ color: '#a78bfa' }}>{winnerRecord.cardId.slice(0, 8)}…</strong></span>
+                <span>Calls: <strong>{calledNumbers.length}</strong> / 75</span>
               </div>
 
               <button
                 className="btn btn-primary victory-play-again-btn"
                 onClick={() => navigate('/lobby')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
               >
-                🎮 Play Again in Lobby
+                <Gamepad2 size={18} />
+                <span>Play Again in Lobby</span>
               </button>
             </div>
           </div>

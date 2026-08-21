@@ -1,8 +1,14 @@
 import { create } from 'zustand';
 import { io, Socket } from 'socket.io-client';
-import { api } from './api';
+import { api, IS_NATIVE, DEFAULT_PROD_URL } from './api';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
+export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || (
+  IS_NATIVE ? DEFAULT_PROD_URL : (
+    typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+      ? window.location.origin
+      : 'http://localhost:4000'
+  )
+);
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -105,12 +111,15 @@ export const useAppStore = create<AppState>((set, get) => ({
           });
         })
         .catch(() => {
-          // Token expired or invalid
+          // Token expired, invalid or offline
           localStorage.removeItem('bingo_jwt_token');
           set({ user: null, token: null, loading: false, initialized: true });
         });
     } else {
-      set({ initialized: true, loading: false });
+      // Give a tiny smooth initial pause for splash animation to finish entering
+      setTimeout(() => {
+        set({ initialized: true, loading: false });
+      }, 500);
     }
   },
 

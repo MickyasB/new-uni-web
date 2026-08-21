@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../store';
 import { api } from '../api';
 import { Gateway } from '@bingo/shared';
+import { Button, Input, CurrencyDisplay, Toast } from '../components/ui';
+import { ArrowDownCircle, ArrowUpCircle, History, Smartphone, Building2, CreditCard, Globe, CheckCircle2, XCircle, Inbox, Send } from 'lucide-react';
 
 export default function Wallet() {
   const { t } = useTranslation();
@@ -115,7 +117,7 @@ export default function Wallet() {
     }
   };
 
-  // Simulated gateway sheet sandbox completion
+  // Simulated gateway sandbox completion
   const handleSimulatePaymentOutcome = async (outcome: 'success' | 'fail') => {
     setDepositLoading(true);
     try {
@@ -162,260 +164,308 @@ export default function Wallet() {
     }
   };
 
-  const balanceEtb = userRecord ? (userRecord.walletBalanceSantim / 100).toFixed(2) : '0.00';
-
   const formatLedgerType = (type: string) => {
     switch (type) {
       case 'deposit': return 'Deposit';
       case 'withdrawal': return 'Withdrawal';
-      case 'win': return 'Winnings Credit';
-      case 'bonus': return 'Bonus Match';
-      case 'entry_fee': return 'Card Purchase Fee';
-      case 'house_cut': return 'House Commission';
+      case 'win': return 'Prize Winnings';
+      case 'bonus': return 'Bonus';
+      case 'entry_fee': return 'Card Purchase';
+      case 'house_cut': return 'Commission';
       default: return type;
     }
   };
 
+  const GATEWAYS_DEPOSIT = [
+    { value: Gateway.CHAPA, label: 'Chapa', icon: <CreditCard size={18} /> },
+    { value: Gateway.TELEBIRR, label: 'Telebirr', icon: <Smartphone size={18} /> },
+    { value: Gateway.WEBIRR, label: 'WeBirr', icon: <Globe size={18} /> },
+    { value: Gateway.CBE, label: 'CBE Birr', icon: <Building2 size={18} /> },
+  ];
+
+  const GATEWAYS_WITHDRAW = [
+    { value: Gateway.TELEBIRR, label: 'Telebirr', icon: <Smartphone size={18} /> },
+    { value: Gateway.CBE, label: 'CBE Account', icon: <Building2 size={18} /> },
+  ];
+
   return (
     <div className="page-container">
-      {/* Wallet Balance Display Card */}
-      <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', textAlign: 'center', border: '1px solid var(--primary-amber)' }}>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{t('wallet.balance') || 'Available Balance'}</p>
-        <h1 style={{ fontSize: '2.5rem', color: 'var(--primary-amber)', fontWeight: 800 }}>
-          {balanceEtb} <span style={{ fontSize: '1.25rem' }}>ETB</span>
-        </h1>
-        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+      {/* Balance Hero Card */}
+      <div className="balance-hero">
+        <span className="balance-hero-label">{t('wallet.balance') || 'Available Balance'}</span>
+        <div style={{ marginTop: '0.25rem' }}>
+          <CurrencyDisplay santim={userRecord?.walletBalanceSantim} size="xl" variant="gold" />
+        </div>
+        <span className="balance-hero-sub" style={{ fontFamily: 'var(--font-mono)' }}>
           {(userRecord?.walletBalanceSantim || 0).toLocaleString()} santim
-        </p>
+        </span>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--surface-raised)', padding: '0.25rem', borderRadius: '12px' }}>
-        <button 
-          className={`btn ${activeTab === 'deposit' ? 'btn-primary' : 'btn-secondary'}`}
+      {/* Tab Bar */}
+      <div className="tab-bar">
+        <button
+          className={`tab-item ${activeTab === 'deposit' ? 'active' : ''}`}
           onClick={() => { setActiveTab('deposit'); setSimulatedCheckoutUrl(''); }}
-          style={{ padding: '0.5rem', fontSize: '0.85rem' }}
         >
-          {t('wallet.deposit') || 'Deposit'}
+          <ArrowDownCircle size={16} />
+          <span>{t('wallet.deposit') || 'Deposit'}</span>
         </button>
-        <button 
-          className={`btn ${activeTab === 'withdraw' ? 'btn-primary' : 'btn-secondary'}`}
+        <button
+          className={`tab-item ${activeTab === 'withdraw' ? 'active' : ''}`}
           onClick={() => { setActiveTab('withdraw'); setSimulatedCheckoutUrl(''); }}
-          style={{ padding: '0.5rem', fontSize: '0.85rem' }}
         >
-          {t('wallet.withdraw') || 'Withdraw'}
+          <ArrowUpCircle size={16} />
+          <span>{t('wallet.withdraw') || 'Withdraw'}</span>
         </button>
-        <button 
-          className={`btn ${activeTab === 'history' ? 'btn-primary' : 'btn-secondary'}`}
+        <button
+          className={`tab-item ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => { setActiveTab('history'); setSimulatedCheckoutUrl(''); }}
-          style={{ padding: '0.5rem', fontSize: '0.85rem' }}
         >
-          History
+          <History size={16} />
+          <span>History</span>
         </button>
       </div>
 
       {/* Deposit Form */}
       {activeTab === 'deposit' && !simulatedCheckoutUrl && (
-        <div className="glass-panel">
-          <form onSubmit={handleDepositSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div className="section-card">
+          <div className="section-title" style={{ fontFamily: 'var(--font-heading)' }}>
+            <ArrowDownCircle size={18} style={{ color: 'var(--primary-amber)' }} />
+            <span>Deposit Funds</span>
+          </div>
+          <form onSubmit={handleDepositSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
             {depositError && (
-              <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid var(--danger)', color: 'var(--danger)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.85rem' }}>
-                {depositError}
-              </div>
+              <Toast message={depositError} type="error" onClose={() => setDepositError('')} />
             )}
 
-            <div className="form-group">
-              <label className="form-label">{t('wallet.amountEtb') || 'Amount (ETB)'}</label>
-              <input 
-                type="number" 
+            <div>
+              <Input
+                label={t('wallet.amountEtb') || 'Amount (ETB)'}
+                type="number"
                 placeholder="Enter amount (e.g. 100)"
                 min="1"
-                className="input-field"
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value)}
                 required
                 disabled={depositLoading}
               />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">{t('wallet.chooseGateway') || 'Payment Gateway'}</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
-                {[
-                  { value: Gateway.CHAPA, label: 'Chapa' },
-                  { value: Gateway.TELEBIRR, label: 'Telebirr' },
-                  { value: Gateway.WEBIRR, label: 'WeBirr' },
-                  { value: Gateway.CBE, label: 'CBE Birr' }
-                ].map((gw) => (
+              <div className="quick-amounts-bar">
+                {[25, 50, 100, 200, 500].map((amt) => (
                   <button
-                    key={gw.value}
+                    key={amt}
                     type="button"
-                    className={`btn ${depositGateway === gw.value ? 'btn-primary' : 'btn-secondary'}`}
-                    style={{ padding: '0.65rem 0.25rem', fontSize: '0.85rem' }}
-                    onClick={() => setDepositGateway(gw.value)}
+                    onClick={() => setDepositAmount(String(amt))}
                     disabled={depositLoading}
+                    className={`quick-amount-btn ${depositAmount === String(amt) ? 'selected' : ''}`}
                   >
-                    {gw.label}
+                    {amt} ETB
                   </button>
                 ))}
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary" disabled={depositLoading}>
-              {depositLoading ? 'Processing...' : 'Proceed to Payment'}
-            </button>
+            <div className="input-field-group">
+              <label className="input-label">{t('wallet.chooseGateway') || 'Payment Gateway'}</label>
+              <div className="gateway-grid">
+                {GATEWAYS_DEPOSIT.map((gw) => (
+                  <button
+                    key={gw.value}
+                    type="button"
+                    className={`gateway-btn ${depositGateway === gw.value ? 'active' : ''}`}
+                    onClick={() => setDepositGateway(gw.value)}
+                    disabled={depositLoading}
+                  >
+                    <span className="gateway-icon">{gw.icon}</span>
+                    <span>{gw.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={depositLoading}
+              icon={<Send size={16} />}
+            >
+              Proceed to Payment
+            </Button>
           </form>
         </div>
       )}
 
-      {/* Simulated checkout sheet overlay */}
+      {/* Sandbox Payment Simulator */}
       {activeTab === 'deposit' && simulatedCheckoutUrl && (
-        <div className="glass-panel" style={{ border: '1px solid var(--primary-amber)', display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1.5rem' }}>
+        <div className="section-card" style={{ borderColor: 'rgba(229,161,0,0.4)', borderStyle: 'dashed' }}>
           <div style={{ textAlign: 'center' }}>
-            <span style={{ fontSize: '2rem' }}>💳</span>
-            <h3 style={{ fontSize: '1.15rem', marginTop: '0.5rem' }}>Sandbox Payment Gateway</h3>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-              Simulate transaction response for **{depositGateway.toUpperCase()}**
+            <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(229,161,0,0.12)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-amber)', marginBottom: '0.4rem' }}>
+              <CreditCard size={22} />
+            </div>
+            <h3 style={{ fontSize: '1.1rem', color: 'var(--text-light)', fontWeight: 700, fontFamily: 'var(--font-heading)' }}>
+              Sandbox Payment Gateway
+            </h3>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+              Simulate response for <strong>{depositGateway.toUpperCase()}</strong>
             </p>
           </div>
 
-          <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.8rem', fontFamily: 'monospace' }}>
-            <div>**TxID**: {paymentId}</div>
-            <div>**Amount**: {depositAmount} ETB</div>
-            <div>**User**: {user?.uid?.substring(0,10)}...</div>
+          <div style={{
+            background: 'var(--surface-raised)',
+            padding: '0.85rem',
+            borderRadius: '12px',
+            fontSize: '0.82rem',
+            fontFamily: 'var(--font-mono)',
+            color: 'var(--text-muted)',
+            lineHeight: 1.6,
+            border: '1px solid var(--card-border)',
+          }}>
+            <div><strong style={{ color: 'var(--text-light)' }}>TxID:</strong> {paymentId}</div>
+            <div><strong style={{ color: 'var(--text-light)' }}>Amount:</strong> {depositAmount} ETB</div>
+            <div><strong style={{ color: 'var(--text-light)' }}>User:</strong> {user?.uid?.substring(0, 10)}...</div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <button 
-              className="btn btn-primary" 
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              fullWidth
               onClick={() => handleSimulatePaymentOutcome('success')}
-              disabled={depositLoading}
-              style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: 'none' }}
+              loading={depositLoading}
+              icon={<CheckCircle2 size={16} />}
             >
-              {depositLoading ? 'Sending success webhook...' : 'Simulate Success (Credit Wallet)'}
-            </button>
-            
-            <button 
-              className="btn btn-secondary" 
+              Simulate Success
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              size="md"
+              fullWidth
               onClick={() => handleSimulatePaymentOutcome('fail')}
               disabled={depositLoading}
-              style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}
+              icon={<XCircle size={16} />}
             >
-              Simulate Payment Cancel/Fail
-            </button>
-
-            <button 
-              className="btn btn-secondary" 
+              Simulate Fail
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="md"
+              fullWidth
               onClick={() => setSimulatedCheckoutUrl('')}
               disabled={depositLoading}
-              style={{ marginTop: '0.5rem' }}
             >
               Close Simulator
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {/* Withdrawal Form */}
       {activeTab === 'withdraw' && (
-        <div className="glass-panel">
-          <form onSubmit={handleWithdrawSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div className="section-card">
+          <div className="section-title" style={{ fontFamily: 'var(--font-heading)' }}>
+            <ArrowUpCircle size={18} style={{ color: 'var(--primary-amber)' }} />
+            <span>Request Withdrawal</span>
+          </div>
+          <form onSubmit={handleWithdrawSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
             {withdrawError && (
-              <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid var(--danger)', color: 'var(--danger)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.85rem' }}>
-                {withdrawError}
-              </div>
+              <Toast message={withdrawError} type="error" onClose={() => setWithdrawError('')} />
             )}
-
             {withdrawSuccess && (
-              <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid var(--success)', color: 'var(--success)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.85rem' }}>
-                ✅ **Withdrawal request submitted successfully!** Waiting for operator approval.
-              </div>
+              <Toast message="Withdrawal submitted! Waiting for operator approval." type="success" onClose={() => setWithdrawSuccess(false)} />
             )}
 
-            <div className="form-group">
-              <label className="form-label">Withdrawal Amount (ETB)</label>
-              <input 
-                type="number" 
-                placeholder="Enter amount (e.g. 50)"
-                min="1"
-                className="input-field"
-                value={withdrawAmount}
-                onChange={(e) => setWithdrawAmount(e.target.value)}
-                required
-                disabled={withdrawLoading}
-              />
-            </div>
+            <Input
+              label="Amount (ETB)"
+              type="number"
+              placeholder="Enter amount (e.g. 50)"
+              min="1"
+              value={withdrawAmount}
+              onChange={(e) => setWithdrawAmount(e.target.value)}
+              required
+              disabled={withdrawLoading}
+            />
 
-            <div className="form-group">
-              <label className="form-label">Payment Gateway</label>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                {[
-                  { value: Gateway.TELEBIRR, label: 'Telebirr Wallet' },
-                  { value: Gateway.CBE, label: 'CBE Account' }
-                ].map((gw) => (
+            <div className="input-field-group">
+              <label className="input-label">Payment Method</label>
+              <div className="gateway-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                {GATEWAYS_WITHDRAW.map((gw) => (
                   <button
                     key={gw.value}
                     type="button"
-                    className={`btn ${withdrawGateway === gw.value ? 'btn-primary' : 'btn-secondary'}`}
-                    style={{ padding: '0.65rem 0.25rem', fontSize: '0.85rem', flex: 1 }}
+                    className={`gateway-btn ${withdrawGateway === gw.value ? 'active' : ''}`}
                     onClick={() => setWithdrawGateway(gw.value)}
                     disabled={withdrawLoading}
                   >
-                    {gw.label}
+                    <span className="gateway-icon">{gw.icon}</span>
+                    <span>{gw.label}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Account Details (Phone or Account number)</label>
-              <input 
-                type="text" 
-                placeholder={withdrawGateway === Gateway.TELEBIRR ? 'e.g. 0911223344' : 'e.g. 1000123456789'}
-                className="input-field"
-                value={accountDetails}
-                onChange={(e) => setAccountDetails(e.target.value)}
-                required
-                disabled={withdrawLoading}
-              />
-            </div>
+            <Input
+              label="Account Details"
+              type="text"
+              placeholder={withdrawGateway === Gateway.TELEBIRR ? 'e.g. 0911223344' : 'e.g. 1000123456789'}
+              value={accountDetails}
+              onChange={(e) => setAccountDetails(e.target.value)}
+              required
+              disabled={withdrawLoading}
+            />
 
-            <button type="submit" className="btn btn-primary" disabled={withdrawLoading}>
-              {withdrawLoading ? 'Submitting...' : 'Request Payout'}
-            </button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={withdrawLoading}
+              icon={<Send size={16} />}
+            >
+              Request Payout
+            </Button>
           </form>
         </div>
       )}
 
-      {/* Transaction History Ledger */}
+      {/* Transaction History */}
       {activeTab === 'history' && (
-        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '350px', overflowY: 'auto' }}>
-          <h4 style={{ fontSize: '0.95rem', marginBottom: '0.5rem', fontWeight: 600 }}>Transactions</h4>
+        <div className="section-card" style={{ maxHeight: '420px', overflowY: 'auto' }}>
+          <div className="section-title" style={{ fontFamily: 'var(--font-heading)' }}>
+            <History size={18} style={{ color: 'var(--primary-amber)' }} />
+            <span>Transactions</span>
+          </div>
 
           {ledgerEntries.length === 0 ? (
-            <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
-              No transactions recorded yet.
+            <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--text-muted)' }}>
+              <Inbox size={36} style={{ opacity: 0.3, marginBottom: '0.5rem' }} />
+              <p style={{ fontSize: '0.85rem' }}>No transactions recorded yet.</p>
             </div>
           ) : (
             ledgerEntries.map((entry) => {
               const isCredit = ['deposit', 'win', 'bonus'].includes(entry.type);
-              const amountEtb = ((entry.amount_santim || entry.amountSantim || 0) / 100).toFixed(2);
+              const santim = entry.amount_santim || entry.amountSantim || 0;
               const date = new Date(parseInt(entry.created_at || entry.createdAt)).toLocaleDateString();
 
               return (
                 <div key={entry.id} className="ledger-item">
                   <div>
-                    <p style={{ fontWeight: 600, fontSize: '0.85rem' }}>{formatLedgerType(entry.type)}</p>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
-                      {date} {entry.gateway ? `| ${entry.gateway.toUpperCase()}` : ''}
+                    <p style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-light)' }}>
+                      {formatLedgerType(entry.type)}
+                    </p>
+                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.15rem', fontFamily: 'var(--font-mono)' }}>
+                      {date} {entry.gateway ? `· ${entry.gateway.toUpperCase()}` : ''}
                     </p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <p className={`ledger-amount ${isCredit ? 'credit' : 'debit'}`}>
-                      {isCredit ? '+' : '-'}{amountEtb} ETB
+                    <p className={`ledger-amount ${isCredit ? 'credit' : 'debit'}`} style={{ fontFamily: 'var(--font-mono)' }}>
+                      {isCredit ? '+' : '-'}<CurrencyDisplay santim={santim} size="sm" variant={isCredit ? 'success' : 'white'} />
                     </p>
-                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
-                      Bal: {((entry.balance_santim || entry.balanceSantim || 0) / 100).toFixed(2)}
+                    <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.1rem', fontFamily: 'var(--font-mono)' }}>
+                      Bal: <CurrencyDisplay santim={entry.balance_santim || entry.balanceSantim || 0} size="sm" variant="muted" prefix="" />
                     </p>
                   </div>
                 </div>

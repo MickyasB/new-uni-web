@@ -1,10 +1,10 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-import en from '../public/locales/en.json';
-import am from '../public/locales/am.json';
-import om from '../public/locales/om.json';
-import ti from '../public/locales/ti.json';
+import en from './locales/en.json';
+import am from './locales/am.json';
+import om from './locales/om.json';
+import ti from './locales/ti.json';
 
 i18n
   .use(initReactI18next)

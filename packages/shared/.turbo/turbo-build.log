@@ -1,4 +1,0 @@
-
-> @bingo/shared@0.0.1 build C:\Users\Administrator\Desktop\Bingo platform\packages\shared
-> tsc && tsc -p tsconfig.cjs.json
-

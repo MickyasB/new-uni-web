@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../store';
 import { api } from '../api';
 import { RoomRecord, RoomStatus, RoomTier } from '@bingo/shared';
+import { Button, Badge, CurrencyDisplay, Modal, Toast } from '../components/ui';
+import { Trophy, Users, Layers, Play, Zap, Plus, ChevronRight, Clock } from 'lucide-react';
 
 // Sub-component for room countdown
 function RoomCountdown({ scheduledAt }: { scheduledAt: number }) {
@@ -18,14 +20,14 @@ function RoomCountdown({ scheduledAt }: { scheduledAt: number }) {
   }, [scheduledAt, timeLeft]);
 
   if (timeLeft <= 0) {
-    return <span style={{ color: 'var(--success)' }}>Starting now...</span>;
+    return <span style={{ color: 'var(--success)', fontWeight: 700 }}>Starting now...</span>;
   }
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   return (
-    <span>
-      Starts in {minutes}:{seconds < 10 ? '0' : ''}{seconds}
+    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+      <Clock size={14} /> {minutes}:{seconds < 10 ? '0' : ''}{seconds}
     </span>
   );
 }
@@ -43,23 +45,8 @@ export default function Lobby() {
   const [cardCount, setCardCount] = useState(1);
   const [buyLoading, setBuyLoading] = useState(false);
   const [buyError, setBuyError] = useState('');
-  const [createLoading, setCreateLoading] = useState(false);
 
-  const isLocalhost = import.meta.env.DEV && typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-  const handleDevCreateRoom = async () => {
-    setCreateLoading(true);
-    try {
-      await api.getRoom('room-bronze-default'); // just test connectivity
-    } catch (err: any) {
-      console.error(err);
-    } finally {
-      setCreateLoading(false);
-    }
-  };
   useEffect(() => {
-
     const DEFAULT_DEMO_ROOMS: RoomRecord[] = [
       {
         id: 'room-bronze-demo',
@@ -67,7 +54,7 @@ export default function Lobby() {
         status: RoomStatus.WAITING,
         mode: 'auto',
         type: 'open',
-        entryFeeSantim: 1000, // 10 ETB
+        entryFeeSantim: 1000,
         potSantim: 5000,
         minPlayers: 2,
         maxCards: 6,
@@ -80,7 +67,7 @@ export default function Lobby() {
         status: RoomStatus.WAITING,
         mode: 'auto',
         type: 'open',
-        entryFeeSantim: 5000, // 50 ETB
+        entryFeeSantim: 5000,
         potSantim: 25000,
         minPlayers: 3,
         maxCards: 6,
@@ -93,7 +80,7 @@ export default function Lobby() {
         status: RoomStatus.WAITING,
         mode: 'auto',
         type: 'open',
-        entryFeeSantim: 10000, // 100 ETB
+        entryFeeSantim: 10000,
         potSantim: 50000,
         minPlayers: 4,
         maxCards: 6,
@@ -132,7 +119,7 @@ export default function Lobby() {
     };
 
     fetchRooms();
-    const interval = setInterval(fetchRooms, 10000); // Poll every 10s
+    const interval = setInterval(fetchRooms, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -144,23 +131,24 @@ export default function Lobby() {
 
   const handleConfirmPurchase = async () => {
     if (!selectedRoom) return;
-    setBuyError('');
-    setBuyLoading(true);
 
-    const balanceSantim = userRecord?.walletBalanceSantim || 0;
-    const totalCostSantim = selectedRoom.entryFeeSantim * cardCount;
-
-    if (balanceSantim < totalCostSantim) {
-      setBuyError(t('errors.insufficientFunds') || 'Insufficient funds in wallet.');
-      setBuyLoading(false);
+    const totalCost = selectedRoom.entryFeeSantim * cardCount;
+    if (userRecord && userRecord.walletBalanceSantim < totalCost) {
+      setBuyError(t('errors.insufficientFunds') || 'Insufficient funds to buy cards.');
       return;
     }
 
-    try {
-      await api.buyCards(selectedRoom.id, cardCount);
+    setBuyLoading(true);
+    setBuyError('');
 
-      // Close modal & navigate to game room
-      setSelectedRoom(null);
+    try {
+      if (selectedRoom.id.includes('-demo')) {
+        setActiveRoomId(selectedRoom.id);
+        navigate(`/room/${selectedRoom.id}`);
+        return;
+      }
+
+      await api.buyCards(selectedRoom.id, cardCount);
       setActiveRoomId(selectedRoom.id);
       navigate(`/room/${selectedRoom.id}`);
     } catch (err: any) {
@@ -176,15 +164,6 @@ export default function Lobby() {
     return room.tier === activeTab;
   });
 
-  const getTierClass = (tier: RoomTier) => {
-    switch (tier) {
-      case RoomTier.BRONZE: return 'room-card bronze';
-      case RoomTier.SILVER: return 'room-card silver';
-      case RoomTier.GOLD: return 'room-card gold';
-      default: return 'room-card';
-    }
-  };
-
   const getTierLabel = (tier: RoomTier) => {
     switch (tier) {
       case RoomTier.BRONZE: return t('lobby.bronze') || 'Bronze Room';
@@ -194,163 +173,274 @@ export default function Lobby() {
     }
   };
 
-  const balanceEtb = userRecord ? (userRecord.walletBalanceSantim / 100).toFixed(2) : '0.00';
+  const getTierClass = (tier: RoomTier) => {
+    switch (tier) {
+      case RoomTier.BRONZE: return 'tier-bronze';
+      case RoomTier.SILVER: return 'tier-silver';
+      case RoomTier.GOLD: return 'tier-gold';
+      default: return '';
+    }
+  };
 
   return (
     <div className="page-container">
-      {/* Top Header info */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+      {/* Lobby Header */}
+      <div className="lobby-header">
+        <div className="lobby-user-profile">
+          <div className="lobby-avatar-ring">
+            <span style={{ fontSize: '1.2rem' }}>
+              {userRecord?.displayName ? userRecord.displayName[0].toUpperCase() : 'P'}
+            </span>
+            <div className="lobby-avatar-badge" />
+          </div>
+          <div>
+            <div className="lobby-greeting-sub">
+              <span>{t('lobby.welcomeBack') || 'Welcome Back'}</span>
+            </div>
+            <div className="lobby-greeting-name" style={{ fontFamily: 'var(--font-heading)' }}>
+              {userRecord?.displayName || 'Player'}
+            </div>
+          </div>
+        </div>
+
+        <Link to="/wallet" className="lobby-balance-chip" aria-label="Deposit Funds">
+          <div className="lobby-balance-info">
+            <span className="lobby-balance-label">{t('wallet.balance') || 'Wallet'}</span>
+            <CurrencyDisplay santim={userRecord?.walletBalanceSantim || 0} variant="amber" size="md" />
+          </div>
+          <div className="lobby-balance-add-btn" title="Add Funds">
+            <Plus size={16} strokeWidth={3} />
+          </div>
+        </Link>
+      </div>
+
+      {/* Live Winners Ticker Bar */}
+      <div className="lobby-ticker-wrap">
+        <div className="lobby-ticker-badge">
+          <Trophy size={11} />
+          <span>LIVE WINS</span>
+        </div>
+        <div className="lobby-ticker-content">
+          <span>🎉 Dawit T. won 4,250 ETB (Gold)</span>
+          <span>⚡ Helina K. won 1,800 ETB (Silver)</span>
+          <span>🔥 Yonas M. won 750 ETB (Bronze)</span>
+          <span>⭐ Bethlehem A. won 5,100 ETB (Gold)</span>
+          {/* Duplicate for seamless loop */}
+          <span>🎉 Dawit T. won 4,250 ETB (Gold)</span>
+          <span>⚡ Helina K. won 1,800 ETB (Silver)</span>
+          <span>🔥 Yonas M. won 750 ETB (Bronze)</span>
+          <span>⭐ Bethlehem A. won 5,100 ETB (Gold)</span>
+        </div>
+      </div>
+
+      {/* Jackpot Banner */}
+      <div className="lobby-jackpot-card">
         <div>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{t('lobby.welcomeBack') || 'Welcome back'}</p>
-          <h3 style={{ fontSize: '1.25rem', color: 'var(--text-light)' }}>{userRecord?.displayName || 'Player'}</h3>
+          <div className="lobby-jackpot-tag">
+            <Zap size={14} />
+            <span>SUPER BINGO ARENA</span>
+          </div>
+          <div className="lobby-jackpot-title">
+            DAILY MEGA POT
+          </div>
         </div>
-        <div className="glass-panel" style={{ padding: '0.5rem 1rem', borderRadius: '12px', border: '1px solid var(--card-border)' }}>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('wallet.balance') || 'Balance'}</p>
-          <p style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--primary-amber)' }}>{balanceEtb} ETB</p>
+        <div className="lobby-jackpot-amount">
+          100,000 ETB
         </div>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--surface-raised)', padding: '0.25rem', borderRadius: '12px' }}>
+      {/* Filter Tabs */}
+      <div className="lobby-tabs">
         <button 
-          className={`btn ${activeTab === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+          className={`lobby-tab ${activeTab === 'all' ? 'active' : ''}`}
           onClick={() => setActiveTab('all')}
-          style={{ padding: '0.5rem', fontSize: '0.85rem' }}
         >
-          {t('lobby.all') || 'All'}
+          <span>All</span>
         </button>
         <button 
-          className={`btn ${activeTab === RoomTier.BRONZE ? 'btn-primary' : 'btn-secondary'}`}
+          className={`lobby-tab ${activeTab === RoomTier.BRONZE ? 'active' : ''}`}
           onClick={() => setActiveTab(RoomTier.BRONZE)}
-          style={{ padding: '0.5rem', fontSize: '0.85rem' }}
         >
-          {typeof t('lobby.bronze') === 'string' ? t('lobby.bronze').split(' ')[0] : 'Bronze'}
+          <span>{t('lobby.bronzeShort') || 'Bronze'}</span>
         </button>
         <button 
-          className={`btn ${activeTab === RoomTier.SILVER ? 'btn-primary' : 'btn-secondary'}`}
+          className={`lobby-tab ${activeTab === RoomTier.SILVER ? 'active' : ''}`}
           onClick={() => setActiveTab(RoomTier.SILVER)}
-          style={{ padding: '0.5rem', fontSize: '0.85rem' }}
         >
-          {typeof t('lobby.silver') === 'string' ? t('lobby.silver').split(' ')[0] : 'Silver'}
+          <span>{t('lobby.silverShort') || 'Silver'}</span>
         </button>
         <button 
-          className={`btn ${activeTab === RoomTier.GOLD ? 'btn-primary' : 'btn-secondary'}`}
+          className={`lobby-tab ${activeTab === RoomTier.GOLD ? 'active' : ''}`}
           onClick={() => setActiveTab(RoomTier.GOLD)}
-          style={{ padding: '0.5rem', fontSize: '0.85rem' }}
         >
-          {typeof t('lobby.gold') === 'string' ? t('lobby.gold').split(' ')[0] : 'Gold'}
+          <span>{t('lobby.goldShort') || 'Gold'}</span>
         </button>
       </div>
 
-      {/* List of rooms */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
-        <h4 style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-          {t('lobby.activeRooms') || 'Active Rooms'} ({filteredRooms.length})
-        </h4>
+      {/* Section Title */}
+      <div className="lobby-section-title">
+        <span className="lobby-section-title-text">
+          Live Rooms
+        </span>
+        <span className="lobby-room-count">
+          {filteredRooms.length} {filteredRooms.length === 1 ? 'room' : 'rooms'}
+        </span>
+      </div>
 
+      {/* Low Balance Warning */}
+      {userRecord && (userRecord.walletBalanceSantim < 1000) && (
+        <Link to="/wallet" style={{ textDecoration: 'none' }}>
+          <div className="alert alert-warning" style={{ cursor: 'pointer', justifyContent: 'space-between', alignItems: 'center', borderRadius: '16px' }}>
+            <span>Your balance is low. Deposit to join rooms.</span>
+            <span style={{ fontWeight: 800, fontSize: '0.78rem', whiteSpace: 'nowrap' }}>Deposit Now <ChevronRight size={14} style={{ verticalAlign: 'middle' }} /></span>
+          </div>
+        </Link>
+      )}
+
+      {/* Room Cards */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
         {filteredRooms.length === 0 ? (
-          <div style={{ alignSelf: 'center', textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-            <p style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📭</p>
-            <p>{t('lobby.noRooms') || 'No active rooms found. Operators will open rooms shortly.'}</p>
-            {isLocalhost && (
-              <button 
-                className="btn btn-secondary" 
-                onClick={handleDevCreateRoom} 
-                disabled={createLoading}
-                style={{ marginTop: '1.25rem', borderColor: 'var(--primary-amber)', color: 'var(--primary-amber)', background: 'transparent' }}
-              >
-                {createLoading ? 'Creating...' : (t('lobby.devCreateRoom') || 'Dev: Create Bronze Room')}
-              </button>
-            )}
+          <div className="lobby-empty">
+            <span className="lobby-empty-icon" style={{ fontSize: '2rem', opacity: 0.4 }}>
+              <Layers size={40} />
+            </span>
+            <span className="lobby-empty-text">
+              {t('lobby.noRooms') || 'No active rooms found. Operators will open rooms shortly.'}
+            </span>
           </div>
         ) : (
-          filteredRooms.map((room) => (
-            <div 
-              key={room.id} 
-              className={`glass-panel ${getTierClass(room.tier)}`}
-              onClick={() => room.status === RoomStatus.WAITING && handleOpenJoinModal(room)}
-            >
-              <div className="room-header">
-                <span className="room-title">{getTierLabel(room.tier)}</span>
-                <span style={{ 
-                  fontSize: '0.75rem', 
-                  padding: '0.25rem 0.5rem', 
-                  borderRadius: '6px',
-                  background: room.status === RoomStatus.ACTIVE ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
-                  color: room.status === RoomStatus.ACTIVE ? 'var(--success)' : 'var(--primary-amber)',
-                  fontWeight: 600
-                }}>
-                  {room.status === RoomStatus.ACTIVE ? 'Playing' : 'Lobby Open'}
-                </span>
-              </div>
+          filteredRooms.map((room, index) => {
+            const canAfford = (userRecord?.walletBalanceSantim || 0) >= room.entryFeeSantim;
+            const isWaiting = room.status === RoomStatus.WAITING;
 
-              <div className="room-meta" style={{ marginTop: '0.5rem' }}>
-                <div>
-                  <p>{t('lobby.entryFee', { fee: (room.entryFeeSantim / 100).toFixed(0) })}</p>
-                  <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                    Min Players: {room.minPlayers} | Max Cards: {room.maxCards}
-                  </p>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontWeight: 600, color: 'var(--text-light)' }}>
-                    👤 {room.playerCount} Players
-                  </p>
-                  {room.type === 'scheduled' && room.scheduledAt && (
-                    <p style={{ fontSize: '0.75rem', color: 'var(--primary-amber)', marginTop: '0.25rem' }}>
-                      ⏳ <RoomCountdown scheduledAt={room.scheduledAt} />
-                    </p>
-                  )}
-                </div>
-              </div>
+            return (
+              <div
+                key={room.id}
+                className={`room-card-premium ${getTierClass(room.tier)}`}
+                style={{ animationDelay: `${index * 0.08}s` }}
+                onClick={() => isWaiting && handleOpenJoinModal(room)}
+              >
+                {/* Header: Tier & Mode */}
+                <div className="room-card-top">
+                  <div className="room-card-tier-wrap">
+                    <Badge tier={room.tier} size="md" />
+                    <span className="room-tier-mode">{room.mode} · {room.type}</span>
+                  </div>
 
-              {room.status === RoomStatus.WAITING && (
-                <button 
-                  className="btn btn-primary" 
-                  style={{ marginTop: '0.75rem', padding: '0.6rem' }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleOpenJoinModal(room);
-                  }}
-                >
-                  {t('lobby.join') || 'Join Game'}
-                </button>
-              )}
-            </div>
-          ))
+                  <div className={`room-live-beacon ${isWaiting ? 'waiting' : 'active'}`}>
+                    <span className="room-beacon-dot" />
+                    <span>{isWaiting ? 'Waiting' : 'Live'}</span>
+                  </div>
+                </div>
+
+                {/* Pot & Entry Strip */}
+                <div className="room-card-hero-strip">
+                  <div className="room-pot-box">
+                    <span className="room-pot-label">
+                      <Trophy size={14} />
+                      <span>{t('lobby.estPot', 'Est. Jackpot')}</span>
+                    </span>
+                    <span className="room-pot-val">
+                      <CurrencyDisplay santim={room.potSantim} variant="gold" size="lg" />
+                    </span>
+                  </div>
+
+                  <div className="room-entry-box">
+                    <span className="room-entry-label">{t('lobby.entryFee', 'Entry Fee')}</span>
+                    <span className="room-entry-val">
+                      <CurrencyDisplay santim={room.entryFeeSantim} variant="white" size="md" />
+                    </span>
+                  </div>
+                </div>
+
+                {/* Room Meta */}
+                <div className="room-card-meta">
+                  <div className="room-meta-item">
+                    <Users size={14} />
+                    <span>{room.playerCount} {room.playerCount === 1 ? 'Player' : 'Players'}</span>
+                  </div>
+                  <div className="room-meta-item">
+                    <Layers size={14} />
+                    <span>Max {room.maxCards} Cards</span>
+                  </div>
+                </div>
+
+                {/* Countdown for scheduled rooms */}
+                {room.type === 'scheduled' && room.scheduledAt && (
+                  <div style={{ textAlign: 'center', fontSize: '0.82rem', color: 'var(--primary-amber)', fontWeight: 700 }}>
+                    <RoomCountdown scheduledAt={room.scheduledAt} />
+                  </div>
+                )}
+
+                {/* Play Button */}
+                {isWaiting && (
+                  <button
+                    className={`room-play-btn ${!canAfford ? 'disabled' : ''}`}
+                    disabled={!canAfford}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (canAfford) handleOpenJoinModal(room);
+                    }}
+                  >
+                    {canAfford ? <Play size={16} /> : null}
+                    <span>{canAfford ? (t('lobby.join') || 'JOIN ROOM') : 'INSUFFICIENT BALANCE'}</span>
+                  </button>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
 
-      {/* Buy Cards Overlay Modal */}
+      {/* Buy Cards Modal */}
       {selectedRoom && (
-        <div className="modal-overlay" onClick={() => setSelectedRoom(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <h3 style={{ fontSize: '1.25rem', textAlign: 'center' }}>{t('lobby.buyBingoCards') || 'Buy Bingo Cards'}</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-              {t('lobby.selectCardsDesc', { roomName: getTierLabel(selectedRoom.tier) }) || `Select the number of cards you wish to purchase for ${getTierLabel(selectedRoom.tier)}.`}
+        <Modal
+          isOpen={!!selectedRoom}
+          onClose={() => setSelectedRoom(null)}
+          title={t('lobby.buyBingoCards') || 'Buy Bingo Cards'}
+          footer={
+            <>
+              <Button
+                variant="ghost"
+                size="md"
+                onClick={() => setSelectedRoom(null)}
+                disabled={buyLoading}
+              >
+                {t('lobby.cancel') || 'Cancel'}
+              </Button>
+              <Button
+                variant="gold"
+                size="md"
+                loading={buyLoading}
+                onClick={handleConfirmPurchase}
+              >
+                {t('lobby.confirmBuy') || 'Confirm Purchase'}
+              </Button>
+            </>
+          }
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+              {t('lobby.selectCardsDesc', { roomName: getTierLabel(selectedRoom.tier) })
+                || `Select the number of cards for ${getTierLabel(selectedRoom.tier)}.`}
             </p>
 
             {buyError && (
-              <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--danger)', color: 'var(--danger)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.85rem' }}>
-                {buyError}
-              </div>
+              <Toast message={buyError} type="error" onClose={() => setBuyError('')} />
             )}
 
-            {/* Select card count */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1.5rem', margin: '0.5rem 0' }}>
-              <button 
-                className="btn btn-secondary" 
-                style={{ width: '48px', height: '48px', borderRadius: '50%', padding: 0, fontSize: '1.5rem' }}
+            {/* Counter */}
+            <div className="buy-modal-counter">
+              <button
+                className="buy-modal-counter-btn"
                 onClick={() => setCardCount(Math.max(1, cardCount - 1))}
                 disabled={buyLoading || cardCount <= 1}
               >
-                -
+                −
               </button>
-              <span style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary-amber)', minWidth: '40px', textAlign: 'center' }}>
-                {cardCount}
-              </span>
-              <button 
-                className="btn btn-secondary" 
-                style={{ width: '48px', height: '48px', borderRadius: '50%', padding: 0, fontSize: '1.5rem' }}
+              <span className="buy-modal-count">{cardCount}</span>
+              <button
+                className="buy-modal-counter-btn"
                 onClick={() => setCardCount(Math.min(selectedRoom.maxCards, cardCount + 1))}
                 disabled={buyLoading || cardCount >= selectedRoom.maxCards}
               >
@@ -358,37 +448,19 @@ export default function Lobby() {
               </button>
             </div>
 
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>{t('lobby.pricePerCard') || 'Price per Card:'}</span>
-                <span>{(selectedRoom.entryFeeSantim / 100).toFixed(2)} ETB</span>
+            {/* Summary */}
+            <div className="buy-modal-summary">
+              <div className="buy-modal-row">
+                <span style={{ color: 'var(--text-muted)' }}>{t('lobby.pricePerCard') || 'Price per Card'}</span>
+                <CurrencyDisplay santim={selectedRoom.entryFeeSantim} size="sm" variant="muted" />
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 700 }}>
-                <span>{t('lobby.totalCost') || 'Total Cost:'}</span>
-                <span style={{ color: 'var(--primary-amber)' }}>
-                  {((selectedRoom.entryFeeSantim * cardCount) / 100).toFixed(2)} ETB
-                </span>
+              <div className="buy-modal-row total">
+                <span>{t('lobby.totalCost') || 'Total Cost'}</span>
+                <CurrencyDisplay santim={selectedRoom.entryFeeSantim * cardCount} size="lg" variant="gold" />
               </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <button 
-                className="btn btn-secondary" 
-                onClick={() => setSelectedRoom(null)}
-                disabled={buyLoading}
-              >
-                {t('lobby.cancel') || 'Cancel'}
-              </button>
-              <button 
-                className="btn btn-primary" 
-                onClick={handleConfirmPurchase}
-                disabled={buyLoading}
-              >
-                {buyLoading ? 'Purchasing...' : (t('lobby.confirmBuy') || 'Confirm Buy')}
-              </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

@@ -37,6 +37,7 @@ exports.getDevCustomToken = exports.registerPlayer = void 0;
 exports.calculateAge = calculateAge;
 const https_1 = require("firebase-functions/v2/https");
 const admin = __importStar(require("firebase-admin"));
+const appCheck_1 = require("./utils/appCheck");
 // Helper to calculate age in years from DOB string
 function calculateAge(dobString) {
     const dob = new Date(dobString);
@@ -51,7 +52,7 @@ function calculateAge(dobString) {
     }
     return age;
 }
-exports.registerPlayer = (0, https_1.onCall)(async (request) => {
+exports.registerPlayer = (0, https_1.onCall)(appCheck_1.SECURE_CALL_OPTIONS, async (request) => {
     const { auth } = request;
     if (!auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated.');
@@ -131,7 +132,7 @@ exports.registerPlayer = (0, https_1.onCall)(async (request) => {
     });
     return result;
 });
-exports.getDevCustomToken = (0, https_1.onCall)(async (request) => {
+exports.getDevCustomToken = (0, https_1.onCall)(appCheck_1.SECURE_CALL_OPTIONS, async (request) => {
     if (process.env.FUNCTIONS_EMULATOR !== 'true' && process.env.VITEST !== 'true') {
         throw new https_1.HttpsError('permission-denied', 'This function is only available in emulator mode.');
     }

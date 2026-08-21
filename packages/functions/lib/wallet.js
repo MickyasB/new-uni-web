@@ -39,7 +39,9 @@ const admin = __importStar(require("firebase-admin"));
 const crypto = __importStar(require("crypto"));
 const shared_1 = require("@bingo/shared");
 const santim_1 = require("./utils/santim");
-exports.requestWithdrawal = (0, https_1.onCall)(async (request) => {
+const rateLimit_1 = require("./utils/rateLimit");
+const appCheck_1 = require("./utils/appCheck");
+exports.requestWithdrawal = (0, https_1.onCall)(appCheck_1.SECURE_CALL_OPTIONS, async (request) => {
     const { auth } = request;
     if (!auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated.');
@@ -47,6 +49,11 @@ exports.requestWithdrawal = (0, https_1.onCall)(async (request) => {
     const { amountEtb, gateway, accountDetails } = request.data;
     if (!amountEtb || amountEtb <= 0 || !gateway || !accountDetails) {
         throw new https_1.HttpsError('invalid-argument', 'Missing or invalid parameters: amountEtb, gateway, accountDetails.');
+    }
+    // Rate limit: max 3 withdrawal requests per user per 24-hour window (spec §4.4)
+    const allowed = await (0, rateLimit_1.checkRateLimit)(auth.uid, 'withdrawal', 3, 24 * 60 * 60 * 1000);
+    if (!allowed) {
+        throw new https_1.HttpsError('resource-exhausted', 'Rate limit exceeded: max 3 withdrawal requests per 24 hours.');
     }
     const amountSantim = (0, santim_1.ethToSantim)(amountEtb);
     const uid = auth.uid;

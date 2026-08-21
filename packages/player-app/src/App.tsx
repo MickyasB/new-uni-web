@@ -10,13 +10,13 @@ import {
 } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from './store';
-import { useTheme } from './useTheme';
+import { Gamepad2, Wallet, User, Trophy } from 'lucide-react';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Lobby from './pages/Lobby';
 import Room from './pages/Room';
-import Wallet from './pages/Wallet';
+import WalletPage from './pages/Wallet';
 import Profile from './pages/Profile';
 import SplashScreen from './components/SplashScreen';
 import './index.css';
@@ -61,7 +61,6 @@ function AuthRoute({ children, mode }: { children: React.ReactNode; mode: 'login
 function AppLayout() {
   const { t } = useTranslation();
   const location = useLocation();
-  const { theme, toggle } = useTheme();
 
   // If in active room, hide bottom nav to maximize bingo board layout
   const showNav = !location.pathname.startsWith('/room/');
@@ -77,24 +76,25 @@ function AppLayout() {
       </div>
 
       {showNav && (
-        <nav className="bottom-nav">
-          <Link to="/lobby" className={isActive('/lobby')}>
-            <span className="nav-icon">🎮</span>
-            <span>{t('lobby.title') || 'Lobby'}</span>
-          </Link>
-          <Link to="/wallet" className={isActive('/wallet')}>
-            <span className="nav-icon">💳</span>
-            <span>{t('wallet.balance') || 'Wallet'}</span>
-          </Link>
-          {/* Theme toggle in the nav centre */}
-          <button className="theme-toggle" onClick={toggle} aria-label="Toggle theme">
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
-          <Link to="/profile" className={isActive('/profile')}>
-            <span className="nav-icon">👤</span>
-            <span>{t('profile.title') || 'Profile'}</span>
-          </Link>
-        </nav>
+        <div className="bottom-nav-container">
+          <nav className="bottom-nav">
+            <Link to="/lobby" className={isActive('/lobby')}>
+              <Gamepad2 size={22} strokeWidth={2.2} />
+              <span className="nav-label">{t('lobby.title') || 'Lobby'}</span>
+            </Link>
+            <Link to="/wallet" className={isActive('/wallet')}>
+              <Wallet size={22} strokeWidth={2.2} />
+              <span className="nav-label">{t('wallet.title') || 'Wallet'}</span>
+            </Link>
+            <Link to="/lobby" className="nav-center-action" aria-label="Play">
+              <Trophy size={24} strokeWidth={2.5} />
+            </Link>
+            <Link to="/profile" className={isActive('/profile')}>
+              <User size={22} strokeWidth={2.2} />
+              <span className="nav-label">{t('profile.title') || 'Profile'}</span>
+            </Link>
+          </nav>
+        </div>
       )}
     </div>
   );
@@ -118,7 +118,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/lobby" replace />} />
           <Route path="/lobby" element={<ProtectedRoute><Lobby /></ProtectedRoute>} />
           <Route path="/room/:roomId" element={<ProtectedRoute><Room /></ProtectedRoute>} />
-          <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+          <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/lobby" replace />} />
         </Route>
@@ -126,3 +126,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+

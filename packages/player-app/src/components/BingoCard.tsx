@@ -1,3 +1,6 @@
+import { Sparkles, Flame, Trophy, XCircle, CheckCircle2 } from 'lucide-react';
+import { soundFX } from '../utils/soundEffects';
+
 interface BingoCardProps {
   cardId: string;
   numbers: number[][];
@@ -11,26 +14,14 @@ interface BingoCardProps {
   onClose?: () => void;
   onCellTap?: (row: number, col: number) => void;
   isBlocked?: boolean;
-  rank?: number; // 1 = best card, 2, 3...
-  chanceScore?: number; // 0-1, how close to winning
+  rank?: number;
+  chanceScore?: number;
 }
 
 const COLUMN_LETTERS = ['B', 'I', 'N', 'G', 'O'];
 
 function getColumnClass(colIndex: number): string {
-  const classes = ['col-b', 'col-i', 'col-n', 'col-g', 'col-o'];
-  return classes[colIndex] || '';
-}
-
-function getStatusLabel(status: string): string {
-  switch (status) {
-    case 'bingo': return '🎉 Bingo!';
-    case 'checking': return '⏳ Checking...';
-    case 'not-registered': return '⏳ Ready';
-    case 'finished': return '— Game Over';
-    case 'playing': return '';
-    default: return '';
-  }
+  return ['col-b', 'col-i', 'col-n', 'col-g', 'col-o'][colIndex] || '';
 }
 
 export default function BingoCard({
@@ -47,135 +38,110 @@ export default function BingoCard({
   onCellTap,
   isBlocked,
   rank,
-  chanceScore
 }: BingoCardProps) {
-  const shortId = cardId.length > 6 ? cardId.substring(0, 5) : cardId;
-  const statusLabel = getStatusLabel(status);
+  const shortId = cardId.length > 6 ? cardId.substring(0, 6) : cardId;
 
-  // Count marked cells for progress indicator
+  // Count marked cells
   let markedCount = 1; // free cell
   if (markedGrid) {
-    for (let r = 0; r < 5; r++) {
+    for (let r = 0; r < 5; r++)
       for (let c = 0; c < 5; c++) {
         if (r === 2 && c === 2) continue;
         if (markedGrid[r]?.[c]) markedCount++;
       }
-    }
   }
   const progress = Math.round((markedCount / 25) * 100);
 
-  // Urgency detection — check if 1 away from any win
+  // Urgency — 1 away from win
   let isOneAway = false;
   if (markedGrid && status === 'playing' && !isBlocked) {
-    // Check horizontal lines
     for (let r = 0; r < 5; r++) {
-      const rowMarked = markedGrid[r]?.filter(Boolean).length || 0;
-      if (rowMarked === 4) isOneAway = true;
+      if ((markedGrid[r]?.filter(Boolean).length || 0) === 4) isOneAway = true;
     }
-    // Check vertical lines
     for (let c = 0; c < 5; c++) {
       let colMarked = 0;
-      for (let r = 0; r < 5; r++) {
-        if (markedGrid[r]?.[c]) colMarked++;
-      }
+      for (let r = 0; r < 5; r++) if (markedGrid[r]?.[c]) colMarked++;
       if (colMarked === 4) isOneAway = true;
     }
-    // Check diagonals
-    let diag1 = 0, diag2 = 0;
+    let d1 = 0, d2 = 0;
     for (let i = 0; i < 5; i++) {
-      if (markedGrid[i]?.[i]) diag1++;
-      if (markedGrid[i]?.[4 - i]) diag2++;
+      if (markedGrid[i]?.[i]) d1++;
+      if (markedGrid[i]?.[4 - i]) d2++;
     }
-    if (diag1 === 4 || diag2 === 4) isOneAway = true;
-    // Check corners (3/4)
-    const corners = [
-      markedGrid[0]?.[0], markedGrid[0]?.[4],
-      markedGrid[4]?.[0], markedGrid[4]?.[4]
-    ].filter(Boolean).length;
+    if (d1 === 4 || d2 === 4) isOneAway = true;
+    const corners = [markedGrid[0]?.[0], markedGrid[0]?.[4], markedGrid[4]?.[0], markedGrid[4]?.[4]].filter(Boolean).length;
     if (corners === 3) isOneAway = true;
   }
 
   const canInteract = status === 'playing' && !isBlocked;
+  const hasClaim = claimableTiers && claimableTiers.length > 0 && !isBlocked;
+
+  const handleCellClick = (r: number, c: number) => {
+    soundFX.playDaub();
+    if (onCellTap) onCellTap(r, c);
+  };
 
   return (
-    <div className={`bingo-card-v2 ${isOneAway ? 'one-away' : ''} ${claimableTiers && claimableTiers.length > 0 ? 'has-claim' : ''} ${isBlocked ? 'card-blocked' : ''}`}>
-      {/* Header strip */}
+    <div className={`bingo-card-v2 ${isOneAway ? 'one-away' : ''} ${hasClaim ? 'has-claim' : ''} ${isBlocked ? 'card-blocked' : ''}`}>
+      {/* Top Header Strip */}
       <div className="card-header-strip">
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          {/* Rank badge */}
+        <div className="card-header-left">
           {rank !== undefined && rank >= 1 && status === 'playing' && (
             <span className={`card-rank-badge ${rank === 1 ? 'rank-best' : ''}`}>
-              {rank === 1 ? '⭐' : `#${rank}`}
+              {rank === 1 ? <Trophy size={10} /> : `#${rank}`}
             </span>
           )}
-          <span style={{ opacity: 0.6 }}>⊞</span>
-          <span>{shortId}</span>
-        </span>
-        <span style={{
-          fontSize: '0.6rem',
-          color: 'rgba(165,180,252,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px'
-        }}>
-          <span style={{
-            display: 'inline-block',
-            width: `${progress}%`,
-            maxWidth: '40px',
-            minWidth: '4px',
-            height: '3px',
-            background: 'linear-gradient(90deg, #818cf8, #a5b4fc)',
-            borderRadius: '2px',
-            transition: 'width 0.4s ease'
-          }} />
-          {progress}%
-        </span>
-        {onClose && (
-          <button className="card-close-btn" onClick={onClose} aria-label="Close card">✕</button>
-        )}
+          <span className="card-id-label">Card #{shortId}</span>
+        </div>
+
+        <div className="card-header-right">
+          {/* Marked count badge */}
+          <span className="card-marked-count">
+            {markedCount}/24
+          </span>
+          {onClose && (
+            <button className="card-close-btn" onClick={onClose} aria-label="Close card">✕</button>
+          )}
+        </div>
       </div>
 
-      {/* Blocked card banner */}
+      {/* Claim / Status Banner */}
+      {hasClaim ? (
+        <button
+          className="card-claim-banner active"
+          onClick={() => {
+            soundFX.playBingoVictory();
+            onClaimBingo?.(claimableTiers![0]);
+          }}
+          disabled={claimLoading}
+        >
+          {claimLoading ? 'Verifying...' : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}><CheckCircle2 size={15} /> BINGO! — Claim Prize</span>}
+        </button>
+      ) : isOneAway && !isBlocked ? (
+        <div className="card-claim-banner urgency">
+          <Flame size={13} style={{ verticalAlign: 'middle', marginRight: '3px' }} />
+          1 AWAY FROM WIN!
+        </div>
+      ) : null}
+
+      {/* Blocked overlay */}
       {isBlocked && (
         <div className="card-blocked-badge">
-          🚫 BLOCKED — False Claim
+          <XCircle size={13} style={{ verticalAlign: 'middle', marginRight: '3px' }} />
+          Blocked — Invalid Claim
         </div>
       )}
 
-      {/* 1 AWAY Urgency Badge */}
-      {isOneAway && !isBlocked && (
-        <div className="one-away-badge">
-          🔥 1 AWAY!
-        </div>
-      )}
-
-      {/* Chance meter — shows how close to nearest win */}
-      {chanceScore !== undefined && chanceScore > 0 && status === 'playing' && !isBlocked && (
-        <div className="chance-meter-bar">
-          <div className="chance-meter-fill" style={{ width: `${Math.round(chanceScore * 100)}%` }} />
-          <span className="chance-meter-label">
-            {Math.round(chanceScore * 100)}% to win
-          </span>
-        </div>
-      )}
-
-      {/* Status badge */}
-      {statusLabel && (
-        <div className={`card-status-badge ${status}`}>
-          {statusLabel}
-        </div>
-      )}
-
-      {/* BINGO Column Headers */}
+      {/* B I N G O Column Header Row */}
       <div className="bingo-col-headers">
         {COLUMN_LETTERS.map((letter, i) => (
-          <div key={letter} className={`bingo-col-header ${getColumnClass(i)}`}>
+          <div key={letter} className={`bingo-col-pill ${getColumnClass(i)}`}>
             {letter}
           </div>
         ))}
       </div>
 
-      {/* Number Grid — tappable for manual daubing */}
+      {/* 5x5 Number Grid */}
       <div className={`card-number-grid ${canInteract ? 'interactive' : ''}`}>
         {numbers.map((row, rIdx) =>
           row.map((num, cIdx) => {
@@ -188,68 +154,38 @@ export default function BingoCard({
             if (isFree) {
               return (
                 <div key={`${rIdx}-${cIdx}`} className="card-cell free-cell">
-                  ★
+                  <div className="free-medallion">
+                    <Sparkles size={14} />
+                    <span className="free-text">FREE</span>
+                  </div>
                 </div>
               );
             }
 
+            const isMarked = isAutoMarked || isManuallyMarked;
+
             return (
               <div
                 key={`${rIdx}-${cIdx}`}
-                className={`card-cell ${isAutoMarked ? `marked ${colClass}` : ''} ${isManuallyMarked ? `manual-marked ${colClass}` : ''} ${isFlashing ? 'flash-cell' : ''} ${isBlocked ? 'cell-blocked' : ''}`}
-                onClick={canInteract && onCellTap && !isAutoMarked ? () => onCellTap(rIdx, cIdx) : undefined}
-                role={canInteract && onCellTap && !isAutoMarked ? 'button' : undefined}
-                aria-label={canInteract && onCellTap && !isAutoMarked ? `${isManuallyMarked ? 'Unmark' : 'Mark'} number ${num}` : undefined}
-                tabIndex={canInteract && onCellTap && !isAutoMarked ? 0 : undefined}
+                className={`card-cell ${isMarked ? `marked ${colClass}` : ''} ${isFlashing ? 'flash-cell' : ''} ${isBlocked ? 'cell-blocked' : ''}`}
+                onClick={canInteract && !isAutoMarked ? () => handleCellClick(rIdx, cIdx) : undefined}
+                role={canInteract && !isAutoMarked ? 'button' : undefined}
+                tabIndex={canInteract && !isAutoMarked ? 0 : undefined}
               >
-                {num}
+                {isMarked && <span className="daub-ink-stamp" />}
+                <span className="cell-number-val">{num}</span>
               </div>
             );
           })
         )}
       </div>
 
-      {/* Single BINGO Claim Button — hidden when blocked */}
-      {claimableTiers && claimableTiers.length > 0 && !isBlocked && (
-        <div style={{
-          padding: '0.6rem 0.5rem',
-          borderTop: '1px solid rgba(245, 158, 11, 0.3)',
-          display: 'flex',
-          justifyContent: 'center',
-          background: 'linear-gradient(180deg, rgba(245,158,11,0.05), rgba(245,158,11,0.15))'
-        }}>
-          <button
-            onClick={() => onClaimBingo?.(claimableTiers[0])}
-            disabled={claimLoading}
-            style={{
-              width: '100%',
-              padding: '0.65rem 1rem',
-              borderRadius: '10px',
-              border: '2px solid #fbbf24',
-              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)',
-              color: '#ffffff',
-              fontWeight: 900,
-              fontSize: '0.9rem',
-              letterSpacing: '1px',
-              textTransform: 'uppercase',
-              cursor: claimLoading ? 'not-allowed' : 'pointer',
-              boxShadow: '0 0 20px rgba(245, 158, 11, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
-              animation: 'goldGlowPulse 1.2s ease-in-out infinite alternate',
-              opacity: claimLoading ? 0.7 : 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px'
-            }}
-          >
-            {claimLoading ? (
-              <>⏳ VERIFYING BINGO...</>
-            ) : (
-              <>🔥 BINGO! (CLAIM GRAND POT)</>
-            )}
-          </button>
+      {/* Mini Progress Bar at bottom */}
+      <div className="card-bottom-bar">
+        <div className="card-progress-track">
+          <div className="card-progress-fill" style={{ width: `${progress}%` }} />
         </div>
-      )}
+      </div>
     </div>
   );
 }

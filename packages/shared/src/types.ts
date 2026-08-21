@@ -1,27 +1,65 @@
-// Enums
-export enum RoomTier { BRONZE = 'bronze', SILVER = 'silver', GOLD = 'gold' }
-export enum RoomStatus { WAITING = 'waiting', ACTIVE = 'active', ENDED = 'ended' }
-export enum GameStatus { PENDING = 'pending', ACTIVE = 'active', COMPLETED = 'completed' }
-export enum WalletEntryType {
-  DEPOSIT = 'deposit',
-  WITHDRAWAL = 'withdrawal',
-  WIN = 'win',
-  BONUS = 'bonus',
-  ENTRY_FEE = 'entry_fee',
-  HOUSE_CUT = 'house_cut'
-}
-export enum WinTier { LINE = 'line', CORNERS = 'corners', FULL_HOUSE = 'full_house' }
-export enum Gateway {
-  CHAPA = 'chapa', TELEBIRR = 'telebirr', CBE = 'cbe', WEBIRR = 'webirr'
-}
-export enum AdminRole { VIEWER = 'viewer', OPERATOR = 'operator', SUPER_ADMIN = 'super-admin' }
-export enum FlagReason {
-  HIGH_VALUE = 'high_value',
-  NEW_ACCOUNT = 'new_account',
-  MULTI_CARD = 'multi_card',
-  VELOCITY = 'velocity',
-  COLLUSION_SUSPECT = 'collusion_suspect'
-}
+// Runtime Enums & Constants
+export const RoomTier = {
+  BRONZE: 'bronze',
+  SILVER: 'silver',
+  GOLD: 'gold'
+} as const;
+export type RoomTier = (typeof RoomTier)[keyof typeof RoomTier];
+
+export const RoomStatus = {
+  WAITING: 'waiting',
+  ACTIVE: 'active',
+  ENDED: 'ended'
+} as const;
+export type RoomStatus = (typeof RoomStatus)[keyof typeof RoomStatus];
+
+export const GameStatus = {
+  PENDING: 'pending',
+  ACTIVE: 'active',
+  COMPLETED: 'completed'
+} as const;
+export type GameStatus = (typeof GameStatus)[keyof typeof GameStatus];
+
+export const WalletEntryType = {
+  DEPOSIT: 'deposit',
+  WITHDRAWAL: 'withdrawal',
+  WIN: 'win',
+  BONUS: 'bonus',
+  ENTRY_FEE: 'entry_fee',
+  HOUSE_CUT: 'house_cut'
+} as const;
+export type WalletEntryType = (typeof WalletEntryType)[keyof typeof WalletEntryType];
+
+export const WinTier = {
+  LINE: 'line',
+  CORNERS: 'corners',
+  FULL_HOUSE: 'full_house'
+} as const;
+export type WinTier = (typeof WinTier)[keyof typeof WinTier];
+
+export const Gateway = {
+  CHAPA: 'chapa',
+  TELEBIRR: 'telebirr',
+  CBE: 'cbe',
+  WEBIRR: 'webirr'
+} as const;
+export type Gateway = (typeof Gateway)[keyof typeof Gateway];
+
+export const AdminRole = {
+  VIEWER: 'viewer',
+  OPERATOR: 'operator',
+  SUPER_ADMIN: 'super-admin'
+} as const;
+export type AdminRole = (typeof AdminRole)[keyof typeof AdminRole];
+
+export const FlagReason = {
+  HIGH_VALUE: 'high_value',
+  NEW_ACCOUNT: 'new_account',
+  MULTI_CARD: 'multi_card',
+  VELOCITY: 'velocity',
+  COLLUSION_SUSPECT: 'collusion_suspect'
+} as const;
+export type FlagReason = (typeof FlagReason)[keyof typeof FlagReason];
 
 // Core entities
 export interface UserRecord {
@@ -63,6 +101,7 @@ export interface RoomRecord {
   status: RoomStatus;
   playerCount: number;
   potSantim: number;
+  patternId?: string; // Assigned winning pattern rule
   createdAt: number;
 }
 
@@ -75,14 +114,18 @@ export interface GameRecord {
   status: GameStatus;
   lastProcessedIndex: number; // optimistic lock for win detection
   winners: WinnerRecord[];
+  patternId?: string; // Winning pattern rule for this game
   revealedAt?: number;
   createdAt: number;
 }
 
 export interface WinnerRecord {
   userId: string;
+  userDisplayId?: string;
+  displayName?: string;
   cardId: string;
   winTier: WinTier;
+  patternName?: string;
   amountSantim: number;
   creditedAt: number;
 }
@@ -100,6 +143,10 @@ export interface RoomLiveState {
   calledNumbers: number[];
   seedHash: string;
   nextCallAt: number;
+  patternId?: string;
+  patternName?: string;
+  patternDescription?: string;
+  patternMatrix?: boolean[][];
   players: Record<string, PlayerLiveState>;
   reactions: Record<string, { emoji: string; timestamp: number }>;
   winner?: WinnerRecord | null;

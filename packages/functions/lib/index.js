@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.notifications = exports.fraud = exports.bonus = exports.adminFns = exports.wallet = exports.payments = exports.game = exports.auth = void 0;
+exports.notifications = exports.bonus = exports.adminFns = exports.wallet = exports.payments = exports.game = exports.auth = void 0;
 const admin = __importStar(require("firebase-admin"));
 // Core modules
 const auth_1 = require("./auth");
@@ -46,6 +46,8 @@ const wallet_1 = require("./wallet");
 const admin_1 = require("./admin");
 // Phase 3: Bonus
 const bonus_1 = require("./bonus");
+// Phase 4: Notifications & SLA
+const notifications_1 = require("./notifications");
 if (!admin.apps.length) {
     admin.initializeApp();
 }
@@ -75,8 +77,9 @@ exports.bonus = {
     applyReferralCode: // Firestore trigger — auto-registered
     bonus_1.applyReferralCode,
 };
-// TODO Phase 4: fraud — Auto-flagging, AML monitoring, and collusion detection
-exports.fraud = {};
-// TODO Phase 4: notifications — FCM and APNs push notification services
-exports.notifications = {};
+// Phase 4: Notifications — FCM push + SLA auto-approve scheduler
+exports.notifications = {
+    registerFcmToken: notifications_1.registerFcmToken,
+    autoApproveStaleFlaggedWins: notifications_1.autoApproveStaleFlaggedWins, // Scheduled: every 5 min, auto-approves flagged wins past 30-min SLA
+};
 //# sourceMappingURL=index.js.map

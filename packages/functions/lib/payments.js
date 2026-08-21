@@ -40,8 +40,9 @@ const crypto = __importStar(require("crypto"));
 const shared_1 = require("@bingo/shared");
 const santim_1 = require("./utils/santim");
 const config_1 = require("./utils/config");
+const appCheck_1 = require("./utils/appCheck");
 // 1. Create Deposit Request Call
-exports.createDepositRequest = (0, https_1.onCall)(async (request) => {
+exports.createDepositRequest = (0, https_1.onCall)(appCheck_1.SECURE_CALL_OPTIONS, async (request) => {
     const { auth } = request;
     if (!auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated.');

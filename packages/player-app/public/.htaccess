@@ -1,6 +1,15 @@
-# Disable LiteSpeed Server Cache for HTML
+# Disable LiteSpeed Server Cache & Anti-Bot CAPTCHA
 <IfModule LiteSpeed>
   CacheLookup off
+  reCaptcha off
+</IfModule>
+
+# Disable ModSecurity Firewall rules for this domain
+<IfModule mod_security2.c>
+  SecRuleEngine Off
+</IfModule>
+<IfModule mod_security.c>
+  SecRuleEngine Off
 </IfModule>
 
 DirectoryIndex index.html index.php
@@ -8,6 +17,14 @@ DirectoryIndex index.html index.php
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # Pass Authorization header to Node backend
+  CGIPassAuth On
+  RewriteCond %{HTTP:Authorization} ^(.*)
+  RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
+  # Proxy /api requests to local Node backend running on port 4000
+  RewriteRule ^api/(.*)$ http://127.0.0.1:4000/api/$1 [P,L]
 
   # Exclude /admin directory from player app rewrites
   RewriteRule ^admin(/.*)?$ - [L]
@@ -19,7 +36,18 @@ DirectoryIndex index.html index.php
 </IfModule>
 
 <IfModule mod_headers.c>
-  Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0, s-maxage=0"
-  Header set Pragma "no-cache"
-  Header set Expires "0"
+  # Re-inject Authorization header for proxy
+  RequestHeader set Authorization "%{HTTP_AUTHORIZATION}e" env=HTTP_AUTHORIZATION
+
+  # Cache static assets aggressively
+  <FilesMatch "\.(js|css|woff2|woff|ttf|png|jpg|jpeg|gif|svg|ico)$">
+    Header set Cache-Control "max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Don't cache HTML
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0, s-maxage=0"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
 </IfModule>

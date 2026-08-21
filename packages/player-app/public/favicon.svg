@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="favGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF0BA"/>
+      <stop offset="50%" stop-color="#E5A100"/>
+      <stop offset="100%" stop-color="#8C5300"/>
+    </linearGradient>
+    <radialGradient id="favCore" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#1E3258"/>
+      <stop offset="60%" stop-color="#0B1426"/>
+      <stop offset="100%" stop-color="#050A14"/>
+    </radialGradient>
+  </defs>
+  <circle cx="32" cy="32" r="30" fill="url(#favGold)"/>
+  <circle cx="32" cy="32" r="26" fill="url(#favCore)"/>
+  <!-- Crown -->
+  <path d="M 23 25 L 21 17 L 27 21 L 32 15 L 37 21 L 43 17 L 41 25 Z" fill="url(#favGold)"/>
+  <!-- 'B' Letter -->
+  <text x="32" y="47" text-anchor="middle" font-family="'Plus Jakarta Sans', 'Arial Black', sans-serif" font-size="24" font-weight="900" fill="url(#favGold)">B</text>
+</svg>

@@ -1,4 +1,5 @@
 import { useTheme } from '../useTheme';
+import { ChevronLeft, Info, Sun, Moon, Circle, Trophy } from 'lucide-react';
 
 interface GameHeaderProps {
   gameName: string;
@@ -12,57 +13,63 @@ interface GameHeaderProps {
 
 export default function GameHeader({ gameName, tier, potEtb, drawnCount, onBack, onShowInfo, isLive }: GameHeaderProps) {
   const { theme, toggle } = useTheme();
-  const tierEmoji = tier === 'gold' ? '🥇' : tier === 'silver' ? '🥈' : tier === 'bronze' ? '🥉' : '🎱';
 
   return (
-    <div className="game-header-v2">
-      {/* Top Row: Back, Title, Tier & Actions */}
+    <header className="game-header-v2">
+      {/* Top Row: Navigation, Room Title & Quick Controls */}
       <div className="game-header-main-row">
         <div className="game-header-brand">
-          <button className="game-header-btn" onClick={onBack} aria-label="Back">
-            ‹
+          <button className="game-header-btn" onClick={onBack} aria-label="Leave room" title="Back to Lobby">
+            <ChevronLeft size={20} />
           </button>
-          <span className="game-header-title">{gameName}</span>
-          {tier && (
-            <span className="game-header-badge">{tierEmoji} {tier}</span>
-          )}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span className="game-header-title">{gameName}</span>
+              {tier && (
+                <span className={`game-header-badge tier-${tier.toLowerCase()}`}>
+                  {tier}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="game-header-actions">
           {onShowInfo && (
-            <button className="game-header-btn" onClick={onShowInfo} aria-label="Info">ℹ</button>
+            <button className="game-header-btn" onClick={onShowInfo} aria-label="Game Info" title="Game Rules & Info">
+              <Info size={17} />
+            </button>
           )}
-          <button className="game-header-btn" onClick={toggle} aria-label="Toggle theme">
-            {theme === 'dark' ? '☀️' : '🌙'}
+          <button className="game-header-btn" onClick={toggle} aria-label="Toggle Theme" title="Switch Dark/Light Theme">
+            {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
           </button>
         </div>
       </div>
 
-      {/* Sub Row: Prize, Live status & Progress */}
-      {(potEtb !== undefined || isLive || drawnCount !== undefined) && (
-        <div className="game-header-sub-row">
-          {potEtb !== undefined && (
-            <span className="header-prize-pill">
-              🏆 {(potEtb * 0.85).toFixed(0)} ETB PRIZE
+      {/* Sub Row: Prize Payout, Drawn Counter & Live Beacon */}
+      <div className="game-header-sub-row">
+        {potEtb !== undefined && (
+          <div className="header-prize-pill">
+            <Trophy size={13} />
+            <span>{(potEtb * 0.85).toFixed(0)} ETB PRIZE</span>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: 'auto' }}>
+          {drawnCount !== undefined && drawnCount > 0 && (
+            <span className="header-drawn-pill">
+              {drawnCount}/75 Balls
             </span>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginLeft: 'auto' }}>
-            {drawnCount !== undefined && drawnCount > 0 && (
-              <span className="header-drawn-pill">
-                🎱 {drawnCount}/75
-              </span>
-            )}
-
-            {isLive && (
-              <span className="header-live-pill">
-                <span className="live-dot" />
-                LIVE
-              </span>
-            )}
-          </div>
+          {isLive && (
+            <span className="header-live-pill">
+              <Circle size={7} fill="currentColor" />
+              LIVE
+            </span>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+    </header>
   );
 }

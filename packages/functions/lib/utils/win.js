@@ -66,7 +66,7 @@ function checkWinPattern(cardNumbers, calledNumbers) {
 }
 /**
  * Calculates the prize pool for the single grand winner.
- * In Single Winner mode, the first valid claim wins 100% of the player prize pool.
+ * Single Winner mode: the first valid claim wins 100% of the player prize pool.
  */
 function calculateTierPrizePools(playerPrizePoolSantim) {
     return {

@@ -40,6 +40,8 @@ const shared_1 = require("@bingo/shared");
 const card_1 = require("./utils/card");
 const rng_1 = require("./utils/rng");
 const win_1 = require("./utils/win");
+const rateLimit_1 = require("./utils/rateLimit");
+const appCheck_1 = require("./utils/appCheck");
 // Helper to determine stakes and rules per tier
 function getTierConfig(tier) {
     switch (tier) {
@@ -54,7 +56,7 @@ function getTierConfig(tier) {
     }
 }
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-exports.createRoom = (0, https_1.onCall)(async (request) => {
+exports.createRoom = (0, https_1.onCall)(appCheck_1.SECURE_CALL_OPTIONS, async (request) => {
     const { auth } = request;
     if (!auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated.');
@@ -97,15 +99,20 @@ exports.createRoom = (0, https_1.onCall)(async (request) => {
     });
     return { success: true, roomId };
 });
-exports.buyCards = (0, https_1.onCall)(async (request) => {
+exports.buyCards = (0, https_1.onCall)(appCheck_1.SECURE_CALL_OPTIONS, async (request) => {
     const { auth } = request;
     if (!auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated.');
     }
     const uid = auth.uid;
+    // Rate limit: max 6 card purchases per user per minute (spec §4.4)
+    const allowed = await (0, rateLimit_1.checkRateLimit)(uid, 'buyCards', 6, 60 * 1000);
+    if (!allowed) {
+        throw new https_1.HttpsError('resource-exhausted', 'Rate limit exceeded: max 6 card purchases per minute.');
+    }
     const { roomId, cardCount } = request.data;
-    if (!roomId || !cardCount || cardCount < 1 || cardCount > 6) {
-        throw new https_1.HttpsError('invalid-argument', 'Invalid purchase request.');
+    if (!roomId || !cardCount || cardCount < 1 || cardCount > 100) {
+        throw new https_1.HttpsError('invalid-argument', 'Invalid purchase request (must be between 1 and 100 cards).');
     }
     const db = admin.firestore();
     const rtdb = admin.database();
@@ -201,7 +208,7 @@ exports.buyCards = (0, https_1.onCall)(async (request) => {
     return { success: true, cards: result.newCards };
 });
 // Run live game loop and number calling
-exports.startGame = (0, https_1.onCall)({ timeoutSeconds: 1200 }, async (request) => {
+exports.startGame = (0, https_1.onCall)(appCheck_1.SECURE_CALL_OPTIONS_LONG, async (request) => {
     const { auth } = request;
     if (!auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated.');
@@ -409,30 +416,29 @@ exports.startGame = (0, https_1.onCall)({ timeoutSeconds: 1200 }, async (request
     });
     return { success: true, winners };
 });
-// Fraud flag logic
-async function evaluateFraudFlags(db, win) {
+// Fraud flag logic — implements all 5 criteria from spec §4.3
+async function evaluateFraudFlags(db, win, gameId) {
     const userRef = db.collection('users').doc(win.userId);
     const userDoc = await userRef.get();
     if (!userDoc.exists)
         return true;
-    // Rule 1: First-time depositor winning on very first game
-    // Check if they only have deposit and card fees, no prior gaming or winning activity
-    const ledgerSnap = await db.collection('walletLedger')
+    const userData = userDoc.data();
+    // Rule 1 (§4.3): First-time depositor wins on their very first game
+    const winLedgerSnap = await db.collection('walletLedger')
         .where('userId', '==', win.userId)
         .where('type', '==', shared_1.WalletEntryType.WIN)
         .get();
-    const isFirstWin = ledgerSnap.empty;
+    const isFirstWin = winLedgerSnap.empty;
     if (isFirstWin) {
-        const firstDepositSnap = await db.collection('walletLedger')
+        const depositSnap = await db.collection('walletLedger')
             .where('userId', '==', win.userId)
             .where('type', '==', shared_1.WalletEntryType.DEPOSIT)
             .get();
-        if (!firstDepositSnap.empty && firstDepositSnap.size === 1) {
-            // High bonus-abuse signal or first-win check
-            return true;
+        if (!depositSnap.empty && depositSnap.size === 1) {
+            return true; // High bonus-abuse signal
         }
     }
-    // Rule 2: Player wins more than 3 games in a rolling 6-hour window
+    // Rule 2 (§4.3): Player wins more than 3 games in a rolling 6-hour window
     const sixHoursAgo = Date.now() - (6 * 60 * 60 * 1000);
     const recentWinsSnap = await db.collection('walletLedger')
         .where('userId', '==', win.userId)
@@ -442,9 +448,71 @@ async function evaluateFraudFlags(db, win) {
     if (recentWinsSnap.size >= 3) {
         return true;
     }
+    // Rule 3 (§4.3): Player's win rate in the last 20 games exceeds 30%
+    // Count games played (entry_fee entries) and wins in recent history
+    const recentEntryFeesSnap = await db.collection('walletLedger')
+        .where('userId', '==', win.userId)
+        .where('type', '==', shared_1.WalletEntryType.ENTRY_FEE)
+        .orderBy('createdAt', 'desc')
+        .limit(20)
+        .get();
+    if (recentEntryFeesSnap.size >= 10) {
+        // Only evaluate win rate if player has enough game history
+        const allWinsSnap = await db.collection('walletLedger')
+            .where('userId', '==', win.userId)
+            .where('type', '==', shared_1.WalletEntryType.WIN)
+            .get();
+        const winRate = allWinsSnap.size / recentEntryFeesSnap.size;
+        if (winRate > 0.30) {
+            return true;
+        }
+    }
+    // Rule 4 (§4.3): Multiple wins from the same device fingerprint within 24h across different accounts
+    const deviceFingerprint = userData.deviceFingerprint;
+    if (deviceFingerprint) {
+        const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
+        // Find other users sharing this device fingerprint
+        const sameDeviceUsersSnap = await db.collection('users')
+            .where('deviceFingerprint', '==', deviceFingerprint)
+            .get();
+        const otherUids = sameDeviceUsersSnap.docs
+            .map(d => d.id)
+            .filter(uid => uid !== win.userId);
+        if (otherUids.length > 0) {
+            // Check if any of those other accounts won in last 24h
+            for (const otherUid of otherUids) {
+                const otherWinsSnap = await db.collection('walletLedger')
+                    .where('userId', '==', otherUid)
+                    .where('type', '==', shared_1.WalletEntryType.WIN)
+                    .where('createdAt', '>=', twentyFourHoursAgo)
+                    .limit(1)
+                    .get();
+                if (!otherWinsSnap.empty) {
+                    return true; // Same device, different account, won within 24h
+                }
+            }
+        }
+    }
+    // Rule 5 (§4.3): Game had fewer than 4 unique player device fingerprints (collusion ring)
+    if (gameId) {
+        const cardsSnap = await db.collection('rooms').doc(gameId).collection('cards').get();
+        const playerUids = new Set(cardsSnap.docs.map(d => d.data().userId));
+        const fingerprints = new Set();
+        for (const uid of playerUids) {
+            const pDoc = await db.collection('users').doc(uid).get();
+            if (pDoc.exists) {
+                const fp = pDoc.data()?.deviceFingerprint;
+                if (fp)
+                    fingerprints.add(fp);
+            }
+        }
+        if (fingerprints.size < 4 && playerUids.size >= 2) {
+            return true; // Too few unique devices for the number of players
+        }
+    }
     return false;
 }
-exports.addMockPlayers = (0, https_1.onCall)(async (request) => {
+exports.addMockPlayers = (0, https_1.onCall)(appCheck_1.SECURE_CALL_OPTIONS, async (request) => {
     if (process.env.FUNCTIONS_EMULATOR !== 'true' && process.env.VITEST !== 'true') {
         throw new https_1.HttpsError('permission-denied', 'This function is only available in emulator mode.');
     }
@@ -538,7 +606,7 @@ exports.addMockPlayers = (0, https_1.onCall)(async (request) => {
     await rtdb.ref(`rooms/${roomId}`).update(updates);
     return { success: true, count: mockCount };
 });
-exports.claimBingo = (0, https_1.onCall)(async (request) => {
+exports.claimBingo = (0, https_1.onCall)(appCheck_1.SECURE_CALL_OPTIONS, async (request) => {
     const { auth } = request;
     if (!auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated.');
@@ -560,7 +628,7 @@ exports.claimBingo = (0, https_1.onCall)(async (request) => {
         amountSantim: 0,
         creditedAt: Date.now()
     };
-    const isFlagged = await evaluateFraudFlags(db, tempWinnerPlaceholder);
+    const isFlagged = await evaluateFraudFlags(db, tempWinnerPlaceholder, roomId);
     const result = await db.runTransaction(async (transaction) => {
         // 1. Read game document
         const gameDoc = await transaction.get(gameRef);
