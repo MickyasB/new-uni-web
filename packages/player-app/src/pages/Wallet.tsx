@@ -68,14 +68,14 @@ export default function Wallet() {
   // Platform official transfer destinations
   const PLATFORM_ACCOUNTS = {
     telebirr: {
-      phone: '0911223344',
-      name: 'Bingo Ethiopia Platform',
+      phone: '0930044412',
+      name: 'Miniyahil',
       badge: 'Telebirr Transfer',
     },
     cbe: {
-      account: '1000543219876',
-      name: 'Bingo Ethiopia Entertainment',
-      branch: 'Finfinne Branch',
+      account: '1000787062044',
+      name: 'Gym General Trading Plc',
+      branch: 'CBE Account',
       badge: 'CBE Mobile / CBE Birr',
     },
   };

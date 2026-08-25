@@ -24,7 +24,7 @@ async function runTests() {
     Trans. ID: FT240825981245
     Amount: 500.00 ETB
     Debited Account: 1000****1234
-    Credited Account: 1000543219876 (Bingo Ethiopia)
+    Credited Account: 1000787062044 (Gym General Trading Plc)
     Date: 25/08/2026 16:45:10
   `;
   const cbeParsed = parseReceiptText(cbeReceiptSample);
@@ -34,7 +34,7 @@ async function runTests() {
   assert(cbeParsed.confidence >= 80, `CBE confidence score is high (${cbeParsed.confidence}%)`);
 
   // ─── Test 2: CBE SMS Message Parsing ───
-  const cbeSmsSample = 'Dear Customer, ETB 250.00 has been debited from your account 1000****5678 on 25-Aug-2026. Trans. ID: FT242387654129 to Bingo Ethiopia. Thank you for banking with CBE.';
+  const cbeSmsSample = 'Dear Customer, ETB 250.00 has been debited from your account 1000****5678 on 25-Aug-2026. Trans. ID: FT242387654129 to Gym General Trading Plc. Thank you for banking with CBE.';
   const cbeSmsParsed = parseReceiptText(cbeSmsSample);
   assert(cbeSmsParsed.ftNumber === 'FT242387654129', 'CBE SMS FT Number extracted');
   assert(cbeSmsParsed.amountEtb === 250, 'CBE SMS Amount 250 ETB extracted');
@@ -47,7 +47,7 @@ async function runTests() {
     Transaction No: CI1209384938
     Status: Completed
     Amount Transferred: 1,000.00 ETB
-    Recipient: 0911223344 (Bingo Ethiopia)
+    Recipient: 0930044412 (Miniyahil)
     Date: 2026-08-25 16:50:00
   `;
   const telebirrParsed = parseReceiptText(telebirrReceiptSample);
@@ -56,7 +56,7 @@ async function runTests() {
   assert(telebirrParsed.gateway === 'telebirr', 'Telebirr Gateway detected');
 
   // ─── Test 4: Telebirr SMS Message Parsing ───
-  const telebirrSmsSample = 'Dear Customer, you have transferred ETB 100.00 to 0911223344 on 25/08/2026 16:55:00. Transaction number is 20260825991823. Your new balance is ETB 450.00.';
+  const telebirrSmsSample = 'Dear Customer, you have transferred ETB 100.00 to 0930044412 on 25/08/2026 16:55:00. Transaction number is 20260825991823. Your new balance is ETB 450.00.';
   const telebirrSmsParsed = parseReceiptText(telebirrSmsSample);
   assert(telebirrSmsParsed.ftNumber === '20260825991823', 'Telebirr numeric Tx ID extracted from SMS');
   assert(telebirrSmsParsed.amountEtb === 100, 'Telebirr SMS amount extracted');
