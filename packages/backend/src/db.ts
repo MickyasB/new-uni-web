@@ -16,13 +16,16 @@ interface LocalStore {
   wallet_ledger: Record<string, any>;
   flagged_wins: Record<string, any>;
   withdrawal_requests: Record<string, any>;
+  manual_deposits: Record<string, any>;
   platform_config: Record<string, any>;
 }
 
 function loadStore(): LocalStore {
   if (fs.existsSync(DB_FILE)) {
     try {
-      return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+      const parsed = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+      if (!parsed.manual_deposits) parsed.manual_deposits = {};
+      return parsed;
     } catch (e) {
       // ignore
     }
@@ -62,6 +65,7 @@ function loadStore(): LocalStore {
     wallet_ledger: {},
     flagged_wins: {},
     withdrawal_requests: {},
+    manual_deposits: {},
     platform_config: {
       global: {
         key: 'global',
@@ -147,6 +151,23 @@ export async function query(text: string, params?: any[]): Promise<{ rows: any[]
       const list = Object.values(store.withdrawal_requests);
       return { rows: list, rowCount: list.length };
     }
+    if (upperSql.includes('FROM MANUAL_DEPOSITS')) {
+      let list = Object.values(store.manual_deposits || {});
+      if (params && params.length > 0) {
+        const val = params[0];
+        if (upperSql.includes('FT_NUMBER =')) {
+          list = list.filter((d: any) => d.ft_number === val || d.ftNumber === val);
+        } else if (upperSql.includes('ID =')) {
+          list = list.filter((d: any) => d.id === val);
+        } else if (upperSql.includes('USER_ID =')) {
+          list = list.filter((d: any) => d.user_id === val || d.userId === val);
+        }
+      }
+      if (upperSql.includes("STATUS = 'PENDING'")) {
+        list = list.filter((d: any) => d.status === 'pending');
+      }
+      return { rows: list, rowCount: list.length };
+    }
     return { rows: [], rowCount: 0 };
   }
 
@@ -168,6 +189,84 @@ export async function query(text: string, params?: any[]): Promise<{ rows: any[]
       store.users[uid] = newUser;
       saveStore(store);
       return { rows: [newUser], rowCount: 1 };
+    }
+  }
+
+  if (upperSql.startsWith('INSERT INTO MANUAL_DEPOSITS')) {
+    if (params) {
+      const [id, userId, gateway, ftNumber, amountEtb, amountSantim, payerName, payerPhone, receiptImageUrl, ocrRawText, ocrConfidence, status, createdAt] = params;
+      const newDep = {
+        id,
+        user_id: userId,
+        gateway,
+        ft_number: ftNumber,
+        amount_etb: amountEtb,
+        amount_santim: amountSantim,
+        payer_name: payerName,
+        payer_phone: payerPhone,
+        receipt_image_url: receiptImageUrl,
+        ocr_raw_text: ocrRawText,
+        ocr_confidence: ocrConfidence,
+        status: status || 'pending',
+        created_at: createdAt || Date.now()
+      };
+      if (!store.manual_deposits) store.manual_deposits = {};
+      store.manual_deposits[id] = newDep;
+      saveStore(store);
+      return { rows: [newDep], rowCount: 1 };
+    }
+  }
+
+  if (upperSql.startsWith('INSERT INTO WALLET_LEDGER')) {
+    if (params) {
+      const [id, userId, type, amountSantim, balanceSantim, gateway, txId, createdAt] = params;
+      const newEntry = {
+        id,
+        user_id: userId,
+        type,
+        amount_santim: amountSantim,
+        balance_santim: balanceSantim,
+        gateway,
+        transaction_id: txId,
+        created_at: createdAt || Date.now()
+      };
+      store.wallet_ledger[id] = newEntry;
+      saveStore(store);
+      return { rows: [newEntry], rowCount: 1 };
+    }
+  }
+
+  if (upperSql.startsWith('UPDATE USERS SET WALLET_BALANCE_SANTIM')) {
+    if (params) {
+      const [newBalance, uid] = params;
+      if (store.users[uid]) {
+        store.users[uid].wallet_balance_santim = newBalance;
+        saveStore(store);
+        return { rows: [store.users[uid]], rowCount: 1 };
+      }
+    }
+  }
+
+  if (upperSql.startsWith('UPDATE MANUAL_DEPOSITS')) {
+    if (params && params.length >= 2) {
+      const id = params[params.length - 1];
+      if (store.manual_deposits && store.manual_deposits[id]) {
+        if (upperSql.includes("STATUS = 'APPROVED'")) {
+          store.manual_deposits[id].status = 'approved';
+          store.manual_deposits[id].processed_by = params[0];
+          store.manual_deposits[id].processed_at = params[1];
+        } else if (upperSql.includes("STATUS = 'REJECTED'")) {
+          store.manual_deposits[id].status = 'rejected';
+          store.manual_deposits[id].rejection_reason = params[0];
+          store.manual_deposits[id].processed_by = params[1];
+          store.manual_deposits[id].processed_at = params[2];
+        } else if (upperSql.includes('TELEGRAM_MESSAGE_ID')) {
+          store.manual_deposits[id].telegram_message_id = params[0];
+          store.manual_deposits[id].telegram_chat_id = params[1];
+        }
+        saveStore(store);
+        return { rows: [store.manual_deposits[id]], rowCount: 1 };
+      }
     }
   }
 

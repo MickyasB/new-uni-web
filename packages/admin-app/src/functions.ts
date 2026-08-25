@@ -67,6 +67,16 @@ export const callApproveFlaggedWin = (data: { flaggedWinId: string }) =>
 export const callRejectFlaggedWin = (data: { flaggedWinId: string }) =>
   adminRequest(`/admin/flagged-wins/${data.flaggedWinId}/reject`, 'POST');
 
+// ── Manual Deposits & FT Approvals ─────────────────────────────────────────────
+export const getPendingManualDeposits = () =>
+  adminRequest('/deposits/pending');
+
+export const approveManualDeposit = (depositId: string) =>
+  adminRequest(`/deposits/${depositId}/approve`, 'POST');
+
+export const rejectManualDeposit = (depositId: string, reason?: string) =>
+  adminRequest(`/deposits/${depositId}/reject`, 'POST', { reason });
+
 // ── Rooms ──────────────────────────────────────────────────────────────────────
 export const createRoom = (tier: string, mode: string, type: string) =>
   adminRequest('/admin/rooms', 'POST', { tier, mode, type });
@@ -80,3 +90,4 @@ export const getLedger = (type?: string) =>
 
 export const callRunManualReconciliation = () =>
   adminRequest('/admin/reconciliation', 'POST');
+

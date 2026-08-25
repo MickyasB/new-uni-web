@@ -196,3 +196,42 @@ export interface PlatformConfig {
   winAutoApproveThresholdSantim: number; // below this, skip fraud queue
   winSlaMinutes: number; // SLA before auto-approve (default: 30)
 }
+
+// Manual Deposit & Verification (Telebirr & CBE FT)
+export type ManualDepositStatus = 'pending' | 'approved' | 'rejected';
+
+export interface ManualDepositRecord {
+  id: string;
+  userId: string;
+  displayName?: string;
+  phone?: string;
+  gateway: 'telebirr' | 'cbe' | 'cbe_birr';
+  ftNumber: string;
+  amountEtb: number;
+  amountSantim: number;
+  payerName?: string;
+  payerPhone?: string;
+  receiptImageUrl?: string;
+  ocrRawText?: string;
+  ocrConfidence?: number;
+  status: ManualDepositStatus;
+  rejectionReason?: string;
+  processedBy?: string;
+  telegramMessageId?: string;
+  telegramChatId?: string;
+  createdAt: number;
+  processedAt?: number;
+}
+
+export interface OCRParseResult {
+  ftNumber: string | null;
+  amountEtb: number | null;
+  amountSantim: number | null;
+  gateway: 'telebirr' | 'cbe' | 'cbe_birr' | null;
+  payerName: string | null;
+  payerPhone: string | null;
+  dateStr: string | null;
+  rawText: string;
+  confidence: number;
+}
+

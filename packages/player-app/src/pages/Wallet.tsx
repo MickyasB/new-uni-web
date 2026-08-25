@@ -1,26 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../store';
 import { api } from '../api';
 import { Gateway } from '@bingo/shared';
 import { Button, Input, CurrencyDisplay, Toast } from '../components/ui';
-import { ArrowDownCircle, ArrowUpCircle, History, Smartphone, Building2, CreditCard, Globe, CheckCircle2, XCircle, Inbox, Send } from 'lucide-react';
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  History,
+  Smartphone,
+  Building2,
+  CreditCard,
+  Inbox,
+  Send,
+  Copy,
+  Check,
+  Sparkles,
+  RefreshCw,
+  ShieldCheck,
+  Camera,
+} from 'lucide-react';
 
 export default function Wallet() {
   const { t } = useTranslation();
   const { user, refreshUser } = useAppStore();
   const userRecord = user;
-  
+
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw' | 'history'>('deposit');
+  const [depositMode, setDepositMode] = useState<'direct' | 'gateway'>('direct');
   const [ledgerEntries, setLedgerEntries] = useState<any[]>([]);
-  
-  // Deposit state
+
+  // Direct Transfer & FT Verification State
+  const [selectedGateway, setSelectedGateway] = useState<'telebirr' | 'cbe'>('telebirr');
+  const [ftNumber, setFtNumber] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
-  const [depositGateway, setDepositGateway] = useState<Gateway>(Gateway.CHAPA);
+  const [receiptImage, setReceiptImage] = useState<string | null>(null);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrDetectedInfo, setOcrDetectedInfo] = useState<string | null>(null);
+  const [ocrConfidence, setOcrConfidence] = useState<number>(0);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  // Active Pending Deposit Tracker State
+  const [activeDepositId, setActiveDepositId] = useState<string | null>(null);
+  const [activeDepositStatus, setActiveDepositStatus] = useState<string | null>(null);
+  const [activeDepositAmount, setActiveDepositAmount] = useState<number>(0);
+  const [activeDepositFt, setActiveDepositFt] = useState<string>('');
+
+  // General Loading & Error State
   const [depositLoading, setDepositLoading] = useState(false);
   const [depositError, setDepositError] = useState('');
-  const [simulatedCheckoutUrl, setSimulatedCheckoutUrl] = useState('');
-  const [paymentId, setPaymentId] = useState('');
+  const [depositSuccess, setDepositSuccess] = useState('');
 
   // Withdrawal state
   const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -30,7 +59,28 @@ export default function Wallet() {
   const [withdrawError, setWithdrawError] = useState('');
   const [withdrawSuccess, setWithdrawSuccess] = useState(false);
 
-  // Fetch wallet history via REST
+  // Gateway sandbox simulator state
+  const [simulatedCheckoutUrl, setSimulatedCheckoutUrl] = useState('');
+  const [paymentId, setPaymentId] = useState('');
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Platform official transfer destinations
+  const PLATFORM_ACCOUNTS = {
+    telebirr: {
+      phone: '0911223344',
+      name: 'Bingo Ethiopia Platform',
+      badge: 'Telebirr Transfer',
+    },
+    cbe: {
+      account: '1000543219876',
+      name: 'Bingo Ethiopia Entertainment',
+      branch: 'Finfinne Branch',
+      badge: 'CBE Mobile / CBE Birr',
+    },
+  };
+
+  // Fetch wallet history
   const fetchHistory = async () => {
     try {
       const data = await api.getWalletHistory();
@@ -44,7 +94,136 @@ export default function Wallet() {
     fetchHistory();
   }, [activeTab]);
 
-  const handleDepositSubmit = async (e: React.FormEvent) => {
+  // Polling tracker for active pending deposit
+  useEffect(() => {
+    let interval: any = null;
+    if (activeDepositId && activeDepositStatus === 'pending') {
+      interval = setInterval(async () => {
+        try {
+          const res = await api.getManualDepositStatus(activeDepositId);
+          if (res.success && res.deposit) {
+            const status = res.deposit.status;
+            if (status === 'approved') {
+              setActiveDepositStatus('approved');
+              setDepositSuccess(`🎉 Deposit Approved! ${res.deposit.amount_etb} ETB has been added to your wallet.`);
+              if (refreshUser) refreshUser();
+              fetchHistory();
+              clearInterval(interval);
+            } else if (status === 'rejected') {
+              setActiveDepositStatus('rejected');
+              setDepositError(`❌ Deposit Rejected: ${res.deposit.rejection_reason || 'Verification failed'}`);
+              clearInterval(interval);
+            }
+          }
+        } catch (e) {
+          // ignore poll error
+        }
+      }, 3000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [activeDepositId, activeDepositStatus]);
+
+  // Handle image upload and trigger OCR
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result as string;
+      setReceiptImage(base64);
+      setOcrLoading(true);
+      setOcrDetectedInfo(null);
+      setDepositError('');
+
+      try {
+        const ocrRes = await api.scanReceiptOcr(base64);
+        if (ocrRes.success && ocrRes.data) {
+          const { ftNumber: detectedFt, amountEtb: detectedAmt, gateway: detectedGw, confidence } = ocrRes.data;
+
+          let infoText = '';
+          if (detectedFt) {
+            setFtNumber(detectedFt);
+            infoText += `Detected FT: ${detectedFt}`;
+          }
+          if (detectedAmt && detectedAmt > 0) {
+            setDepositAmount(String(detectedAmt));
+            infoText += (infoText ? ' | ' : '') + `Amount: ${detectedAmt} ETB`;
+          }
+          if (detectedGw) {
+            setSelectedGateway(detectedGw === 'cbe' ? 'cbe' : 'telebirr');
+          }
+          setOcrConfidence(confidence || 0);
+
+          if (infoText) {
+            setOcrDetectedInfo(`🤖 Auto-detected: ${infoText}`);
+          }
+        }
+      } catch (err: any) {
+        console.warn('OCR Scan warning:', err);
+      } finally {
+        setOcrLoading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Copy to clipboard helper
+  const handleCopy = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  // Submit Direct Transfer & FT verification request
+  const handleManualDepositSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDepositError('');
+    setDepositSuccess('');
+    setDepositLoading(true);
+
+    const amt = parseFloat(depositAmount);
+    if (isNaN(amt) || amt <= 0) {
+      setDepositError('Please enter a valid deposit amount.');
+      setDepositLoading(false);
+      return;
+    }
+
+    if (!ftNumber.trim()) {
+      setDepositError('Please enter the FT / Transaction Reference number from your transfer receipt.');
+      setDepositLoading(false);
+      return;
+    }
+
+    try {
+      const res = await api.submitManualDeposit({
+        gateway: selectedGateway,
+        ftNumber: ftNumber.trim(),
+        amountEtb: amt,
+        receiptImageUrl: receiptImage || undefined,
+        ocrConfidence: ocrConfidence || 0,
+      });
+
+      if (res.success && res.deposit) {
+        setActiveDepositId(res.deposit.id);
+        setActiveDepositStatus('pending');
+        setActiveDepositAmount(res.deposit.amountEtb || amt);
+        setActiveDepositFt(res.deposit.ftNumber);
+        setDepositSuccess('Deposit request submitted! Admin will verify and credit your wallet immediately.');
+      } else {
+        throw new Error(res.error || 'Failed to submit deposit verification.');
+      }
+    } catch (err: any) {
+      setDepositError(err.message || 'Failed to submit deposit verification.');
+    } finally {
+      setDepositLoading(false);
+    }
+  };
+
+  // Standard Gateway flow
+  const handleGatewayDepositSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setDepositError('');
     setSimulatedCheckoutUrl('');
@@ -58,21 +237,21 @@ export default function Wallet() {
     }
 
     try {
-      const data = await api.deposit(amt, depositGateway);
+      const data = await api.deposit(amt, Gateway.CHAPA);
       if (data.success && data.checkoutUrl) {
         setSimulatedCheckoutUrl(data.checkoutUrl);
         setPaymentId(data.paymentRef);
       } else {
-        throw new Error('Failed to create deposit request.');
+        throw new Error('Failed to create payment session.');
       }
     } catch (err: any) {
-      console.error(err);
-      setDepositError(err.message || 'Failed to process deposit request.');
+      setDepositError(err.message || 'Failed to create payment session.');
     } finally {
       setDepositLoading(false);
     }
   };
 
+  // Handle Withdrawal Request
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setWithdrawError('');
@@ -110,63 +289,15 @@ export default function Wallet() {
         throw new Error('Withdrawal request failed.');
       }
     } catch (err: any) {
-      console.error(err);
       setWithdrawError(err.message || 'Failed to request withdrawal.');
     } finally {
       setWithdrawLoading(false);
     }
   };
 
-  // Simulated gateway sandbox completion
-  const handleSimulatePaymentOutcome = async (outcome: 'success' | 'fail') => {
-    setDepositLoading(true);
-    try {
-      const API_BASE = import.meta.env.VITE_API_URL || '/api';
-      const webhookUrl = `${API_BASE}/wallet/webhooks/${depositGateway}`;
-      
-      const payload: Record<string, any> = {
-        tx_ref: paymentId,
-        outTradeNo: paymentId,
-        paymentId: paymentId,
-        referenceNumber: paymentId,
-        amount: depositAmount,
-        totalAmount: depositAmount,
-        meta: { userId: user?.uid },
-        customization: { userId: user?.uid },
-        userId: user?.uid,
-        msisdn: user?.phone,
-        status: outcome === 'success' ? 'success' : 'failed',
-        tradeStatus: outcome === 'success' ? 'SUCCESS' : 'FAILED',
-        transactionStatus: outcome === 'success' ? 'COMPLETED' : 'FAILED',
-        currency: 'ETB',
-      };
-
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        setSimulatedCheckoutUrl('');
-        setDepositAmount('');
-        setActiveTab('history');
-        if (refreshUser) refreshUser();
-        fetchHistory();
-      } else {
-        const text = await response.text();
-        throw new Error(text || 'Simulation webhook request failed.');
-      }
-    } catch (err: any) {
-      setDepositError(`Webhook simulation error: ${err.message}`);
-    } finally {
-      setDepositLoading(false);
-    }
-  };
-
   const formatLedgerType = (type: string) => {
     switch (type) {
-      case 'deposit': return 'Deposit';
+      case 'deposit': return 'Deposit (Direct/FT)';
       case 'withdrawal': return 'Withdrawal';
       case 'win': return 'Prize Winnings';
       case 'bonus': return 'Bonus';
@@ -176,20 +307,8 @@ export default function Wallet() {
     }
   };
 
-  const GATEWAYS_DEPOSIT = [
-    { value: Gateway.CHAPA, label: 'Chapa', icon: <CreditCard size={18} /> },
-    { value: Gateway.TELEBIRR, label: 'Telebirr', icon: <Smartphone size={18} /> },
-    { value: Gateway.WEBIRR, label: 'WeBirr', icon: <Globe size={18} /> },
-    { value: Gateway.CBE, label: 'CBE Birr', icon: <Building2 size={18} /> },
-  ];
-
-  const GATEWAYS_WITHDRAW = [
-    { value: Gateway.TELEBIRR, label: 'Telebirr', icon: <Smartphone size={18} /> },
-    { value: Gateway.CBE, label: 'CBE Account', icon: <Building2 size={18} /> },
-  ];
-
   return (
-    <div className="page-container">
+    <div className="page-container" style={{ paddingBottom: '3rem' }}>
       {/* Balance Hero Card */}
       <div className="balance-hero">
         <span className="balance-hero-label">{t('wallet.balance') || 'Available Balance'}</span>
@@ -226,144 +345,381 @@ export default function Wallet() {
         </button>
       </div>
 
-      {/* Deposit Form */}
-      {activeTab === 'deposit' && !simulatedCheckoutUrl && (
-        <div className="section-card">
-          <div className="section-title" style={{ fontFamily: 'var(--font-heading)' }}>
-            <ArrowDownCircle size={18} style={{ color: 'var(--primary-amber)' }} />
-            <span>Deposit Funds</span>
-          </div>
-          <form onSubmit={handleDepositSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
-            {depositError && (
-              <Toast message={depositError} type="error" onClose={() => setDepositError('')} />
-            )}
-
-            <div>
-              <Input
-                label={t('wallet.amountEtb') || 'Amount (ETB)'}
-                type="number"
-                placeholder="Enter amount (e.g. 100)"
-                min="1"
-                value={depositAmount}
-                onChange={(e) => setDepositAmount(e.target.value)}
-                required
-                disabled={depositLoading}
-              />
-              <div className="quick-amounts-bar">
-                {[25, 50, 100, 200, 500].map((amt) => (
-                  <button
-                    key={amt}
-                    type="button"
-                    onClick={() => setDepositAmount(String(amt))}
-                    disabled={depositLoading}
-                    className={`quick-amount-btn ${depositAmount === String(amt) ? 'selected' : ''}`}
-                  >
-                    {amt} ETB
-                  </button>
-                ))}
+      {/* ─── TAB 1: DEPOSIT ────────────────────────────────────────────── */}
+      {activeTab === 'deposit' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* Active Deposit Live Status Card */}
+          {activeDepositStatus === 'pending' && (
+            <div className="section-card" style={{ border: '1px solid rgba(229,161,0,0.5)', background: 'rgba(229,161,0,0.06)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ animation: 'spin 2s linear infinite', color: 'var(--primary-amber)' }}>
+                  <RefreshCw size={22} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-light)', fontWeight: 700 }}>
+                    Verification Pending with Admin
+                  </h4>
+                  <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    FT: <strong>{activeDepositFt}</strong> · {activeDepositAmount} ETB
+                  </p>
+                </div>
+                <span className="badge" style={{ background: 'rgba(229,161,0,0.2)', color: 'var(--primary-amber)', fontSize: '0.72rem', padding: '0.25rem 0.5rem', borderRadius: '20px' }}>
+                  ⏳ Checking Telegram
+                </span>
               </div>
             </div>
+          )}
 
-            <div className="input-field-group">
-              <label className="input-label">{t('wallet.chooseGateway') || 'Payment Gateway'}</label>
-              <div className="gateway-grid">
-                {GATEWAYS_DEPOSIT.map((gw) => (
-                  <button
-                    key={gw.value}
-                    type="button"
-                    className={`gateway-btn ${depositGateway === gw.value ? 'active' : ''}`}
-                    onClick={() => setDepositGateway(gw.value)}
-                    disabled={depositLoading}
-                  >
-                    <span className="gateway-icon">{gw.icon}</span>
-                    <span>{gw.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+          {depositError && <Toast message={depositError} type="error" onClose={() => setDepositError('')} />}
+          {depositSuccess && <Toast message={depositSuccess} type="success" onClose={() => setDepositSuccess('')} />}
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              fullWidth
-              loading={depositLoading}
-              icon={<Send size={16} />}
+          {/* Deposit Mode Switcher */}
+          <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--surface-raised)', padding: '0.35rem', borderRadius: '12px' }}>
+            <button
+              type="button"
+              onClick={() => setDepositMode('direct')}
+              style={{
+                flex: 1,
+                padding: '0.65rem',
+                borderRadius: '8px',
+                border: 'none',
+                background: depositMode === 'direct' ? 'var(--primary-gradient)' : 'transparent',
+                color: depositMode === 'direct' ? '#000' : 'var(--text-muted)',
+                fontWeight: depositMode === 'direct' ? 700 : 500,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.4rem',
+                transition: 'all 0.2s',
+              }}
             >
-              Proceed to Payment
-            </Button>
-          </form>
+              <Smartphone size={16} />
+              <span>Telebirr & CBE Transfer (Instant)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setDepositMode('gateway')}
+              style={{
+                flex: 0.8,
+                padding: '0.65rem',
+                borderRadius: '8px',
+                border: 'none',
+                background: depositMode === 'gateway' ? 'var(--primary-gradient)' : 'transparent',
+                color: depositMode === 'gateway' ? '#000' : 'var(--text-muted)',
+                fontWeight: depositMode === 'gateway' ? 700 : 500,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.4rem',
+                transition: 'all 0.2s',
+              }}
+            >
+              <CreditCard size={16} />
+              <span>Online Gateway</span>
+            </button>
+          </div>
+
+          {/* ─── DIRECT TRANSFER & FT CONFIRMATION FORM ─── */}
+          {depositMode === 'direct' && (
+            <div className="section-card">
+              <div className="section-title" style={{ fontFamily: 'var(--font-heading)' }}>
+                <ShieldCheck size={18} style={{ color: 'var(--primary-amber)' }} />
+                <span>Step 1: Choose Method & Transfer</span>
+              </div>
+
+              {/* Gateway Selector (Telebirr vs CBE) */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+                <button
+                  type="button"
+                  className={`gateway-btn ${selectedGateway === 'telebirr' ? 'active' : ''}`}
+                  onClick={() => setSelectedGateway('telebirr')}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0.85rem', gap: '0.35rem' }}
+                >
+                  <Smartphone size={24} style={{ color: '#00A859' }} />
+                  <span style={{ fontWeight: 700 }}>Telebirr</span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>USSD / SuperApp</span>
+                </button>
+                <button
+                  type="button"
+                  className={`gateway-btn ${selectedGateway === 'cbe' ? 'active' : ''}`}
+                  onClick={() => setSelectedGateway('cbe')}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0.85rem', gap: '0.35rem' }}
+                >
+                  <Building2 size={24} style={{ color: '#800080' }} />
+                  <span style={{ fontWeight: 700 }}>CBE / CBE Birr</span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>FT Transfer</span>
+                </button>
+              </div>
+
+              {/* Destination Account Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(229,161,0,0.12), rgba(0,0,0,0.4))',
+                border: '1px solid rgba(229,161,0,0.3)',
+                borderRadius: '12px',
+                padding: '1rem',
+                marginBottom: '1.25rem',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--primary-amber)', fontWeight: 700, textTransform: 'uppercase' }}>
+                    Official Platform {selectedGateway === 'telebirr' ? 'Telebirr' : 'CBE'} Destination
+                  </span>
+                  <span style={{ fontSize: '0.7rem', background: 'rgba(0,0,0,0.4)', padding: '0.15rem 0.4rem', borderRadius: '4px', color: 'var(--text-muted)' }}>
+                    Verified
+                  </span>
+                </div>
+
+                {selectedGateway === 'telebirr' ? (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-light)', fontFamily: 'var(--font-mono)' }}>
+                        {PLATFORM_ACCOUNTS.telebirr.phone}
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                        Name: {PLATFORM_ACCOUNTS.telebirr.name}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(PLATFORM_ACCOUNTS.telebirr.phone, 'phone')}
+                      className="btn btn-secondary btn-sm"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                    >
+                      {copiedField === 'phone' ? <Check size={14} style={{ color: '#22c55e' }} /> : <Copy size={14} />}
+                      <span>{copiedField === 'phone' ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-light)', fontFamily: 'var(--font-mono)' }}>
+                        {PLATFORM_ACCOUNTS.cbe.account}
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                        {PLATFORM_ACCOUNTS.cbe.name} ({PLATFORM_ACCOUNTS.cbe.branch})
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(PLATFORM_ACCOUNTS.cbe.account, 'account')}
+                      className="btn btn-secondary btn-sm"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                    >
+                      {copiedField === 'account' ? <Check size={14} style={{ color: '#22c55e' }} /> : <Copy size={14} />}
+                      <span>{copiedField === 'account' ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Step 2: Confirmation & OCR Form */}
+              <div className="section-title" style={{ fontFamily: 'var(--font-heading)', marginTop: '0.5rem' }}>
+                <Sparkles size={18} style={{ color: 'var(--primary-amber)' }} />
+                <span>Step 2: Upload Receipt & Confirm</span>
+              </div>
+
+              <form onSubmit={handleManualDepositSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Screenshot Upload Dropzone */}
+                <div>
+                  <label className="input-label">Payment Screenshot (Auto-extracts FT Number)</label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    style={{ display: 'none' }}
+                  />
+                  {!receiptImage ? (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{
+                        border: '2px dashed var(--card-border)',
+                        borderRadius: '12px',
+                        padding: '1.5rem 1rem',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        background: 'var(--surface-raised)',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <Camera size={28} style={{ color: 'var(--primary-amber)', marginBottom: '0.5rem', opacity: 0.8 }} />
+                      <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-light)' }}>
+                        Tap to Upload or Take Photo of Receipt
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                        Supports CBE & Telebirr screenshot images
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.85rem',
+                      background: 'var(--surface-raised)',
+                      padding: '0.75rem',
+                      borderRadius: '12px',
+                      border: '1px solid var(--card-border)',
+                    }}>
+                      <img
+                        src={receiptImage}
+                        alt="Receipt"
+                        style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '8px' }}
+                      />
+                      <div style={{ flex: 1, overflow: 'hidden' }}>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-light)' }}>
+                          Receipt Image Loaded
+                        </div>
+                        {ocrLoading ? (
+                          <div style={{ fontSize: '0.72rem', color: 'var(--primary-amber)', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem' }}>
+                            <RefreshCw size={12} style={{ animation: 'spin 1.5s linear infinite' }} />
+                            <span>Scanning FT Number & Amount...</span>
+                          </div>
+                        ) : ocrDetectedInfo ? (
+                          <div style={{ fontSize: '0.72rem', color: '#22c55e', marginTop: '0.2rem' }}>
+                            {ocrDetectedInfo}
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                            Ready for verification
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReceiptImage(null);
+                          setOcrDetectedInfo(null);
+                        }}
+                        className="btn btn-ghost btn-sm"
+                        style={{ color: 'var(--text-muted)' }}
+                      >
+                        Change
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* FT / Transaction Reference Input */}
+                <div>
+                  <Input
+                    label={selectedGateway === 'cbe' ? 'CBE FT Number' : 'Telebirr Transaction / Receipt ID'}
+                    type="text"
+                    placeholder={selectedGateway === 'cbe' ? 'e.g. FT240825129841' : 'e.g. CI1209384938 or 202408...'}
+                    value={ftNumber}
+                    onChange={(e) => setFtNumber(e.target.value.toUpperCase())}
+                    required
+                    disabled={depositLoading}
+                  />
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
+                    💡 Tip: Check your transfer SMS or receipt screen for the FT/Transaction ID.
+                  </span>
+                </div>
+
+                {/* Amount Field */}
+                <div>
+                  <Input
+                    label="Amount Transferred (ETB)"
+                    type="number"
+                    placeholder="e.g. 100"
+                    min="1"
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    required
+                    disabled={depositLoading}
+                  />
+                  <div className="quick-amounts-bar">
+                    {[25, 50, 100, 200, 500, 1000].map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => setDepositAmount(String(amt))}
+                        disabled={depositLoading}
+                        className={`quick-amount-btn ${depositAmount === String(amt) ? 'selected' : ''}`}
+                      >
+                        {amt} ETB
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  loading={depositLoading}
+                  icon={<Send size={16} />}
+                >
+                  Submit Deposit for Instant Approval
+                </Button>
+              </form>
+            </div>
+          )}
+
+          {/* ─── ONLINE GATEWAY FLOW (CHAPA / WEBIRR) ─── */}
+          {depositMode === 'gateway' && !simulatedCheckoutUrl && (
+            <div className="section-card">
+              <div className="section-title" style={{ fontFamily: 'var(--font-heading)' }}>
+                <CreditCard size={18} style={{ color: 'var(--primary-amber)' }} />
+                <span>Online Card / Bank Checkout</span>
+              </div>
+              <form onSubmit={handleGatewayDepositSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+                <Input
+                  label="Amount (ETB)"
+                  type="number"
+                  placeholder="e.g. 100"
+                  min="1"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  required
+                  disabled={depositLoading}
+                />
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  loading={depositLoading}
+                  icon={<Send size={16} />}
+                >
+                  Proceed to Online Checkout
+                </Button>
+              </form>
+            </div>
+          )}
+
+          {depositMode === 'gateway' && simulatedCheckoutUrl && (
+            <div className="section-card" style={{ borderColor: 'rgba(229,161,0,0.4)', borderStyle: 'dashed' }}>
+              <div style={{ textAlign: 'center' }}>
+                <h3 style={{ fontSize: '1.1rem', color: 'var(--text-light)', fontWeight: 700 }}>
+                  Sandbox Gateway Simulation
+                </h3>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  Ref: {paymentId} · {depositAmount} ETB
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="primary"
+                size="md"
+                fullWidth
+                onClick={() => {
+                  setSimulatedCheckoutUrl('');
+                  setActiveTab('history');
+                  if (refreshUser) refreshUser();
+                }}
+              >
+                Simulate Successful Payment
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Sandbox Payment Simulator */}
-      {activeTab === 'deposit' && simulatedCheckoutUrl && (
-        <div className="section-card" style={{ borderColor: 'rgba(229,161,0,0.4)', borderStyle: 'dashed' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(229,161,0,0.12)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-amber)', marginBottom: '0.4rem' }}>
-              <CreditCard size={22} />
-            </div>
-            <h3 style={{ fontSize: '1.1rem', color: 'var(--text-light)', fontWeight: 700, fontFamily: 'var(--font-heading)' }}>
-              Sandbox Payment Gateway
-            </h3>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-              Simulate response for <strong>{depositGateway.toUpperCase()}</strong>
-            </p>
-          </div>
-
-          <div style={{
-            background: 'var(--surface-raised)',
-            padding: '0.85rem',
-            borderRadius: '12px',
-            fontSize: '0.82rem',
-            fontFamily: 'var(--font-mono)',
-            color: 'var(--text-muted)',
-            lineHeight: 1.6,
-            border: '1px solid var(--card-border)',
-          }}>
-            <div><strong style={{ color: 'var(--text-light)' }}>TxID:</strong> {paymentId}</div>
-            <div><strong style={{ color: 'var(--text-light)' }}>Amount:</strong> {depositAmount} ETB</div>
-            <div><strong style={{ color: 'var(--text-light)' }}>User:</strong> {user?.uid?.substring(0, 10)}...</div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            <Button
-              type="button"
-              variant="primary"
-              size="md"
-              fullWidth
-              onClick={() => handleSimulatePaymentOutcome('success')}
-              loading={depositLoading}
-              icon={<CheckCircle2 size={16} />}
-            >
-              Simulate Success
-            </Button>
-            <Button
-              type="button"
-              variant="danger"
-              size="md"
-              fullWidth
-              onClick={() => handleSimulatePaymentOutcome('fail')}
-              disabled={depositLoading}
-              icon={<XCircle size={16} />}
-            >
-              Simulate Fail
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="md"
-              fullWidth
-              onClick={() => setSimulatedCheckoutUrl('')}
-              disabled={depositLoading}
-            >
-              Close Simulator
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Withdrawal Form */}
+      {/* ─── TAB 2: WITHDRAWAL ─────────────────────────────────────────── */}
       {activeTab === 'withdraw' && (
         <div className="section-card">
           <div className="section-title" style={{ fontFamily: 'var(--font-heading)' }}>
@@ -371,9 +727,7 @@ export default function Wallet() {
             <span>Request Withdrawal</span>
           </div>
           <form onSubmit={handleWithdrawSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
-            {withdrawError && (
-              <Toast message={withdrawError} type="error" onClose={() => setWithdrawError('')} />
-            )}
+            {withdrawError && <Toast message={withdrawError} type="error" onClose={() => setWithdrawError('')} />}
             {withdrawSuccess && (
               <Toast message="Withdrawal submitted! Waiting for operator approval." type="success" onClose={() => setWithdrawSuccess(false)} />
             )}
@@ -381,7 +735,7 @@ export default function Wallet() {
             <Input
               label="Amount (ETB)"
               type="number"
-              placeholder="Enter amount (e.g. 50)"
+              placeholder="e.g. 50"
               min="1"
               value={withdrawAmount}
               onChange={(e) => setWithdrawAmount(e.target.value)}
@@ -390,20 +744,28 @@ export default function Wallet() {
             />
 
             <div className="input-field-group">
-              <label className="input-label">Payment Method</label>
+              <label className="input-label">Payout Method</label>
               <div className="gateway-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                {GATEWAYS_WITHDRAW.map((gw) => (
-                  <button
-                    key={gw.value}
-                    type="button"
-                    className={`gateway-btn ${withdrawGateway === gw.value ? 'active' : ''}`}
-                    onClick={() => setWithdrawGateway(gw.value)}
-                    disabled={withdrawLoading}
-                  >
-                    <span className="gateway-icon">{gw.icon}</span>
-                    <span>{gw.label}</span>
-                  </button>
-                ))}
+                <button
+                  key="telebirr"
+                  type="button"
+                  className={`gateway-btn ${withdrawGateway === Gateway.TELEBIRR ? 'active' : ''}`}
+                  onClick={() => setWithdrawGateway(Gateway.TELEBIRR)}
+                  disabled={withdrawLoading}
+                >
+                  <Smartphone size={18} />
+                  <span>Telebirr</span>
+                </button>
+                <button
+                  key="cbe"
+                  type="button"
+                  className={`gateway-btn ${withdrawGateway === Gateway.CBE ? 'active' : ''}`}
+                  onClick={() => setWithdrawGateway(Gateway.CBE)}
+                  disabled={withdrawLoading}
+                >
+                  <Building2 size={18} />
+                  <span>CBE Account</span>
+                </button>
               </div>
             </div>
 
@@ -431,12 +793,12 @@ export default function Wallet() {
         </div>
       )}
 
-      {/* Transaction History */}
+      {/* ─── TAB 3: TRANSACTION HISTORY ─────────────────────────────────── */}
       {activeTab === 'history' && (
-        <div className="section-card" style={{ maxHeight: '420px', overflowY: 'auto' }}>
+        <div className="section-card" style={{ maxHeight: '480px', overflowY: 'auto' }}>
           <div className="section-title" style={{ fontFamily: 'var(--font-heading)' }}>
             <History size={18} style={{ color: 'var(--primary-amber)' }} />
-            <span>Transactions</span>
+            <span>Transaction Ledger</span>
           </div>
 
           {ledgerEntries.length === 0 ? (
@@ -457,7 +819,7 @@ export default function Wallet() {
                       {formatLedgerType(entry.type)}
                     </p>
                     <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.15rem', fontFamily: 'var(--font-mono)' }}>
-                      {date} {entry.gateway ? `· ${entry.gateway.toUpperCase()}` : ''}
+                      {date} {entry.transaction_id ? `· Ref: ${entry.transaction_id}` : ''}
                     </p>
                   </div>
                   <div style={{ textAlign: 'right' }}>

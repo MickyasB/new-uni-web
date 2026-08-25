@@ -90,6 +90,26 @@ export const api = {
   withdraw: (amountEtb: number, gateway: string, accountDetails: string) =>
     apiRequest('/wallet/withdraw', 'POST', { amountEtb, gateway, accountDetails }),
 
+  // ── Manual Deposits & FT Verification (Telebirr & CBE) ──────────────────────
+  scanReceiptOcr: (imageBase64?: string, text?: string) =>
+    apiRequest('/deposits/ocr-scan', 'POST', { imageBase64, text }),
+  submitManualDeposit: (payload: {
+    gateway: string;
+    ftNumber: string;
+    amountEtb: number;
+    payerName?: string;
+    payerPhone?: string;
+    receiptImageUrl?: string;
+    ocrRawText?: string;
+    ocrConfidence?: number;
+  }) => apiRequest('/deposits/submit', 'POST', payload),
+  getManualDepositStatus: (id: string) => apiRequest(`/deposits/status/${id}`, 'GET'),
+  getMyManualDeposits: () => apiRequest('/deposits/my-deposits', 'GET'),
+  getPendingManualDeposits: () => apiRequest('/deposits/pending', 'GET'),
+  approveManualDeposit: (id: string) => apiRequest(`/deposits/${id}/approve`, 'POST'),
+  rejectManualDeposit: (id: string, reason?: string) =>
+    apiRequest(`/deposits/${id}/reject`, 'POST', { reason }),
+
   // ── Admin ───────────────────────────────────────────────────────────────────
   getAnalytics: () => apiRequest('/admin/analytics', 'GET'),
   getUsers: (search?: string) =>

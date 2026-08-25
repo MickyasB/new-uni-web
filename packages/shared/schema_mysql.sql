@@ -124,6 +124,31 @@ CREATE TABLE IF NOT EXISTS `pending_payments` (
     FOREIGN KEY (`user_id`) REFERENCES `users`(`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS `manual_deposits` (
+    `id` VARCHAR(64) PRIMARY KEY,
+    `user_id` VARCHAR(64) NOT NULL,
+    `gateway` VARCHAR(32) NOT NULL,
+    `ft_number` VARCHAR(128) NOT NULL UNIQUE,
+    `amount_etb` DECIMAL(10,2) NOT NULL,
+    `amount_santim` BIGINT NOT NULL,
+    `payer_name` VARCHAR(128),
+    `payer_phone` VARCHAR(32),
+    `receipt_image_url` VARCHAR(512),
+    `ocr_raw_text` LONGTEXT,
+    `ocr_confidence` INT DEFAULT 0,
+    `status` VARCHAR(32) DEFAULT 'pending',
+    `rejection_reason` VARCHAR(255),
+    `processed_by` VARCHAR(64),
+    `telegram_message_id` VARCHAR(64),
+    `telegram_chat_id` VARCHAR(64),
+    `created_at` BIGINT NOT NULL,
+    `processed_at` BIGINT,
+    INDEX `idx_manual_dep_user` (`user_id`),
+    INDEX `idx_manual_dep_status` (`status`),
+    INDEX `idx_manual_dep_ft` (`ft_number`),
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`uid`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS `admin_audit_logs` (
     `id` VARCHAR(64) PRIMARY KEY,
     `actor_id` VARCHAR(64) NOT NULL,

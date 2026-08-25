@@ -7,6 +7,8 @@ import authRoutes from './routes/auth';
 import gameRoutes, { setIoRef } from './routes/game';
 import walletRoutes from './routes/wallet';
 import adminRoutes from './routes/admin';
+import depositRoutes from './routes/deposits';
+import telegramRoutes from './routes/telegramWebhook';
 import { initDb } from './db';
 
 dotenv.config();
@@ -20,7 +22,7 @@ const io = new Server(server, {
 });
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '15mb' })); // Support base64 image uploads
 
 // Pass Socket.io reference to game routes
 setIoRef(io);
@@ -30,6 +32,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/deposits', depositRoutes);
+app.use('/api/telegram', telegramRoutes);
 
 // Healthcheck
 app.get('/health', (req, res) => {

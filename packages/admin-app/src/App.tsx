@@ -12,6 +12,9 @@ import {
   getFlaggedWins,
   callApproveFlaggedWin,
   callRejectFlaggedWin,
+  getPendingManualDeposits,
+  approveManualDeposit,
+  rejectManualDeposit,
   createRoom,
   getAuditLog,
   getLedger,
@@ -34,6 +37,7 @@ interface Analytics {
 type Panel =
   | 'analytics'
   | 'users'
+  | 'deposits'
   | 'withdrawals'
   | 'flaggedWins'
   | 'ledger'
@@ -342,6 +346,259 @@ function UsersPanel() {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+// ── Manual Deposits & FT Verification Panel ─────────────────────────────────────
+function ManualDepositsPanel() {
+  const [deposits, setDeposits] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [msg, setMsg] = useState('');
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [copiedFt, setCopiedFt] = useState<string | null>(null);
+
+  const fetchDeposits = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getPendingManualDeposits();
+      setDeposits(data.deposits || []);
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDeposits();
+    const interval = setInterval(fetchDeposits, 5000);
+    return () => clearInterval(interval);
+  }, [fetchDeposits]);
+
+  const handleApprove = async (id: string, ft: string, amount: number) => {
+    setActionLoading(id);
+    setMsg('');
+    try {
+      await approveManualDeposit(id);
+      setMsg(`✅ Deposit for FT ${ft} (${amount} ETB) approved and credited!`);
+      fetchDeposits();
+    } catch (err: any) {
+      setMsg(`❌ Error: ${err.message}`);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReject = async (id: string, ft: string) => {
+    const reason = prompt('Enter rejection reason (e.g. Duplicate FT, Payment not received, Invalid amount):', 'Payment confirmation mismatch');
+    if (reason === null) return;
+
+    setActionLoading(id);
+    setMsg('');
+    try {
+      await rejectManualDeposit(id, reason);
+      setMsg(`Deposit ${ft} rejected.`);
+      fetchDeposits();
+    } catch (err: any) {
+      setMsg(`❌ Error: ${err.message}`);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedFt(text);
+    setTimeout(() => setCopiedFt(null), 2000);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Telegram Sync Alert Banner */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(56,189,248,0.12), rgba(0,0,0,0.3))',
+        border: '1px solid rgba(56,189,248,0.3)',
+        borderRadius: '12px',
+        padding: '1rem 1.25rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <span style={{ fontSize: '1.8rem' }}>🤖</span>
+          <div>
+            <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-light)', fontWeight: 700 }}>
+              Telegram Admin Bot Real-Time Synchronization Active
+            </h4>
+            <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              Approvals and rejections are bi-directionally synchronized between this web dashboard and your Telegram admin chat.
+            </p>
+          </div>
+        </div>
+        <button className="btn btn-ghost" onClick={fetchDeposits} style={{ fontSize: '0.82rem' }}>
+          ↺ Refresh Queue
+        </button>
+      </div>
+
+      {msg && <div className="alert alert-info" style={{ fontSize: '0.85rem' }}>{msg}</div>}
+
+      {/* Pending Queue Card */}
+      <div className="card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-light)', fontWeight: 700 }}>
+              Pending Deposit Verifications ({deposits.length})
+            </h3>
+            <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              Verify player FT numbers against Telebirr / CBE account statements before approving.
+            </p>
+          </div>
+        </div>
+
+        {loading && deposits.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '2rem' }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
+        ) : deposits.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🎉</div>
+            <p style={{ fontWeight: 600, fontSize: '0.95rem' }}>All caught up! No pending deposit requests.</p>
+            <p style={{ fontSize: '0.78rem', marginTop: '0.2rem' }}>New player submissions will appear here and on Telegram instantly.</p>
+          </div>
+        ) : (
+          <div className="table-wrapper">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Method</th>
+                  <th>FT / Tx Reference</th>
+                  <th>Amount (ETB)</th>
+                  <th>Player Details</th>
+                  <th>OCR Match</th>
+                  <th>Receipt</th>
+                  <th>Submitted At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deposits.map((dep: any) => (
+                  <tr key={dep.id}>
+                    <td>
+                      <span className={`badge badge-${dep.gateway === 'telebirr' ? 'success' : 'primary'}`} style={{ textTransform: 'uppercase', fontWeight: 800 }}>
+                        {dep.gateway === 'telebirr' ? '📱 Telebirr' : '🏦 CBE'}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <code style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fbbf24', background: 'rgba(251,191,36,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                          {dep.ft_number || dep.ftNumber}
+                        </code>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-xs"
+                          onClick={() => copyToClipboard(dep.ft_number || dep.ftNumber)}
+                          title="Copy FT Number"
+                          style={{ padding: '2px 6px' }}
+                        >
+                          {copiedFt === (dep.ft_number || dep.ftNumber) ? '✓ Copied' : '📋'}
+                        </button>
+                      </div>
+                    </td>
+                    <td>
+                      <strong style={{ fontSize: '0.95rem', color: '#22c55e' }}>
+                        {parseFloat(dep.amount_etb || dep.amountEtb).toFixed(2)} ETB
+                      </strong>
+                    </td>
+                    <td>
+                      <div>
+                        <strong>{dep.display_name || dep.displayName || 'Player'}</strong><br />
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {dep.phone || dep.user_id || dep.userId}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`badge badge-${(dep.ocr_confidence || dep.ocrConfidence) > 60 ? 'success' : 'warning'}`}>
+                        {(dep.ocr_confidence || dep.ocrConfidence) ? `${dep.ocr_confidence || dep.ocrConfidence}% Match` : 'Manual'}
+                      </span>
+                    </td>
+                    <td>
+                      {(dep.receipt_image_url || dep.receiptImageUrl) ? (
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-xs"
+                          onClick={() => setPreviewImage(dep.receipt_image_url || dep.receiptImageUrl)}
+                        >
+                          🔍 View Screenshot
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>No Image</span>
+                      )}
+                    </td>
+                    <td style={{ fontSize: '0.75rem' }}>
+                      {new Date(parseInt(dep.created_at || dep.createdAt)).toLocaleTimeString()}
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          className="btn btn-success"
+                          disabled={actionLoading === dep.id}
+                          onClick={() => handleApprove(dep.id, dep.ft_number || dep.ftNumber, dep.amount_etb || dep.amountEtb)}
+                          style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+                        >
+                          {actionLoading === dep.id ? '…' : '✅ Approve'}
+                        </button>
+                        <button
+                          className="btn btn-danger"
+                          disabled={actionLoading === dep.id}
+                          onClick={() => handleReject(dep.id, dep.ft_number || dep.ftNumber)}
+                          style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+                        >
+                          {actionLoading === dep.id ? '…' : '❌ Reject'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Screenshot Preview Modal */}
+      {previewImage && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.85)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem',
+        }}>
+          <div style={{
+            background: 'var(--surface)',
+            borderRadius: '16px',
+            maxWidth: '500px',
+            width: '100%',
+            overflow: 'hidden',
+            border: '1px solid var(--card-border)',
+          }}>
+            <div style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--card-border)' }}>
+              <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-light)' }}>Payment Receipt Screenshot</h4>
+              <button className="btn btn-ghost btn-sm" onClick={() => setPreviewImage(null)}>✕ Close</button>
+            </div>
+            <div style={{ padding: '1rem', textAlign: 'center', maxHeight: '70vh', overflowY: 'auto' }}>
+              <img src={previewImage} alt="Receipt Preview" style={{ maxWidth: '100%', height: 'auto', borderRadius: '8px', border: '1px solid var(--card-border)' }} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2020,6 +2277,7 @@ const NAV: { section: string; items: { id: Panel; icon: string; label: string }[
   {
     section: 'Finance',
     items: [
+      { id: 'deposits',       icon: '📥', label: 'Manual Deposits (FT)' },
       { id: 'withdrawals',    icon: '💸', label: 'Withdrawals' },
       { id: 'ledger',         icon: '📒', label: 'Ledger' },
       { id: 'flaggedWins',    icon: '🚩', label: 'Flagged Wins' },
@@ -2039,6 +2297,7 @@ const NAV: { section: string; items: { id: Panel; icon: string; label: string }[
 const PANEL_TITLES: Record<Panel, string> = {
   analytics:      'Analytics Dashboard',
   users:          'User Management & Compliance',
+  deposits:       'Telebirr & CBE Manual Deposits',
   withdrawals:    'Withdrawal Requests',
   flaggedWins:    'Flagged Win Reviews',
   ledger:         'Wallet Ledger',
@@ -2085,6 +2344,7 @@ export default function App() {
     switch (activePanel) {
       case 'analytics':      return <AnalyticsPanel />;
       case 'users':          return <UsersPanel />;
+      case 'deposits':       return <ManualDepositsPanel />;
       case 'withdrawals':    return <WithdrawalsPanel />;
       case 'flaggedWins':    return <FlaggedWinsPanel />;
       case 'ledger':         return <LedgerPanel />;
