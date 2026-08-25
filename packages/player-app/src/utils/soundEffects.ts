@@ -121,6 +121,30 @@ class SoundFX {
       });
     } catch {}
   }
+
+  // 5. Miscall Error Buzzer (low saw/buzz tone)
+  public playMiscallBuzzer() {
+    try {
+      const ctx = this.getContext();
+      if (!ctx) return;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(140, ctx.currentTime);
+      osc.frequency.setValueAtTime(110, ctx.currentTime + 0.15);
+
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.45);
+    } catch {}
+  }
 }
 
 export const soundFX = new SoundFX();

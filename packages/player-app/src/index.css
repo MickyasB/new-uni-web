@@ -1422,6 +1422,33 @@ h1, h2, h3, h4, h5, h6 {
 .card-claim-banner.active:hover { filter: brightness(1.1); }
 .card-claim-banner.active:disabled { opacity: 0.7; cursor: not-allowed; }
 
+.card-claim-banner.manual-ready {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  cursor: pointer;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.7rem;
+  border-radius: 6px;
+  margin: 3px 4px;
+  color: #ffffff;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+}
+.card-claim-banner.manual-ready:hover {
+  background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+  filter: brightness(1.15);
+}
+.card-claim-banner.manual-ready:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.card-claim-banner.pulse-win {
+  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%) !important;
+  animation: goldGlowPulse 0.8s ease-in-out infinite alternate;
+  font-size: 0.75rem;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.6) !important;
+}
+
 .card-claim-banner.urgency {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   font-size: 0.6rem;

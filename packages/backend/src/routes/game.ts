@@ -171,8 +171,8 @@ router.post('/claim', authenticate, async (req: AuthRequest, res: Response) => {
   const { roomId, cardId, winTier } = req.body;
   const userId = req.user!.uid;
 
-  if (!roomId || !cardId || !winTier) {
-    return res.status(400).json({ error: 'roomId, cardId, and winTier are required' });
+  if (!roomId || !cardId) {
+    return res.status(400).json({ error: 'roomId and cardId are required' });
   }
 
   try {
@@ -186,7 +186,20 @@ router.post('/claim', authenticate, async (req: AuthRequest, res: Response) => {
     }
     const gameId = gameRes.rows[0].id;
 
-    const result = await claimWin(roomId, gameId, userId, cardId, winTier);
+    const result = await claimWin(roomId, gameId, userId, cardId, winTier || 'line');
+
+    if (result.miscalled) {
+      // Broadcast miscall alert to the room
+      if (ioRef) {
+        ioRef.to(roomId).emit('playerMiscalled', {
+          roomId,
+          userId,
+          cardId,
+          message: 'False Bingo claim! Card is blocked for this round.',
+        });
+      }
+      return res.status(400).json(result);
+    }
 
     // Broadcast win via Socket.io
     if (ioRef && result.success) {
@@ -195,7 +208,7 @@ router.post('/claim', authenticate, async (req: AuthRequest, res: Response) => {
 
     res.json(result);
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: err.message || 'Failed to process claim' });
   }
 });
 

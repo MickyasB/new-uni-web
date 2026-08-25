@@ -27,6 +27,7 @@ export interface RoomLiveState {
   state: string;
   winner?: any;
   players?: Record<string, any>;
+  lastMiscall?: { roomId: string; userId: string; cardId: string; message: string };
 }
 
 interface AppState {
@@ -193,6 +194,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       socket.emit('leaveRoom', prevRoomId);
       socket.off('numberCalled');
       socket.off('winnerDeclared');
+      socket.off('playerMiscalled');
       socket.off('gameStarted');
       socket.off('gameEnded');
       socket.off('playerJoined');
@@ -221,6 +223,15 @@ export const useAppStore = create<AppState>((set, get) => ({
             ...state.roomLiveState!,
             state: 'ended',
             winner,
+          },
+        }));
+      });
+
+      socket.on('playerMiscalled', (data: { roomId: string; userId: string; cardId: string; message: string }) => {
+        set((state) => ({
+          roomLiveState: {
+            ...(state.roomLiveState || { currentNumber: null, calledNumbers: [], state: 'active' }),
+            lastMiscall: data,
           },
         }));
       });

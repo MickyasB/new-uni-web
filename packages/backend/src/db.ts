@@ -121,7 +121,11 @@ export async function query(text: string, params?: any[]): Promise<{ rows: any[]
 
   if (upperSql.startsWith('SELECT')) {
     if (upperSql.includes('FROM ROOMS')) {
-      const list = Object.values(store.rooms);
+      let list = Object.values(store.rooms);
+      if (params && params.length > 0) {
+        const val = params[0];
+        list = list.filter((r: any) => r.id === val);
+      }
       return { rows: list, rowCount: list.length };
     }
     if (upperSql.includes('FROM USERS')) {
@@ -149,6 +153,22 @@ export async function query(text: string, params?: any[]): Promise<{ rows: any[]
     }
     if (upperSql.includes('FROM WITHDRAWAL_REQUESTS')) {
       const list = Object.values(store.withdrawal_requests);
+      return { rows: list, rowCount: list.length };
+    }
+    if (upperSql.includes('FROM GAMES')) {
+      let list = Object.values(store.games || {});
+      if (params && params.length > 0) {
+        const val = params[0];
+        list = list.filter((g: any) => g.id === val || g.room_id === val || g.roomId === val);
+      }
+      return { rows: list, rowCount: list.length };
+    }
+    if (upperSql.includes('FROM BINGO_CARDS')) {
+      let list = Object.values(store.bingo_cards || {});
+      if (params && params.length > 0) {
+        const val = params[0];
+        list = list.filter((c: any) => c.id === val || c.room_id === val || c.roomId === val);
+      }
       return { rows: list, rowCount: list.length };
     }
     if (upperSql.includes('FROM MANUAL_DEPOSITS')) {
@@ -266,6 +286,64 @@ export async function query(text: string, params?: any[]): Promise<{ rows: any[]
         }
         saveStore(store);
         return { rows: [store.manual_deposits[id]], rowCount: 1 };
+      }
+    }
+  }
+
+  if (upperSql.startsWith('INSERT INTO GAMES')) {
+    if (params) {
+      const [id, roomId, seedHash, sequence, calledNumbers, status, lastIndex, winners, blockedCards, createdAt] = params;
+      const newGame = {
+        id,
+        room_id: roomId,
+        seed_hash: seedHash,
+        sequence,
+        called_numbers: calledNumbers || '[]',
+        status: status || 'active',
+        last_processed_index: lastIndex || 0,
+        winners: winners || '[]',
+        blocked_cards: blockedCards || '[]',
+        created_at: createdAt || Date.now(),
+      };
+      if (!store.games) store.games = {};
+      store.games[id] = newGame;
+      saveStore(store);
+      return { rows: [newGame], rowCount: 1 };
+    }
+  }
+
+  if (upperSql.startsWith('INSERT INTO BINGO_CARDS')) {
+    if (params) {
+      const [id, roomId, userId, fingerprint, numbersJson, createdAt] = params;
+      const newCard = {
+        id,
+        room_id: roomId,
+        user_id: userId,
+        fingerprint,
+        numbers_json: numbersJson,
+        created_at: createdAt || Date.now(),
+      };
+      if (!store.bingo_cards) store.bingo_cards = {};
+      store.bingo_cards[id] = newCard;
+      saveStore(store);
+      return { rows: [newCard], rowCount: 1 };
+    }
+  }
+
+  if (upperSql.startsWith('UPDATE GAMES')) {
+    if (params && params.length >= 2) {
+      const gameId = params[params.length - 1];
+      if (store.games && store.games[gameId]) {
+        if (upperSql.includes('BLOCKED_CARDS =')) {
+          store.games[gameId].blocked_cards = params[0];
+        } else if (upperSql.includes('CALLED_NUMBERS =')) {
+          store.games[gameId].called_numbers = params[0];
+        } else if (upperSql.includes('WINNERS =')) {
+          store.games[gameId].winners = params[0];
+          store.games[gameId].status = 'completed';
+        }
+        saveStore(store);
+        return { rows: [store.games[gameId]], rowCount: 1 };
       }
     }
   }

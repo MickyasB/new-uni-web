@@ -74,7 +74,7 @@ export default function BingoCard({
   }
 
   const canInteract = status === 'playing' && !isBlocked;
-  const hasClaim = claimableTiers && claimableTiers.length > 0 && !isBlocked;
+  const hasDetectedWin = claimableTiers && claimableTiers.length > 0 && !isBlocked;
 
   const handleCellClick = (r: number, c: number) => {
     soundFX.playDaub();
@@ -82,7 +82,7 @@ export default function BingoCard({
   };
 
   return (
-    <div className={`bingo-card-v2 ${isOneAway ? 'one-away' : ''} ${hasClaim ? 'has-claim' : ''} ${isBlocked ? 'card-blocked' : ''}`}>
+    <div className={`bingo-card-v2 ${isOneAway ? 'one-away' : ''} ${hasDetectedWin ? 'has-claim' : ''} ${isBlocked ? 'card-blocked' : ''}`}>
       {/* Top Header Strip */}
       <div className="card-header-strip">
         <div className="card-header-left">
@@ -105,32 +105,45 @@ export default function BingoCard({
         </div>
       </div>
 
-      {/* Claim / Status Banner */}
-      {hasClaim ? (
+      {/* Claim / Status Banner — Always clickable during active play unless blocked */}
+      {isBlocked ? (
+        <div className="card-blocked-badge" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+          <XCircle size={13} />
+          <span>MISCALLED — BLOCKED THIS ROUND</span>
+        </div>
+      ) : status === 'playing' ? (
         <button
-          className="card-claim-banner active"
+          className={`card-claim-banner ${hasDetectedWin ? 'active pulse-win' : 'manual-ready'}`}
           onClick={() => {
-            soundFX.playBingoVictory();
-            onClaimBingo?.(claimableTiers![0]);
+            if (hasDetectedWin) {
+              soundFX.playBingoVictory();
+            } else {
+              soundFX.playDaub();
+            }
+            onClaimBingo?.(claimableTiers?.[0] || 'line');
           }}
           disabled={claimLoading}
+          title="Click to claim Bingo whenever you complete a pattern!"
         >
-          {claimLoading ? 'Verifying...' : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}><CheckCircle2 size={15} /> BINGO! — Claim Prize</span>}
+          {claimLoading ? (
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+              <Sparkles size={14} className="spin" /> Verifying BINGO...
+            </span>
+          ) : hasDetectedWin ? (
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontWeight: 900 }}>
+              <CheckCircle2 size={16} /> 🎯 BINGO! — CLAIM PRIZE
+            </span>
+          ) : isOneAway ? (
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+              <Flame size={14} /> 1-AWAY! CALL BINGO
+            </span>
+          ) : (
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+              <Trophy size={13} /> CALL BINGO!
+            </span>
+          )}
         </button>
-      ) : isOneAway && !isBlocked ? (
-        <div className="card-claim-banner urgency">
-          <Flame size={13} style={{ verticalAlign: 'middle', marginRight: '3px' }} />
-          1 AWAY FROM WIN!
-        </div>
       ) : null}
-
-      {/* Blocked overlay */}
-      {isBlocked && (
-        <div className="card-blocked-badge">
-          <XCircle size={13} style={{ verticalAlign: 'middle', marginRight: '3px' }} />
-          Blocked — Invalid Claim
-        </div>
-      )}
 
       {/* B I N G O Column Header Row */}
       <div className="bingo-col-headers">
@@ -168,9 +181,10 @@ export default function BingoCard({
               <div
                 key={`${rIdx}-${cIdx}`}
                 className={`card-cell ${isMarked ? `marked ${colClass}` : ''} ${isFlashing ? 'flash-cell' : ''} ${isBlocked ? 'cell-blocked' : ''}`}
-                onClick={canInteract && !isAutoMarked ? () => handleCellClick(rIdx, cIdx) : undefined}
-                role={canInteract && !isAutoMarked ? 'button' : undefined}
-                tabIndex={canInteract && !isAutoMarked ? 0 : undefined}
+                onClick={canInteract ? () => handleCellClick(rIdx, cIdx) : undefined}
+                role={canInteract ? 'button' : undefined}
+                tabIndex={canInteract ? 0 : undefined}
+                title={canInteract ? 'Tap to mark/daub number' : undefined}
               >
                 {isMarked && <span className="daub-ink-stamp" />}
                 <span className="cell-number-val">{num}</span>

@@ -24,10 +24,18 @@ function checkWinPattern(
   cardNumbers: number[][],
   calledNumbers: number[]
 ): { line: boolean; corners: boolean; fullHouse: boolean } {
-  const calledSet = new Set(calledNumbers);
+  if (!Array.isArray(cardNumbers) || cardNumbers.length < 5) {
+    return { line: false, corners: false, fullHouse: false };
+  }
+  const calledList = Array.isArray(calledNumbers) ? calledNumbers : [];
+  const calledSet = new Set(calledList);
   calledSet.add(0); // FREE cell
 
-  const isMarked = (r: number, c: number) => calledSet.has(cardNumbers[r][c]);
+  const isMarked = (r: number, c: number) => {
+    if (!cardNumbers[r] || cardNumbers[r][c] === undefined) return false;
+    const val = cardNumbers[r][c];
+    return val === 0 || calledSet.has(val);
+  };
 
   // Line check
   let hasLine = false;
@@ -251,8 +259,23 @@ export async function claimWin(
 
     if (game.status !== 'active') throw new Error('Game is not active');
 
-    const currentWinners = game.winners || [];
-    if (currentWinners.length > 0) throw new Error('A winner has already been declared');
+    const currentWinners = typeof game.winners === 'string' ? JSON.parse(game.winners) : (game.winners || []);
+    if (Array.isArray(currentWinners) && currentWinners.length > 0) throw new Error('A winner has already been declared');
+
+    // 1.1 Check if this card was previously blocked due to a miscall
+    const blockedList: string[] = typeof game.blocked_cards === 'string'
+      ? JSON.parse(game.blocked_cards)
+      : (game.blocked_cards || []);
+
+    if (blockedList.includes(cardId)) {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        miscalled: true,
+        blocked: true,
+        error: 'This card is blocked due to a previous false Bingo claim.',
+      };
+    }
 
     // 2. Read card
     const cardRes = await client.query('SELECT * FROM bingo_cards WHERE id = $1', [cardId]);
@@ -260,16 +283,37 @@ export async function claimWin(
     const card = cardRes.rows[0];
     if (card.user_id !== userId) throw new Error('You do not own this card');
 
-    // 3. Verify win
-    const cardNumbers = typeof card.numbers_json === 'string' ? JSON.parse(card.numbers_json) : card.numbers_json;
-    const calledNumbers = typeof game.called_numbers === 'string' ? JSON.parse(game.called_numbers) : game.called_numbers;
+    // 3. Verify win against actual called numbers
+    const cardNumbers = typeof card.numbers_json === 'string'
+      ? JSON.parse(card.numbers_json)
+      : (card.numbers_json || card.numbers || []);
+
+    const calledNumbers = typeof game.called_numbers === 'string'
+      ? JSON.parse(game.called_numbers)
+      : (game.called_numbers || []);
+
     const winCheck = checkWinPattern(cardNumbers, calledNumbers);
 
-    let isValid = false;
-    if (winTier === 'line' && winCheck.line) isValid = true;
-    if (winTier === 'corners' && winCheck.corners) isValid = true;
-    if (winTier === 'full_house' && winCheck.fullHouse) isValid = true;
-    if (!isValid) throw new Error('Invalid BINGO claim');
+    // Accept line, corners, or full house patterns
+    const isValid = winCheck.line || winCheck.corners || winCheck.fullHouse;
+
+    if (!isValid) {
+      // 🚫 MISCALL PENALTY: Block this card for the rest of this game round
+      const updatedBlocked = [...blockedList, cardId];
+      await client.query(
+        'UPDATE games SET blocked_cards = $1 WHERE id = $2',
+        [JSON.stringify(updatedBlocked), gameId]
+      );
+      await client.query('COMMIT');
+
+      return {
+        success: false,
+        miscalled: true,
+        blocked: true,
+        cardId,
+        error: 'False Bingo claim! This card does not have a completed winning pattern and is blocked for the rest of this round.',
+      };
+    }
 
     // 4. Calculate prize (single winner takes 85% of pot)
     if (!room) {

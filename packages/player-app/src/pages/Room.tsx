@@ -102,7 +102,7 @@ export default function Room() {
   const [showVictoryModal, setShowVictoryModal] = useState(true);
   const [manualMarks, setManualMarks] = useState<Record<string, boolean[][]>>({});
   const [blockedCards, setBlockedCards] = useState<Set<string>>(new Set());
-  const [isAutoDaub, setIsAutoDaub] = useState(true);
+  const [isAutoDaub, setIsAutoDaub] = useState(false); // Manual player daubing by default
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
 
   const activeGamePattern: BingoPattern = useMemo(() => {
@@ -204,15 +204,32 @@ export default function Room() {
 
   const handleClaimBingo = async (cardId: string, winTier: string) => {
     if (!roomId) return;
-    if (blockedCards.has(cardId)) return; // Card is blocked, no claims allowed
+    if (blockedCards.has(cardId)) {
+      showToast('🚫 This card is blocked from claiming due to a previous miscall.', 'error');
+      return;
+    }
     setClaimLoading(true);
 
     // Ensure winTier matches backend expectations ('line' | 'corners' | 'full_house')
     const validTier = (winTier === 'single-jackpot' || !winTier) ? 'line' : winTier;
 
-    // Handle local demo game victory directly
+    // Handle local demo game victory check
     if (localDemoGame.active) {
+      const card = cards.find(c => c.id === cardId);
+      const grid = getCardMarkedGrid(cardId, card?.numbers || []);
+      const completeness = checkCardCompleteness(grid);
+      const isWin = completeness.line || completeness.corners || completeness.fullHouse;
+
+      if (!isWin) {
+        setBlockedCards(prev => new Set(prev).add(cardId));
+        soundFX.playMiscallBuzzer();
+        showToast('🚫 False Bingo claim! Card has been blocked for this round.', 'error');
+        setClaimLoading(false);
+        return;
+      }
+
       setLocalDemoGame(prev => ({ ...prev, active: false }));
+      soundFX.playBingoVictory();
       setShowVictoryModal(true);
       showToast('🎉 CONGRATULATIONS! You won BINGO!', 'success');
       setClaimLoading(false);
@@ -222,23 +239,22 @@ export default function Room() {
     try {
       const res = await api.claimBingo(roomId, cardId, validTier);
       if (res?.success) {
+        soundFX.playBingoVictory();
         setShowVictoryModal(true);
-        showToast(`🎉 Congratulations! You won BINGO!`, 'success');
+        showToast(`🎉 CONGRATULATIONS! You won BINGO!`, 'success');
+      } else if (res?.miscalled) {
+        setBlockedCards(prev => new Set(prev).add(cardId));
+        soundFX.playMiscallBuzzer();
+        showToast(res?.error || '🚫 False Bingo claim! Card is blocked for this round.', 'error');
       }
     } catch (err: any) {
       console.error('Claim error:', err);
-      const errorMsg = err?.message || '';
+      const errorMsg = err?.message || err?.error || '';
 
-      if (errorMsg === 'internal' || errorMsg.includes('internal')) {
-        setShowVictoryModal(true);
-        showToast('🎉 BINGO Claimed successfully!', 'success');
-        setClaimLoading(false);
-        return;
-      }
-
-      if (errorMsg.includes('Invalid BINGO claim') || errorMsg.includes('failed-precondition')) {
+      if (errorMsg.includes('Invalid BINGO') || errorMsg.includes('False Bingo') || errorMsg.includes('miscall') || errorMsg.includes('blocked') || errorMsg.includes('failed-precondition')) {
         setBlockedCards(prev => new Set(prev).add(cardId));
-        showToast('🚫 False claim! This card has been blocked.', 'error');
+        soundFX.playMiscallBuzzer();
+        showToast('🚫 Miscalled Bingo! This card has been blocked for the rest of this round.', 'error');
       } else {
         showToast(errorMsg || 'Failed to claim BINGO.', 'error');
       }
@@ -359,6 +375,20 @@ export default function Room() {
     if (winnerRecord) setShowVictoryModal(true);
   }, [roomLiveState?.winner, gameRecord?.winners]);
 
+  // Listen for miscall alerts from socket
+  useEffect(() => {
+    const miscall = (roomLiveState as any)?.lastMiscall;
+    if (miscall && miscall.cardId) {
+      if (miscall.userId === user?.uid) {
+        setBlockedCards(prev => new Set(prev).add(miscall.cardId));
+        soundFX.playMiscallBuzzer();
+        showToast('🚫 False Bingo claim! Card is blocked for this round.', 'error');
+      } else {
+        showToast('⚠️ Notice: Another player miscalled Bingo.', 'info');
+      }
+    }
+  }, [roomLiveState, user?.uid, showToast]);
+
   // Check if the called number is on any of the player's cards
   const isNumberOnPlayerCards = useCallback((num: number) => {
     return cards.some(card =>
@@ -474,9 +504,10 @@ export default function Room() {
       }
     }
 
-    // Fallback: Construct grid dynamically from calledNumbers (using Set for O(1))
+    // Construct grid from called numbers (auto mode) or manual marks (manual mode)
     const grid = Array.from({ length: 5 }, () => Array(5).fill(false));
     grid[2][2] = true; // FREE cell in the middle
+
     if (isAutoDaub) {
       for (let r = 0; r < 5; r++) {
         for (let c = 0; c < 5; c++) {
@@ -485,9 +516,20 @@ export default function Room() {
           }
         }
       }
+    } else {
+      const userMarks = manualMarks[cardId];
+      if (userMarks) {
+        for (let r = 0; r < 5; r++) {
+          for (let c = 0; c < 5; c++) {
+            if (userMarks[r]?.[c]) {
+              grid[r][c] = true;
+            }
+          }
+        }
+      }
     }
     return grid;
-  }, [roomLiveState, calledSet, isAutoDaub]);
+  }, [roomLiveState, calledSet, isAutoDaub, manualMarks, user?.uid]);
 
   // Helper to evaluate completeness of patterns locally for claims
   const checkCardCompleteness = useCallback((grid: boolean[][]) => {
