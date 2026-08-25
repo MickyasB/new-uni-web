@@ -113,14 +113,19 @@ if (require.main === module) {
   // 7. Restart Backend on cPanel
   console.log('\n🔄 Step 7: Triggering Backend Restart on cPanel...');
   try {
-    const res = await new Promise((resolve, reject) => {
-      http.get('http://bingo.gymtradingplc.com/restart_backend.php', (res) => {
+    const res = await new Promise((resolve) => {
+      const req = http.get('http://bingo.gymtradingplc.com/restart_backend.php', (res) => {
         let body = '';
         res.on('data', (c) => (body += c));
         res.on('end', () => resolve(body));
-      }).on('error', reject);
+      });
+      req.setTimeout(8000, () => {
+        req.destroy();
+        resolve('Restart signal triggered (request timed out as expected).');
+      });
+      req.on('error', (e) => resolve('Restart notice: ' + e.message));
     });
-    console.log('  Server Restart Response:', res);
+    console.log('  Server Restart Result:', res);
   } catch (reErr) {
     console.warn('  ⚠️ Restart script notice:', reErr.message);
   }
