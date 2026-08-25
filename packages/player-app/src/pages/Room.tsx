@@ -580,16 +580,12 @@ export default function Room() {
 
     const grid = getCardMarkedGrid(cardId, cardNumbers);
     
-    // 1. Verify against the active room pattern rule (Crazy rotations & anywhere blocks handled automatically)
-    const isSpecialtyMatch = verifyPatternMatch(grid, activeGamePattern);
-    if (isSpecialtyMatch) return ['line'];
-
-    // 2. Also check standard line completeness as safety fallback
-    const winCheck = checkCardCompleteness(grid);
-    if (winCheck.line || winCheck.corners || winCheck.fullHouse) return ['line'];
+    // Strictly verify against the single active pattern rule for this game
+    const isRuleMatch = verifyPatternMatch(grid, activeGamePattern);
+    if (isRuleMatch) return ['line'];
 
     return [];
-  }, [isGameActive, getCardMarkedGrid, activeGamePattern, checkCardCompleteness]);
+  }, [isGameActive, getCardMarkedGrid, activeGamePattern]);
 
   // Helper to compute completeness score for sorting cards
   const getCardChanceScore = (markedGrid: boolean[][]): number => {
@@ -1245,6 +1241,51 @@ export default function Room() {
         {isGameEnded && (
           <div className="game-status-banner finished" style={{ margin: '0.4rem 0', padding: '0.4rem' }}>
             {t('game.finishedBanner') || 'Bingo round finished! Winner declared.'}
+          </div>
+        )}
+
+        {/* ─── In-Game Single Active Rule Banner ─── */}
+        {isGameActive && (
+          <div className="active-rule-indicator-bar" style={{
+            background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.9), rgba(49, 46, 129, 0.9))',
+            border: '1px solid rgba(129, 140, 248, 0.3)',
+            borderRadius: '10px',
+            padding: '0.4rem 0.75rem',
+            margin: '0.35rem 0 0.55rem 0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.5rem',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <Target size={15} style={{ color: '#fbbf24', flexShrink: 0 }} />
+              <div>
+                <div style={{ fontSize: '0.72rem', fontWeight: 900, color: '#ffffff', letterSpacing: '0.3px', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <span>ACTIVE WINNING RULE:</span>
+                  <span style={{ color: '#fbbf24', textDecoration: 'underline' }}>{activeGamePattern.name}</span>
+                </div>
+                <div style={{ fontSize: '0.62rem', color: '#cbd5e1' }}>
+                  {activeGamePattern.description}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowPatternHints(true)}
+              style={{
+                background: 'rgba(99, 102, 241, 0.25)',
+                border: '1px solid rgba(129, 140, 248, 0.4)',
+                borderRadius: '6px',
+                padding: '3px 7px',
+                color: '#e0e7ff',
+                fontSize: '0.62rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                flexShrink: 0
+              }}
+            >
+              View Matrix
+            </button>
           </div>
         )}
 

@@ -350,7 +350,7 @@ export async function query(text: string, params?: any[]): Promise<{ rows: any[]
 
   if (upperSql.startsWith('INSERT INTO ROOMS')) {
     if (params) {
-      const [id, tier, fee, mode, type, minP, maxC, status, count, pot, createdAt] = params;
+      const [id, tier, fee, mode, type, minP, maxC, status, count, pot, createdAt, patternId] = params;
       const newRoom = {
         id,
         tier,
@@ -362,11 +362,27 @@ export async function query(text: string, params?: any[]): Promise<{ rows: any[]
         status: status || 'waiting',
         player_count: count || 0,
         pot_santim: pot || 0,
+        pattern_id: patternId || 'horizontal_line',
         created_at: createdAt || Date.now()
       };
       store.rooms[id] = newRoom;
       saveStore(store);
       return { rows: [newRoom], rowCount: 1 };
+    }
+  }
+
+  if (upperSql.startsWith('UPDATE ROOMS')) {
+    if (params && params.length >= 2) {
+      const roomId = params[params.length - 1];
+      if (store.rooms && store.rooms[roomId]) {
+        if (upperSql.includes('PATTERN_ID =')) {
+          store.rooms[roomId].pattern_id = params[0];
+        } else if (upperSql.includes("STATUS = 'ENDED'")) {
+          store.rooms[roomId].status = 'ended';
+        }
+        saveStore(store);
+        return { rows: [store.rooms[roomId]], rowCount: 1 };
+      }
     }
   }
 

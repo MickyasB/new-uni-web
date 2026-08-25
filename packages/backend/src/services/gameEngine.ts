@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { Server } from 'socket.io';
 import { getClient, query } from '../db';
+import { getPatternById, verifyPatternMatch, BingoPattern } from '@bingo/shared';
 
 // ── Shared Utils (ported from packages/functions/src/utils) ────────────────────
 
@@ -283,7 +284,7 @@ export async function claimWin(
     const card = cardRes.rows[0];
     if (card.user_id !== userId) throw new Error('You do not own this card');
 
-    // 3. Verify win against actual called numbers
+    // 3. Verify win against actual called numbers and the single assigned rule for this game
     const cardNumbers = typeof card.numbers_json === 'string'
       ? JSON.parse(card.numbers_json)
       : (card.numbers_json || card.numbers || []);
@@ -292,10 +293,43 @@ export async function claimWin(
       ? JSON.parse(game.called_numbers)
       : (game.called_numbers || []);
 
-    const winCheck = checkWinPattern(cardNumbers, calledNumbers);
+    if (!room) {
+      const roomRes = await client.query('SELECT * FROM rooms WHERE id = $1', [roomId]);
+      room = roomRes.rows[0];
+    }
 
-    // Accept line, corners, or full house patterns
-    const isValid = winCheck.line || winCheck.corners || winCheck.fullHouse;
+    const assignedPatternId = room?.pattern_id || room?.patternId || (game as any)?.pattern_id || 'horizontal_line';
+    const patternDef = getPatternById(assignedPatternId);
+
+    // Build marked grid for the card (with FREE center cell)
+    const calledSet = new Set(calledNumbers);
+    calledSet.add(0);
+    const markedGrid: boolean[][] = Array.from({ length: 5 }, () => Array(5).fill(false));
+    markedGrid[2][2] = true;
+    for (let r = 0; r < 5; r++) {
+      for (let c = 0; c < 5; c++) {
+        const val = cardNumbers[r]?.[c];
+        if (val === 0 || calledSet.has(val)) {
+          markedGrid[r][c] = true;
+        }
+      }
+    }
+
+    let isValid = false;
+    if (patternDef) {
+      // Strictly enforce the announced single winning pattern rule for this round
+      isValid = verifyPatternMatch(markedGrid, patternDef);
+    } else {
+      // Standard rule fallback
+      const winCheck = checkWinPattern(cardNumbers, calledNumbers);
+      if (assignedPatternId === 'corners') {
+        isValid = winCheck.corners;
+      } else if (assignedPatternId === 'full_house' || assignedPatternId === 'coverall') {
+        isValid = winCheck.fullHouse;
+      } else {
+        isValid = winCheck.line;
+      }
+    }
 
     if (!isValid) {
       // 🚫 MISCALL PENALTY: Block this card for the rest of this game round
