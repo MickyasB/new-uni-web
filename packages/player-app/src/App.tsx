@@ -19,6 +19,7 @@ import Room from './pages/Room';
 import WalletPage from './pages/Wallet';
 import Profile from './pages/Profile';
 import SplashScreen from './components/SplashScreen';
+import AdminPortal from './pages/AdminPortal';
 import './index.css';
 
 // Guard for authenticated users
@@ -112,6 +113,10 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<AuthRoute mode="login"><Login /></AuthRoute>} />
         <Route path="/register" element={<AuthRoute mode="register"><Register /></AuthRoute>} />
+        
+        {/* Admin Portal — standalone with its own PIN authentication */}
+        <Route path="/admin" element={<AdminPortal />} />
+        <Route path="/admin-portal" element={<AdminPortal />} />
         
         {/* Main App Layout */}
         <Route element={<AppLayout />}>

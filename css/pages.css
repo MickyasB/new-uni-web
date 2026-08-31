@@ -1,0 +1,729 @@
+/* Page Specific Styles */
+
+/* Homepage */
+.hero {
+  height: calc(100vh - var(--header-height) - var(--top-bar-height));
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(10, 22, 40, 0.6), rgba(10, 22, 40, 0.8)), url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+  z-index: 0;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  color: var(--color-white);
+  max-width: 800px;
+  padding: 0 var(--space-4);
+}
+
+.hero-title {
+  font-size: var(--text-4xl);
+  font-family: var(--font-heading);
+  margin-bottom: var(--space-4);
+  color: var(--color-white);
+}
+
+@media (min-width: 768px) {
+  .hero-title {
+    font-size: var(--text-7xl);
+  }
+}
+
+.hero-subtitle {
+  font-size: var(--text-xl);
+  max-width: 600px;
+  margin: 0 auto var(--space-8);
+  opacity: 0.9;
+}
+
+.hero-search {
+  max-width: 600px;
+  margin: 0 auto var(--space-8);
+}
+
+.hero-cta-group {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.faculty-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.faculty-card {
+  position: relative;
+  height: 300px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  padding: var(--space-4);
+  color: var(--color-white);
+  text-decoration: none;
+}
+
+.faculty-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  z-index: 1;
+}
+
+.faculty-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+.campus-switcher {
+  background-color: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.campus-tab {
+  padding: var(--space-4);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  font-weight: 600;
+  text-align: center;
+  flex: 1;
+}
+
+.campus-tab:hover, .campus-tab.active {
+  background-color: var(--color-off-white);
+  color: var(--color-primary);
+  border-bottom-color: var(--color-secondary);
+}
+
+.campus-detail {
+  padding: var(--space-6);
+  display: none;
+}
+
+.campus-detail.active {
+  display: block;
+}
+
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-6);
+}
+
+.news-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.news-card .card-image {
+  height: 200px;
+}
+
+.news-card .card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.event-card {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-light-grey);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+
+.event-card .date-circle {
+  width: 60px;
+  height: 60px;
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border-radius: var(--radius-full);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Academics */
+.course-search {
+  background-color: var(--color-white);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin-top: calc(var(--space-12) * -1);
+  position: relative;
+  z-index: 10;
+}
+
+.course-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--space-6);
+}
+
+.course-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.course-detail {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+}
+
+@media (min-width: 1024px) {
+  .course-detail {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.course-sidebar {
+  position: sticky;
+  top: calc(var(--header-height) + var(--top-bar-height) + var(--space-6));
+}
+
+.module-list {
+  border: 1px solid var(--color-light-grey);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.module-list summary {
+  padding: var(--space-4);
+  background-color: var(--color-off-white);
+  cursor: pointer;
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-light-grey);
+}
+
+.module-list p {
+  padding: var(--space-4);
+  margin: 0;
+}
+
+/* Campus Life */
+.accommodation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-6);
+}
+
+.sports-showcase {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  padding: var(--space-16) 0;
+}
+
+.union-highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Research */
+.research-themes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-6);
+}
+
+.funding-metrics {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+}
+
+.impact-showcase {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.impact-showcase > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .impact-showcase > div {
+    flex-direction: row;
+  }
+  .impact-showcase > div:nth-child(even) {
+    flex-direction: row-reverse;
+  }
+}
+
+/* Scholarships */
+.scholarship-hero {
+  background-color: var(--color-primary-light);
+  color: var(--color-white);
+  padding: var(--space-12) 0;
+  text-align: center;
+}
+
+.scholarship-filters {
+  background-color: var(--color-white);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.scholarship-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.scholarship-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .scholarship-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.eligibility-checker {
+  background-color: var(--color-white);
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.eligibility-result {
+  background-color: rgba(40, 167, 69, 0.1);
+  border: 1px solid var(--color-success);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+}
+
+/* Application Wizard */
+.wizard-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.wizard-header {
+  padding: var(--space-6) var(--space-8);
+  background-color: var(--color-off-white);
+  border-bottom: 1px solid var(--color-light-grey);
+}
+
+.wizard-body {
+  padding: var(--space-8);
+  min-height: 400px;
+}
+
+.wizard-footer {
+  padding: var(--space-4) var(--space-8);
+  background-color: var(--color-off-white);
+  border-top: 1px solid var(--color-light-grey);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wizard-step {
+  display: none;
+}
+
+.wizard-step.active {
+  display: block;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.auto-save-indicator {
+  font-size: var(--text-xs);
+  color: var(--color-slate);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Portal */
+.portal-dashboard {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+@media (min-width: 1024px) {
+  .portal-dashboard {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.application-card {
+  border-left: 4px solid var(--color-secondary);
+}
+
+.status-timeline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  margin: var(--space-4) 0;
+}
+
+.status-timeline::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-light-grey);
+  z-index: 1;
+}
+
+.notification-panel {
+  background-color: var(--color-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.document-upload-modal .modal-body {
+  text-align: center;
+}
+
+/* Admin */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  width: 250px;
+  background-color: var(--color-dark);
+  color: var(--color-white);
+  padding: var(--space-6) 0;
+  flex-shrink: 0;
+}
+
+.admin-sidebar .nav-link {
+  color: var(--color-medium-grey);
+  display: block;
+  padding: var(--space-2) var(--space-6);
+  margin: 0;
+}
+
+.admin-sidebar .nav-link:hover, .admin-sidebar .nav-link.active {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.admin-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-card .value {
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.metric-card .trend {
+  font-size: var(--text-sm);
+  color: var(--color-success);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.scorecard-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.score-input {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.score-input input[type="range"] {
+  flex: 1;
+}
+
+.total-score {
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  color: var(--color-primary);
+  text-align: center;
+  margin-top: var(--space-4);
+}
+
+/* Login/Auth */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-primary);
+  padding: var(--space-4);
+}
+
+.auth-card {
+  background-color: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2xl);
+  width: 100%;
+  max-width: 440px;
+  padding: var(--space-8);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.auth-header h1 {
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-1);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.auth-footer {
+  margin-top: var(--space-6);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-slate);
+}
+
+/* ==========================================================================
+   Comprehensive Mobile & Tablet Responsive Design System
+   ========================================================================== */
+
+/* 1. Global Touch & Viewport Enhancements */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  -webkit-tap-highlight-color: transparent;
+}
+
+img, video, iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 2. Responsive Form Grids */
+@media (max-width: 640px) {
+  .form-grid-2, 
+  .form-grid-3,
+  .form-row {
+    grid-template-columns: 1fr !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+
+  .form-input, .form-select, .form-textarea {
+    font-size: 16px !important; /* Prevents auto-zoom on iOS */
+    padding: 12px 14px !important;
+  }
+}
+
+/* 3. Scholarships Page Responsive Layout */
+@media (max-width: 960px) {
+  .scholarships-grid-layout {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  .scholarships-grid-layout aside {
+    position: static !important;
+    top: 0 !important;
+    margin-bottom: 1.5rem !important;
+  }
+}
+
+/* 4. Wizard & Application Page Responsive */
+@media (max-width: 768px) {
+  .wizard-container,
+  .apply-page .card {
+    padding: 1.25rem 1rem !important;
+    border-radius: 8px !important;
+  }
+
+  #stepper-bar {
+    overflow-x: auto;
+    padding-bottom: 8px;
+    justify-content: flex-start !important;
+    gap: 1.25rem !important;
+  }
+
+  .step-node {
+    min-width: 60px;
+  }
+
+  .wizard-step-pane h3 {
+    font-size: 1.1rem !important;
+  }
+}
+
+/* 5. Header, Top Bar & Navigation Responsive */
+@media (max-width: 768px) {
+  .top-bar-links-left {
+    display: none !important;
+  }
+
+  .top-bar {
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+  }
+
+  .main-nav {
+    padding: 10px 14px !important;
+  }
+
+  .main-nav .nav-links-desktop {
+    display: none !important;
+  }
+
+  .logo-text-group h1,
+  .logo-text-group .brand-title {
+    font-size: 1.15rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .logo-text-group .brand-sub {
+    font-size: 0.72rem !important;
+  }
+}
+
+/* 6. Admin Dashboard & Kanban Responsive */
+@media (max-width: 1024px) {
+  .admin-layout {
+    flex-direction: column !important;
+  }
+
+  #kanban-view {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    display: flex !important;
+    gap: 1rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .kanban-column {
+    min-width: 280px !important;
+    flex-shrink: 0 !important;
+  }
+}
+
+/* 7. Homepage Sections Responsive */
+@media (max-width: 640px) {
+  .hero-content {
+    padding: 20px 12px !important;
+  }
+
+  .hero-title {
+    font-size: 2.2rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem !important;
+  }
+
+  .hero-cta-group {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  .hero-cta-group .btn {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+
+  .campus-switcher .campus-tabs {
+    flex-direction: column !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1rem !important;
+  }
+}
+
+/* 8. Touch Targets and Buttons */
+@media (max-width: 768px) {
+  .btn {
+    min-height: 44px;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+  }
+
+  .card {
+    margin-bottom: 1rem;
+  }
+}
+

@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String        @default("password123")
+  fullName     String
+  country      String        @default("United Kingdom")
+  role         String        @default("STUDENT")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
+  reviews      Review[]      @relation("ReviewerRelation")
+}
+
+model Scholarship {
+  id           String        @id @default(uuid())
+  title        String
+  description  String        @default("")
+  amount       String
+  amountValue  Float         @default(0)
+  faculty      String
+  level        String
+  nationality  String        @default("All")
+  deadline     DateTime
+  eligibility  String        @default("{}")
+  status       String        @default("OPEN")
+  createdAt    DateTime      @default(now())
+  applications Application[]
+}
+
+model Application {
+  id            String   @id @default(uuid())
+  userId        String
+  scholarshipId String
+  status        String   @default("DRAFT")
+  personalDetails String @default("{}")
+  academicInfo  String   @default("{}")
+  statement     String   @default("")
+  financialInfo String   @default("{}")
+  documents     String   @default("[]")
+  score         Float?
+  adminNotes    String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id])
+  scholarship   Scholarship @relation(fields: [scholarshipId], references: [id])
+  reviews       Review[]
+}
+
+model Review {
+  id              String      @id @default(uuid())
+  applicationId   String
+  reviewerId      String
+  academicScore   Float       @default(0)
+  statementScore  Float       @default(0)
+  financialScore  Float       @default(0)
+  totalScore      Float       @default(0)
+  comments        String      @default("")
+  createdAt       DateTime    @default(now())
+  application     Application @relation(fields: [applicationId], references: [id])
+  reviewer        User        @relation("ReviewerRelation", fields: [reviewerId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  data      String   @default("{}")
+  createdAt DateTime @default(now())
+}

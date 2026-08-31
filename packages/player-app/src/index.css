@@ -1,19 +1,111 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&family=Noto+Serif+Ethiopic:wght@300;400;700&display=swap');
 
 /* ═══════════════════════════════════════════════════════════════
-   WARM CREAM & SOFT BLUE PALETTE
-   - App Background: #FAF7F2 (Warm Cream)
-   - Card Surface: #FFFFFF (Pure White)
-   - Primary (Headers/Buttons): #2563EB (Soft Blue)
-   - Ball Accent 1 (Golden Balls): #EAB308 (Sunburst Yellow)
-   - Ball Accent 2 (Secondary Highlights): #FB7185 (Coral Blush)
-   - Dark Text: #292524 (Deep Espresso)
+   LOW-CONTRAST SOFT DARK MODE (Active / Default)
+   - App Background: #161922 (Deep Charcoal Slate)
+   - Card Surface: #1E222D (Soft Elevated Charcoal)
+   - Inner Inputs/Cells: #262B3A (Smooth Neutral Dark)
+   - Primary: #3B82F6 / #2563EB (Soft Blue)
+   - Golden Ball / Jackpot: #F59E0B / #EAB308 (Warm Sunburst Gold)
+   - Highlight / Live Beacon: #FB7185 (Coral Blush)
+   - Primary Typography: #F1F5F9 (Soft Slate White)
+   - Muted Typography: #94A3B8 (Comfortable Slate Gray)
    ═══════════════════════════════════════════════════════════════ */
 
 :root,
-[data-theme="dark"],
+[data-theme="dark"] {
+  --bg-dark: #161922;
+  --bg-deep: #12141A;
+  --card-bg: #1E222D;
+  --card-border: rgba(255, 255, 255, 0.08);
+  
+  --primary-blue: #3B82F6;
+  --primary-blue-hover: #2563EB;
+  --primary-amber: #3B82F6;
+  --primary-glow: rgba(59, 130, 246, 0.25);
+  
+  --ball-gold: #F59E0B;
+  --ball-coral: #FB7185;
+  --ball-blue: #3B82F6;
+  
+  --text-light: #F1F5F9;
+  --text-dark: #F1F5F9;
+  --text-muted: #94A3B8;
+
+  --bronze: #D97706;
+  --silver: #94A3B8;
+  --gold: #F59E0B;
+
+  --success: #10B981;
+  --danger: #FB7185;
+  
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-serif: 'Noto Serif Ethiopic', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-game: 'Plus Jakarta Sans', 'Inter', sans-serif;
+
+  /* ── Design scale tokens ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.25), 0 2px 6px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.35), 0 4px 10px rgba(0, 0, 0, 0.2);
+  --shadow-glow: 0 0 20px var(--primary-glow);
+
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 0.75rem;
+  --space-lg: 1rem;
+  --space-xl: 1.5rem;
+
+  /* Derived surfaces */
+  --surface-raised: #262B3A;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+  --input-bg: #262B3A;
+  --input-text: #F1F5F9;
+  --input-border: rgba(255, 255, 255, 0.1);
+  --nav-bg: rgba(30, 34, 45, 0.95);
+  --nav-border: rgba(255, 255, 255, 0.08);
+  --history-circle-bg: #262B3A;
+
+  /* Premium game colors */
+  --bingo-b: #3B82F6;
+  --bingo-i: #FB7185;
+  --bingo-n: #F59E0B;
+  --bingo-g: #10B981;
+  --bingo-o: #8B5CF6;
+
+  /* Header gradient — Soft Twilight Blue */
+  --header-bg: linear-gradient(135deg, #1E293B 0%, #1E222D 50%, #262B3A 100%);
+  --header-text: #F1F5F9;
+  --header-badge-bg: rgba(59, 130, 246, 0.18);
+  --header-btn-bg: rgba(255, 255, 255, 0.08);
+
+  /* Game surface */
+  --game-bg: #161922;
+  --game-panel-bg: #1E222D;
+  --game-border: rgba(255, 255, 255, 0.08);
+  --game-glow: rgba(59, 130, 246, 0.12);
+
+  --modal-bg: #1E222D;
+  --modal-text: #F1F5F9;
+  --modal-subtext: #94A3B8;
+  --modal-border: rgba(255, 255, 255, 0.1);
+  --card-header-bg: linear-gradient(90deg, #1E293B 0%, #1E222D 100%);
+
+  /* Card & Cell Tokens */
+  --cell-bg: #262B3A;
+  --cell-border: rgba(255, 255, 255, 0.08);
+  --cell-text: #F1F5F9;
+  --panel-subtext: #94A3B8;
+}
+
 [data-theme="light"] {
-  /* ── Core Palette Tokens ── */
   --bg-dark: #FAF7F2;
   --bg-deep: #F5EFE6;
   --card-bg: #FFFFFF;
@@ -37,32 +129,7 @@
 
   --success: #10B981;
   --danger: #FB7185;
-  
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-heading: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  --font-serif: 'Noto Serif Ethiopic', serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --font-game: 'Plus Jakarta Sans', 'Inter', sans-serif;
 
-  /* ── Design scale tokens ── */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-  --radius-full: 9999px;
-
-  --shadow-sm: 0 1px 3px rgba(41, 37, 36, 0.05), 0 1px 2px rgba(41, 37, 36, 0.03);
-  --shadow-md: 0 4px 14px rgba(41, 37, 36, 0.07), 0 2px 4px rgba(41, 37, 36, 0.03);
-  --shadow-lg: 0 8px 24px rgba(41, 37, 36, 0.10), 0 4px 8px rgba(41, 37, 36, 0.04);
-  --shadow-glow: 0 0 20px var(--primary-glow);
-
-  --space-xs: 0.25rem;
-  --space-sm: 0.5rem;
-  --space-md: 0.75rem;
-  --space-lg: 1rem;
-  --space-xl: 1.5rem;
-
-  /* Derived surfaces */
   --surface-raised: #FBF9F5;
   --scrollbar-thumb: rgba(41, 37, 36, 0.15);
   --input-bg: #FFFFFF;
@@ -72,20 +139,11 @@
   --nav-border: rgba(41, 37, 36, 0.08);
   --history-circle-bg: #F5EFE6;
 
-  /* Premium game colors */
-  --bingo-b: #2563EB;
-  --bingo-i: #FB7185;
-  --bingo-n: #EAB308;
-  --bingo-g: #10B981;
-  --bingo-o: #8B5CF6;
-
-  /* Header gradient — Soft Blue */
   --header-bg: linear-gradient(135deg, #1D4ED8 0%, #2563EB 50%, #3B82F6 100%);
   --header-text: #FFFFFF;
   --header-badge-bg: rgba(255, 255, 255, 0.2);
   --header-btn-bg: rgba(255, 255, 255, 0.15);
 
-  /* Game surface */
   --game-bg: #FAF7F2;
   --game-panel-bg: #FFFFFF;
   --game-border: rgba(41, 37, 36, 0.08);
@@ -97,7 +155,6 @@
   --modal-border: rgba(41, 37, 36, 0.1);
   --card-header-bg: linear-gradient(90deg, #1D4ED8 0%, #2563EB 100%);
 
-  /* Card & Cell Tokens */
   --cell-bg: #FFFFFF;
   --cell-border: rgba(41, 37, 36, 0.1);
   --cell-text: #292524;
@@ -6849,4 +6906,183 @@ body {
 .auth-input:focus {
   border-color: #2563EB !important;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   LOW-CONTRAST SOFT DARK MODE OVERRIDES
+   ═══════════════════════════════════════════════════════════════ */
+
+[data-theme="dark"] body {
+  background-color: #12141A !important;
+  color: #F1F5F9 !important;
+}
+
+[data-theme="dark"] #root {
+  background-color: #161922 !important;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .page-container,
+[data-theme="dark"] .game-room-page,
+[data-theme="dark"] .auth-page-container {
+  background-color: #161922 !important;
+  color: #F1F5F9 !important;
+}
+
+/* ── Lobby Header ── */
+[data-theme="dark"] .lobby-header {
+  background: #1E222D !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-theme="dark"] .lobby-avatar-ring {
+  background: rgba(59, 130, 246, 0.15) !important;
+  border: 1.5px solid rgba(59, 130, 246, 0.4) !important;
+  color: #60A5FA !important;
+}
+
+[data-theme="dark"] .lobby-greeting-sub {
+  color: #94A3B8 !important;
+}
+
+[data-theme="dark"] .lobby-greeting-name {
+  color: #F1F5F9 !important;
+}
+
+[data-theme="dark"] .theme-toggle-btn,
+[data-theme="dark"] .theme-toggle {
+  background: #262B3A !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #F1F5F9 !important;
+}
+
+[data-theme="dark"] .lobby-balance-chip {
+  background: #262B3A !important;
+  border: 1.5px solid rgba(59, 130, 246, 0.3) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-theme="dark"] .lobby-balance-label {
+  color: #94A3B8 !important;
+}
+
+[data-theme="dark"] .lobby-balance-add-btn {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%) !important;
+  color: #FFFFFF !important;
+}
+
+/* ── Room Cards ── */
+[data-theme="dark"] .room-card-premium {
+  background: #1E222D !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="dark"] .room-card-premium:hover {
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 8px 28px rgba(59, 130, 246, 0.15) !important;
+}
+
+[data-theme="dark"] .room-card-hero-strip {
+  background: #262B3A !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-theme="dark"] .room-pot-val {
+  color: #F59E0B !important;
+}
+
+[data-theme="dark"] .room-entry-val {
+  color: #F1F5F9 !important;
+}
+
+/* ── Bingo Cards in Dark Mode ── */
+[data-theme="dark"] .bingo-card-v2 {
+  background: #1E222D !important;
+  border: 1.5px solid rgba(59, 130, 246, 0.25) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .card-header-strip {
+  background: linear-gradient(135deg, #1E293B 0%, #262B3A 100%) !important;
+  color: #F1F5F9 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .card-cell {
+  background: #262B3A !important;
+  color: #F1F5F9 !important;
+  font-weight: 800 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .card-cell:hover {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-color: #3B82F6 !important;
+}
+
+[data-theme="dark"] .card-cell.marked {
+  background: radial-gradient(circle at 35% 35%, #FDE047 0%, #F59E0B 65%, #D97706 100%) !important;
+  box-shadow: 0 3px 12px rgba(245, 158, 11, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.6) !important;
+  color: #1E222D !important;
+}
+
+[data-theme="dark"] .card-cell.free-cell,
+[data-theme="dark"] .free-space-v2 {
+  background: linear-gradient(135deg, #FDE047 0%, #F59E0B 100%) !important;
+  color: #1E222D !important;
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.4) !important;
+}
+
+/* ── Bottom Nav in Dark Mode ── */
+[data-theme="dark"] .bottom-nav,
+[data-theme="dark"] .nav-bar {
+  background: rgba(30, 34, 45, 0.96) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .nav-item {
+  color: #94A3B8 !important;
+}
+
+[data-theme="dark"] .nav-item-active,
+[data-theme="dark"] .nav-item.nav-item-active {
+  color: #FFFFFF !important;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%) !important;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35) !important;
+}
+
+/* ── Modals & Sheets in Dark Mode ── */
+[data-theme="dark"] .modal-container,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .glass-panel,
+[data-theme="dark"] .settings-sheet {
+  background: #1E222D !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
+  color: #F1F5F9 !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .buy-modal-counter,
+[data-theme="dark"] .card-stepper-minimal,
+[data-theme="dark"] .buy-cost-summary,
+[data-theme="dark"] .buy-modal-summary {
+  background: #262B3A !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .input-field,
+[data-theme="dark"] .auth-input {
+  background: #262B3A !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #F1F5F9 !important;
+}
+
+[data-theme="dark"] .auth-card {
+  background: #1E222D !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4) !important;
 }
