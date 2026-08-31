@@ -14,7 +14,13 @@ import {
   Moon, 
   LogOut, 
   Trash2, 
-  FileText 
+  FileText,
+  Scale,
+  Info,
+  HelpCircle,
+  PhoneCall,
+  ChevronRight,
+  ShieldAlert
 } from 'lucide-react';
 
 export default function Profile() {
@@ -23,6 +29,7 @@ export default function Profile() {
   const { theme, toggle } = useTheme();
   const userRecord = user;
   const [copied, setCopied] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [docType, setDocType] = useState('national_id');
@@ -232,7 +239,7 @@ export default function Profile() {
       {userRecord && (
         <div className="section-card">
           <div className="section-title" style={{ fontFamily: 'var(--font-heading)' }}>
-            <Gift size={18} style={{ color: 'var(--primary-amber)' }} />
+            <Gift size={18} style={{ color: 'var(--primary-blue)' }} />
             <span>{t('profile.referralLink') || 'Invite Friends'}</span>
           </div>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
@@ -242,13 +249,160 @@ export default function Profile() {
             <span className="referral-code" style={{ fontFamily: 'var(--font-mono)' }}>{userRecord.referralCode}</span>
             <Button
               type="button"
-              variant={copied ? 'secondary' : 'gold'}
+              variant={copied ? 'secondary' : 'primary'}
               size="sm"
               onClick={handleCopyReferral}
               icon={copied ? <Check size={14} /> : <Copy size={14} />}
             >
               {copied ? 'Copied' : 'Copy'}
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Terms, Conditions & Platform Details Card */}
+      <div className="section-card">
+        <div className="section-title" style={{ fontFamily: 'var(--font-heading)' }}>
+          <Scale size={18} style={{ color: 'var(--primary-blue)' }} />
+          <span>Terms & Platform Details</span>
+        </div>
+
+        <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '0.75rem' }}>
+          Super Bingo operates under fair play standards, cryptographic RNG number calling, and strict privacy safeguards.
+        </p>
+
+        <button
+          type="button"
+          onClick={() => setShowTermsModal(true)}
+          style={{
+            background: 'var(--surface-raised)',
+            border: '1px solid var(--card-border)',
+            borderRadius: '10px',
+            padding: '0.75rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            cursor: 'pointer',
+            textAlign: 'left',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <FileText size={18} style={{ color: 'var(--primary-blue)' }} />
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-light)' }}>
+                View Terms & Conditions
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                Fair play, payouts, and 3-day history rules
+              </div>
+            </div>
+          </div>
+          <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
+        </button>
+
+        {/* Platform Details Summary */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--card-border)', paddingTop: '0.4rem' }}>
+            <span>Platform Version</span>
+            <strong style={{ color: 'var(--text-light)' }}>v2.4.0 (Enterprise)</strong>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span>Game History Retention</span>
+            <strong style={{ color: 'var(--text-light)' }}>72 Hours (3 Days)</strong>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span>RNG Certification</span>
+            <strong style={{ color: 'var(--success)' }}>Cryptographic SHA-256</strong>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span>Support & Compliance</span>
+            <strong style={{ color: 'var(--primary-blue)' }}>support@superbingo.et</strong>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Terms & Conditions Modal ─── */}
+      {showTermsModal && (
+        <div className="modal-overlay" onClick={() => setShowTermsModal(false)}>
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '480px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', padding: '1.25rem' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', borderBottom: '1px solid var(--card-border)', paddingBottom: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                <Scale size={20} style={{ color: 'var(--primary-blue)' }} />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-light)' }}>
+                  Terms & Conditions
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowTermsModal(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.2rem', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.82rem', color: 'var(--text-light)', lineHeight: 1.55 }}>
+              <div>
+                <h4 style={{ fontWeight: 800, color: 'var(--primary-blue)', marginBottom: '0.2rem' }}>
+                  1. Eligibility & Fair Play
+                </h4>
+                <p style={{ color: 'var(--text-muted)' }}>
+                  Players must be at least 18 years of age. All bingo number calls are generated using cryptographically secure deterministic random sequences. Artificial bots or automated scripts are strictly prohibited.
+                </p>
+              </div>
+
+              <div>
+                <h4 style={{ fontWeight: 800, color: 'var(--primary-blue)', marginBottom: '0.2rem' }}>
+                  2. Winning Patterns & Game Rules
+                </h4>
+                <p style={{ color: 'var(--text-muted)' }}>
+                  Winning patterns are automatically determined by the system based on house size (Single-goal patterns for standard halls, Dual-goal Primary + Secondary patterns for VIP lounges). The first player to claim a verified winning card wins the jackpot pot.
+                </p>
+              </div>
+
+              <div>
+                <h4 style={{ fontWeight: 800, color: 'var(--primary-blue)', marginBottom: '0.2rem' }}>
+                  3. Deposits & Withdrawals
+                </h4>
+                <p style={{ color: 'var(--text-muted)' }}>
+                  Deposits via official Telebirr and CBE account transfers are verified by compliance operators. Withdrawals are processed directly to the player’s registered account with 0% platform hidden fees.
+                </p>
+              </div>
+
+              <div>
+                <h4 style={{ fontWeight: 800, color: 'var(--primary-blue)', marginBottom: '0.2rem' }}>
+                  4. 3-Day Game Record Retention
+                </h4>
+                <p style={{ color: 'var(--text-muted)' }}>
+                  Complete round verification data, called ball hashes, and winner payouts are preserved for exactly 72 hours (3 days) for player transparency, after which they are automatically purged from active storage.
+                </p>
+              </div>
+
+              <div>
+                <h4 style={{ fontWeight: 800, color: 'var(--primary-blue)', marginBottom: '0.2rem' }}>
+                  5. Responsible Gaming
+                </h4>
+                <p style={{ color: 'var(--text-muted)' }}>
+                  Super Bingo encourages responsible participation. Players may request voluntary account limits or self-exclusion anytime through our support channels.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '1rem', borderTop: '1px solid var(--card-border)', paddingTop: '0.75rem' }}>
+              <Button
+                type="button"
+                variant="primary"
+                size="md"
+                fullWidth
+                onClick={() => setShowTermsModal(false)}
+              >
+                I Understand & Agree
+              </Button>
+            </div>
           </div>
         </div>
       )}

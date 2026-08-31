@@ -1,6 +1,11 @@
 /**
  * Centralized Platform Data Engine & Store
- * Supports real-time persistence with 0-based initial state
+ * Features:
+ * - 0-based persistent state
+ * - Real-time subscribers
+ * - 3-day rolling Game History (auto-purged after 72 hours)
+ * - User transaction ledger with Pending, Approved, and Rejected states
+ * - Admin entry fee and winning price configuration (patterns automated by system)
  */
 
 export interface DbUser {
@@ -27,6 +32,7 @@ export interface DbDeposit {
   screenshotUrl?: string;
   createdAt: string;
   status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
   processedAt?: string;
 }
 
@@ -40,6 +46,19 @@ export interface DbWithdrawal {
   accountNumber: string;
   createdAt: string;
   status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+  processedAt?: string;
+}
+
+export interface DbUserTransaction {
+  id: string;
+  type: 'deposit' | 'withdrawal';
+  amountETB: number;
+  status: 'pending' | 'approved' | 'rejected';
+  method: string;
+  reference: string;
+  createdAt: string;
+  rejectionReason?: string;
   processedAt?: string;
 }
 
@@ -52,6 +71,24 @@ export interface DbRoom {
   playerCount: number;
   maxPlayers: number;
   status: 'waiting' | 'active' | 'completed';
+  lastStartedAt?: string;
+}
+
+export interface DbGameHistory {
+  id: string;
+  roomId: string;
+  roomName: string;
+  tier: 'bronze' | 'silver' | 'gold';
+  potETB: number;
+  entryFeeETB: number;
+  winnerId: string;
+  winnerName: string;
+  winningPatternName: string;
+  winningCardId: string;
+  calledNumbersCount: number;
+  calledNumbers: number[];
+  playedAt: string;
+  timestamp: number; // Unix timestamp in milliseconds for clean 3-day purge
 }
 
 const STORAGE_KEYS = {
@@ -59,8 +96,13 @@ const STORAGE_KEYS = {
   DEPOSITS: 'bingo_db_deposits_v2',
   WITHDRAWALS: 'bingo_db_withdrawals_v2',
   ROOMS: 'bingo_db_rooms_v2',
+  GAME_HISTORY: 'bingo_db_game_history_v2',
   CURRENT_USER: 'bingo_current_user_session',
+  LAST_JOINED_ROOM: 'bingo_last_joined_room',
 };
+
+// 3 Days in milliseconds: 3 * 24 * 60 * 60 * 1000 = 259,200,000 ms
+const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
 // Initial state starts clean from 0
 const DEFAULT_ROOMS: DbRoom[] = [
@@ -91,6 +133,7 @@ class DatabaseService {
   private deposits: DbDeposit[] = [];
   private withdrawals: DbWithdrawal[] = [];
   private rooms: DbRoom[] = DEFAULT_ROOMS;
+  private gameHistory: DbGameHistory[] = [];
   private listeners: Array<() => void> = [];
 
   constructor() {
@@ -100,12 +143,26 @@ class DatabaseService {
   public subscribe(fn: () => void) {
     this.listeners.push(fn);
     return () => {
-      this.listeners = this.listeners.filter(l => l !== fn);
+      this.listeners = this.listeners.filter((l) => l !== fn);
     };
   }
 
   private notify() {
-    this.listeners.forEach(fn => fn());
+    this.listeners.forEach((fn) => {
+      try {
+        fn();
+      } catch (e) {
+        console.error('dbService listener error:', e);
+      }
+    });
+  }
+
+  private purgeOldGameHistory(records: DbGameHistory[]): DbGameHistory[] {
+    const now = Date.now();
+    return records.filter((g) => {
+      const age = now - (g.timestamp || new Date(g.playedAt).getTime());
+      return age < THREE_DAYS_MS;
+    });
   }
 
   private load() {
@@ -122,22 +179,30 @@ class DatabaseService {
 
       const r = localStorage.getItem(STORAGE_KEYS.ROOMS);
       this.rooms = r ? JSON.parse(r) : DEFAULT_ROOMS;
+
+      const gh = localStorage.getItem(STORAGE_KEYS.GAME_HISTORY);
+      const rawHistory: DbGameHistory[] = gh ? JSON.parse(gh) : [];
+      this.gameHistory = this.purgeOldGameHistory(rawHistory);
     } catch (e) {
       console.warn('Database load error, initialized with empty state:', e);
       this.users = [];
       this.deposits = [];
       this.withdrawals = [];
       this.rooms = DEFAULT_ROOMS;
+      this.gameHistory = [];
     }
   }
 
   private save() {
     if (typeof window === 'undefined') return;
     try {
+      this.gameHistory = this.purgeOldGameHistory(this.gameHistory);
+
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(this.users));
       localStorage.setItem(STORAGE_KEYS.DEPOSITS, JSON.stringify(this.deposits));
       localStorage.setItem(STORAGE_KEYS.WITHDRAWALS, JSON.stringify(this.withdrawals));
       localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(this.rooms));
+      localStorage.setItem(STORAGE_KEYS.GAME_HISTORY, JSON.stringify(this.gameHistory));
       this.notify();
     } catch (e) {
       console.error('Database save error:', e);
@@ -149,6 +214,7 @@ class DatabaseService {
     this.users = [];
     this.deposits = [];
     this.withdrawals = [];
+    this.gameHistory = [];
     this.rooms = [
       {
         id: 'room-classic-hall',
@@ -174,6 +240,7 @@ class DatabaseService {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
       localStorage.removeItem('bingo_jwt_token');
+      localStorage.removeItem(STORAGE_KEYS.LAST_JOINED_ROOM);
     }
     this.save();
   }
@@ -184,11 +251,11 @@ class DatabaseService {
   }
 
   public getUserById(uid: string): DbUser | undefined {
-    return this.users.find(u => u.uid === uid);
+    return this.users.find((u) => u.uid === uid);
   }
 
   public getUserByPhone(phone: string): DbUser | undefined {
-    return this.users.find(u => u.phone === phone);
+    return this.users.find((u) => u.phone === phone);
   }
 
   public registerUser(params: {
@@ -204,7 +271,6 @@ class DatabaseService {
     // Check if phone already registered
     const existing = this.getUserByPhone(trimmedPhone);
     if (existing) {
-      // Update name if different and return
       existing.displayName = trimmedName;
       this.save();
       return existing;
@@ -291,7 +357,7 @@ class DatabaseService {
   }
 
   public approveDeposit(depositId: string): boolean {
-    const deposit = this.deposits.find(d => d.id === depositId);
+    const deposit = this.deposits.find((d) => d.id === depositId);
     if (!deposit || deposit.status !== 'pending') return false;
 
     deposit.status = 'approved';
@@ -309,10 +375,11 @@ class DatabaseService {
   }
 
   public rejectDeposit(depositId: string, reason?: string): boolean {
-    const deposit = this.deposits.find(d => d.id === depositId);
+    const deposit = this.deposits.find((d) => d.id === depositId);
     if (!deposit || deposit.status !== 'pending') return false;
 
     deposit.status = 'rejected';
+    deposit.rejectionReason = reason || 'Verification failed';
     deposit.processedAt = new Date().toISOString();
     this.save();
     return true;
@@ -358,7 +425,7 @@ class DatabaseService {
   }
 
   public approveWithdrawal(withdrawalId: string): boolean {
-    const withdrawal = this.withdrawals.find(w => w.id === withdrawalId);
+    const withdrawal = this.withdrawals.find((w) => w.id === withdrawalId);
     if (!withdrawal || withdrawal.status !== 'pending') return false;
 
     withdrawal.status = 'approved';
@@ -373,11 +440,12 @@ class DatabaseService {
     return true;
   }
 
-  public rejectWithdrawal(withdrawalId: string): boolean {
-    const withdrawal = this.withdrawals.find(w => w.id === withdrawalId);
+  public rejectWithdrawal(withdrawalId: string, reason?: string): boolean {
+    const withdrawal = this.withdrawals.find((w) => w.id === withdrawalId);
     if (!withdrawal || withdrawal.status !== 'pending') return false;
 
     withdrawal.status = 'rejected';
+    withdrawal.rejectionReason = reason || 'Payment rejected by operator';
     withdrawal.processedAt = new Date().toISOString();
 
     // Refund player balance
@@ -390,7 +458,42 @@ class DatabaseService {
     return true;
   }
 
-  // ── ROOMS ──
+  // ── USER TRANSACTION FEED (WITH PENDING, APPROVED, REJECTED STATES) ──
+  public getUserTransactions(playerId: string): DbUserTransaction[] {
+    const userDeposits = this.deposits
+      .filter((d) => d.playerId === playerId)
+      .map((d) => ({
+        id: d.id,
+        type: 'deposit' as const,
+        amountETB: d.amountETB,
+        status: d.status,
+        method: 'Telebirr / CBE Transfer',
+        reference: d.ftNumber,
+        createdAt: d.createdAt,
+        rejectionReason: d.rejectionReason,
+        processedAt: d.processedAt,
+      }));
+
+    const userWithdrawals = this.withdrawals
+      .filter((w) => w.playerId === playerId)
+      .map((w) => ({
+        id: w.id,
+        type: 'withdrawal' as const,
+        amountETB: w.amountETB,
+        status: w.status,
+        method: w.method || 'Payout',
+        reference: w.accountNumber,
+        createdAt: w.createdAt,
+        rejectionReason: w.rejectionReason,
+        processedAt: w.processedAt,
+      }));
+
+    const combined = [...userDeposits, ...userWithdrawals];
+    combined.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return combined;
+  }
+
+  // ── ROOMS & ADMIN CONTROLS ──
   public getRooms(): DbRoom[] {
     return [...this.rooms];
   }
@@ -405,28 +508,82 @@ class DatabaseService {
     return newRoom;
   }
 
+  public updateRoomPricing(roomId: string, entryFeeETB: number, potETB: number): boolean {
+    const room = this.rooms.find((r) => r.id === roomId);
+    if (!room) return false;
+    room.entryFeeETB = Math.max(1, entryFeeETB);
+    room.potETB = Math.max(0, potETB);
+    this.save();
+    return true;
+  }
+
   public toggleRoomStatus(roomId: string): boolean {
-    const room = this.rooms.find(r => r.id === roomId);
+    const room = this.rooms.find((r) => r.id === roomId);
     if (!room) return false;
     room.status = room.status === 'active' ? 'waiting' : 'active';
     this.save();
     return true;
   }
 
+  public triggerRoomGameStart(roomId: string): boolean {
+    const room = this.rooms.find((r) => r.id === roomId);
+    if (!room) return false;
+    room.status = 'active';
+    room.lastStartedAt = new Date().toISOString();
+    this.save();
+    return true;
+  }
+
+  // ── 3-DAY ROLLING GAME HISTORY ──
+  public getGameHistory(): DbGameHistory[] {
+    this.gameHistory = this.purgeOldGameHistory(this.gameHistory);
+    return [...this.gameHistory];
+  }
+
+  public recordGameResult(history: Omit<DbGameHistory, 'id' | 'timestamp' | 'playedAt'>): DbGameHistory {
+    const now = Date.now();
+    const entry: DbGameHistory = {
+      ...history,
+      id: 'game-' + now + '-' + Math.floor(Math.random() * 1000),
+      playedAt: new Date(now).toISOString(),
+      timestamp: now,
+    };
+
+    this.gameHistory.unshift(entry);
+    this.gameHistory = this.purgeOldGameHistory(this.gameHistory);
+    this.save();
+    return entry;
+  }
+
+  // ── ACTIVE JOINED ROOM STORAGE ──
+  public setLastJoinedRoom(roomId: string | null) {
+    if (typeof window === 'undefined') return;
+    if (roomId) {
+      localStorage.setItem(STORAGE_KEYS.LAST_JOINED_ROOM, roomId);
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.LAST_JOINED_ROOM);
+    }
+  }
+
+  public getLastJoinedRoom(): string | null {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem(STORAGE_KEYS.LAST_JOINED_ROOM) || 'room-classic-hall';
+  }
+
   // ── ANALYTICS ──
   public getAnalytics() {
     const totalUsers = this.users.length;
     const totalApprovedDepositsETB = this.deposits
-      .filter(d => d.status === 'approved')
+      .filter((d) => d.status === 'approved')
       .reduce((sum, d) => sum + d.amountETB, 0);
 
     const totalApprovedWithdrawalsETB = this.withdrawals
-      .filter(w => w.status === 'approved')
+      .filter((w) => w.status === 'approved')
       .reduce((sum, w) => sum + w.amountETB, 0);
 
-    const pendingDepositsCount = this.deposits.filter(d => d.status === 'pending').length;
-    const pendingWithdrawalsCount = this.withdrawals.filter(w => w.status === 'pending').length;
-    const activeRoomsCount = this.rooms.filter(r => r.status === 'active').length;
+    const pendingDepositsCount = this.deposits.filter((d) => d.status === 'pending').length;
+    const pendingWithdrawalsCount = this.withdrawals.filter((w) => w.status === 'pending').length;
+    const activeRoomsCount = this.rooms.filter((r) => r.status === 'active').length;
     const netRevenueETB = totalApprovedDepositsETB - totalApprovedWithdrawalsETB;
 
     return {
@@ -448,7 +605,6 @@ class DatabaseService {
     if (!saved) return null;
     try {
       const parsed = JSON.parse(saved);
-      // Retrieve fresh from users list
       return this.getUserById(parsed.uid) || parsed;
     } catch {
       return null;

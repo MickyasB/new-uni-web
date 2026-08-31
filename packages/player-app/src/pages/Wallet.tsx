@@ -81,19 +81,24 @@ export default function Wallet() {
     },
   };
 
-  // Fetch wallet history
-  const fetchHistory = async () => {
-    try {
-      const data = await api.getWalletHistory();
-      setLedgerEntries(data.entries || []);
-    } catch (err) {
-      console.error('Failed to load wallet history:', err);
+  // Fetch wallet history & user transaction records
+  const fetchHistory = () => {
+    if (userRecord?.uid) {
+      const userTxns = dbService.getUserTransactions(userRecord.uid);
+      setLedgerEntries(userTxns);
+    } else {
+      setLedgerEntries([]);
     }
   };
 
   useEffect(() => {
     fetchHistory();
-  }, [activeTab]);
+    const unsub = dbService.subscribe(() => {
+      fetchHistory();
+      if (refreshUser) refreshUser();
+    });
+    return unsub;
+  }, [activeTab, userRecord?.uid, refreshUser]);
 
   // Polling tracker for active pending deposit
   useEffect(() => {
@@ -112,7 +117,7 @@ export default function Wallet() {
             return;
           } else if (localDep.status === 'rejected') {
             setActiveDepositStatus('rejected');
-            setDepositError(`❌ Deposit Rejected: Verification could not be confirmed.`);
+            setDepositError(`❌ Deposit Rejected: ${localDep.rejectionReason || 'Verification could not be confirmed.'}`);
             clearInterval(interval);
             return;
           }
@@ -835,44 +840,177 @@ export default function Wallet() {
 
       {/* ─── TAB 3: TRANSACTION HISTORY ─────────────────────────────────── */}
       {activeTab === 'history' && (
-        <div className="section-card" style={{ maxHeight: '480px', overflowY: 'auto' }}>
-          <div className="section-title" style={{ fontFamily: 'var(--font-heading)' }}>
-            <History size={18} style={{ color: 'var(--primary-amber)' }} />
-            <span>Transaction Ledger</span>
+        <div className="section-card" style={{ maxHeight: '520px', overflowY: 'auto' }}>
+          <div className="section-title" style={{ fontFamily: 'var(--font-heading)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <History size={18} style={{ color: 'var(--primary-blue)' }} />
+              <span>Transaction History</span>
+            </div>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+              {ledgerEntries.length} Record{ledgerEntries.length !== 1 ? 's' : ''}
+            </span>
           </div>
 
           {ledgerEntries.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--text-muted)' }}>
               <Inbox size={36} style={{ opacity: 0.3, marginBottom: '0.5rem' }} />
-              <p style={{ fontSize: '0.85rem' }}>No transactions recorded yet.</p>
+              <p style={{ fontSize: '0.85rem', fontWeight: 600 }}>No transactions yet</p>
+              <p style={{ fontSize: '0.75rem', marginTop: '0.2rem' }}>Make a deposit or request a withdrawal to see live records here.</p>
             </div>
           ) : (
-            ledgerEntries.map((entry) => {
-              const isCredit = ['deposit', 'win', 'bonus'].includes(entry.type);
-              const santim = entry.amount_santim || entry.amountSantim || 0;
-              const date = new Date(parseInt(entry.created_at || entry.createdAt)).toLocaleDateString();
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              {ledgerEntries.map((entry) => {
+                const isDeposit = entry.type === 'deposit';
+                const isApproved = entry.status === 'approved';
+                const isPending = entry.status === 'pending';
+                const isRejected = entry.status === 'rejected';
+                
+                const amountETB = entry.amountETB || (entry.amount_santim ? entry.amount_santim / 100 : 0);
+                const dateStr = new Date(entry.createdAt || entry.created_at || Date.now()).toLocaleString();
 
-              return (
-                <div key={entry.id} className="ledger-item">
-                  <div>
-                    <p style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-light)' }}>
-                      {formatLedgerType(entry.type)}
-                    </p>
-                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.15rem', fontFamily: 'var(--font-mono)' }}>
-                      {date} {entry.transaction_id ? `· Ref: ${entry.transaction_id}` : ''}
-                    </p>
+                return (
+                  <div
+                    key={entry.id}
+                    style={{
+                      background: 'var(--surface-raised)',
+                      border: '1px solid var(--card-border)',
+                      borderRadius: '12px',
+                      padding: '0.85rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.45rem',
+                    }}
+                  >
+                    {/* Header Row: Type, Status Badge & Amount */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                        <div
+                          style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '50%',
+                            background: isDeposit ? 'rgba(37, 99, 235, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                            color: isDeposit ? 'var(--primary-blue)' : 'var(--danger)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          {isDeposit ? <ArrowDownCircle size={16} /> : <ArrowUpCircle size={16} />}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-light)' }}>
+                            {isDeposit ? 'Deposit' : 'Withdrawal'}
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                            {entry.method || (isDeposit ? 'Telebirr / CBE' : 'Payout')}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: 'right' }}>
+                        <div
+                          style={{
+                            fontWeight: 900,
+                            fontSize: '0.95rem',
+                            color: isDeposit ? 'var(--primary-blue)' : 'var(--text-light)',
+                            fontFamily: 'var(--font-mono)',
+                          }}
+                        >
+                          {isDeposit ? '+' : '-'}{amountETB.toFixed(2)} ETB
+                        </div>
+                        
+                        {/* Status Badge */}
+                        <div style={{ marginTop: '0.15rem' }}>
+                          {isPending && (
+                            <span
+                              style={{
+                                background: '#FEF3C7',
+                                color: '#92400E',
+                                padding: '2px 7px',
+                                borderRadius: '6px',
+                                fontSize: '0.66rem',
+                                fontWeight: 800,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.03rem',
+                              }}
+                            >
+                              ⏳ Pending Review
+                            </span>
+                          )}
+                          {isApproved && (
+                            <span
+                              style={{
+                                background: '#D1FAE5',
+                                color: '#065F46',
+                                padding: '2px 7px',
+                                borderRadius: '6px',
+                                fontSize: '0.66rem',
+                                fontWeight: 800,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.03rem',
+                              }}
+                            >
+                              ✓ Approved
+                            </span>
+                          )}
+                          {isRejected && (
+                            <span
+                              style={{
+                                background: '#FEE2E2',
+                                color: '#991B1B',
+                                padding: '2px 7px',
+                                borderRadius: '6px',
+                                fontSize: '0.66rem',
+                                fontWeight: 800,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.03rem',
+                              }}
+                            >
+                              ✕ Rejected
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Reference & Date Strip */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: '0.73rem',
+                        color: 'var(--text-muted)',
+                        borderTop: '1px solid var(--card-border)',
+                        paddingTop: '0.4rem',
+                        fontFamily: 'var(--font-mono)',
+                      }}
+                    >
+                      <span>Ref / FT: {entry.reference || entry.id}</span>
+                      <span>{dateStr}</span>
+                    </div>
+
+                    {/* Rejection Note if rejected */}
+                    {isRejected && entry.rejectionReason && (
+                      <div
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.08)',
+                          border: '1px solid rgba(239, 68, 68, 0.2)',
+                          padding: '0.4rem 0.6rem',
+                          borderRadius: '6px',
+                          fontSize: '0.72rem',
+                          color: 'var(--danger)',
+                          fontWeight: 500,
+                        }}
+                      >
+                        Note: {entry.rejectionReason}
+                      </div>
+                    )}
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <p className={`ledger-amount ${isCredit ? 'credit' : 'debit'}`} style={{ fontFamily: 'var(--font-mono)' }}>
-                      {isCredit ? '+' : '-'}<CurrencyDisplay santim={santim} size="sm" variant={isCredit ? 'success' : 'white'} />
-                    </p>
-                    <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.1rem', fontFamily: 'var(--font-mono)' }}>
-                      Bal: <CurrencyDisplay santim={entry.balance_santim || entry.balanceSantim || 0} size="sm" variant="muted" prefix="" />
-                    </p>
-                  </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
         </div>
       )}

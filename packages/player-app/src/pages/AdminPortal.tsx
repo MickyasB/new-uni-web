@@ -1217,50 +1217,125 @@ export default function AdminPortal() {
               </form>
             )}
 
-            {rooms.map(r => (
-              <div
-                key={r.id}
-                style={{
-                  background: 'var(--card-bg)',
-                  border: '1px solid var(--card-border)',
-                  borderRadius: '12px',
-                  padding: '0.9rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.5rem',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontWeight: 800, fontSize: '0.95rem' }}>{r.name}</div>
+            {rooms.map((r) => {
+              const autoConfig = dbService.getRooms().find((rm) => rm.id === r.id);
+              return (
+                <div
+                  key={r.id}
+                  style={{
+                    background: 'var(--card-bg)',
+                    border: '1px solid var(--card-border)',
+                    borderRadius: '12px',
+                    padding: '0.9rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.6rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-light)' }}>{r.name}</div>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
+                        {r.tier} Tier · {r.tier === 'gold' ? '2 Patterns (Dual-Goal)' : '1 Pattern (Single-Goal)'}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleToggleRoom(r.id)}
+                      style={{
+                        background: r.status === 'active' ? 'var(--success)' : 'var(--surface-raised)',
+                        color: r.status === 'active' ? '#fff' : 'var(--text-muted)',
+                        border: 'none',
+                        padding: '3px 9px',
+                        borderRadius: '6px',
+                        fontSize: '0.68rem',
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {r.status}
+                    </button>
+                  </div>
+
+                  {/* Pricing Controls: Entry Price & Winning Pot Only */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', background: 'var(--surface-raised)', padding: '0.6rem', borderRadius: '8px' }}>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>
+                        Entry Price (ETB)
+                      </label>
+                      <input
+                        type="number"
+                        defaultValue={r.entryFeeETB}
+                        onBlur={(e) => {
+                          const val = parseFloat(e.target.value) || 10;
+                          dbService.updateRoomPricing(r.id, val, r.potETB);
+                          showNotification(`Updated Entry Price to ${val} ETB`);
+                        }}
+                        style={{
+                          width: '100%',
+                          background: 'var(--input-bg)',
+                          border: '1px solid var(--input-border)',
+                          borderRadius: '6px',
+                          padding: '4px 8px',
+                          color: 'var(--text-light)',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>
+                        Winning Pot (ETB)
+                      </label>
+                      <input
+                        type="number"
+                        defaultValue={r.potETB}
+                        onBlur={(e) => {
+                          const val = parseFloat(e.target.value) || 50;
+                          dbService.updateRoomPricing(r.id, r.entryFeeETB, val);
+                          showNotification(`Updated Winning Pot to ${val} ETB`);
+                        }}
+                        style={{
+                          width: '100%',
+                          background: 'var(--input-bg)',
+                          border: '1px solid var(--input-border)',
+                          borderRadius: '6px',
+                          padding: '4px 8px',
+                          color: 'var(--gold)',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Admin Start Game Button */}
                   <button
-                    onClick={() => handleToggleRoom(r.id)}
+                    onClick={() => {
+                      dbService.triggerRoomGameStart(r.id);
+                      showNotification(`🎮 Game started for ${r.name}! Calling numbers.`);
+                    }}
                     style={{
-                      background: r.status === 'active' ? 'var(--success)' : 'var(--surface-raised)',
-                      color: r.status === 'active' ? '#fff' : 'var(--text-muted)',
+                      background: 'var(--primary-blue)',
+                      color: '#fff',
                       border: 'none',
-                      padding: '2px 8px',
-                      borderRadius: '6px',
-                      fontSize: '0.68rem',
+                      padding: '0.5rem',
+                      borderRadius: '8px',
+                      fontSize: '0.78rem',
                       fontWeight: 800,
-                      textTransform: 'uppercase',
                       cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.35rem',
                     }}
                   >
-                    {r.status}
+                    <Gamepad2 size={14} /> Start Game Now
                   </button>
                 </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Entry Fee</span>
-                  <span style={{ fontWeight: 800 }}>{r.entryFeeETB} ETB</span>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Est. Jackpot Pot</span>
-                  <span style={{ fontWeight: 800, color: 'var(--gold)' }}>{r.potETB} ETB</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </>
         )}
       </div>

@@ -15,12 +15,15 @@ import {
   verifyPatternMatch,
   formatUserDisplayId
 } from '@bingo/shared';
+import { getAutoRoomPatterns, RoomPatternConfig } from '../patterns';
+import { dbService, DbGameHistory } from '../dbService';
 
 import GameHeader from '../components/GameHeader';
 import BingoCard from '../components/BingoCard';
 import PatternHintsModal from '../components/PatternHintsModal';
-import { Target, Zap, Volume2, VolumeX, Eye, Trophy, Sparkles, RotateCw, Boxes, Layers, Lock, Crown, Gamepad2, CheckCircle2, XCircle, Search } from 'lucide-react';
+import { Target, Zap, Volume2, VolumeX, Eye, Trophy, Sparkles, RotateCw, Boxes, Layers, Lock, Crown, Gamepad2, CheckCircle2, XCircle, Search, History, Clock } from 'lucide-react';
 import { soundFX } from '../utils/soundEffects';
+import { speakBingoCall } from '../utils/voiceCaller';
 
 // Helper to compute SHA-256 hash in JS
 async function sha256(message: string): Promise<string> {
@@ -69,7 +72,7 @@ function getRowColor(letter: string) {
 }
 
 export default function Room() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
 
@@ -88,7 +91,7 @@ export default function Room() {
   const [verifyStatus, setVerifyStatus] = useState<'idle' | 'verifying' | 'valid' | 'invalid'>('idle');
   const [calculatedHash, setCalculatedHash] = useState('');
   const [startLoading, setStartLoading] = useState(false);
-  const [botsLoading, setBotsLoading] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showGameInfo, setShowGameInfo] = useState(false);
   const [showAllNumbers, setShowAllNumbers] = useState(false);
   const [showPatternHints, setShowPatternHints] = useState(false);
@@ -105,13 +108,27 @@ export default function Room() {
   const [isAutoDaub, setIsAutoDaub] = useState(false); // Manual player daubing by default
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
 
-  const activeGamePattern: BingoPattern = useMemo(() => {
-    if (roomRecord?.patternId) {
-      const found = getPatternById(roomRecord.patternId);
-      if (found) return found;
+  // Remember last joined room for live navigation
+  useEffect(() => {
+    if (roomId) {
+      dbService.setLastJoinedRoom(roomId);
+      if (setActiveRoomId) setActiveRoomId(roomId);
     }
-    return assignRandomPatternForTier(roomRecord?.tier || 'bronze');
-  }, [roomRecord?.patternId, roomRecord?.tier]);
+  }, [roomId, setActiveRoomId]);
+
+  // Automated pattern setup based strictly on room tier & house size (1 for small, 2 for big house)
+  const roomPatternConfig: RoomPatternConfig = useMemo(() => {
+    const feeETB = (roomRecord?.entryFeeSantim || 1000) / 100;
+    return getAutoRoomPatterns(roomRecord?.tier || 'silver', feeETB);
+  }, [roomRecord?.tier, roomRecord?.entryFeeSantim]);
+
+  const activeGamePattern: BingoPattern = useMemo(() => {
+    return roomPatternConfig.primaryPattern;
+  }, [roomPatternConfig]);
+
+  const secondaryGamePattern: BingoPattern | undefined = useMemo(() => {
+    return roomPatternConfig.secondaryPattern;
+  }, [roomPatternConfig]);
 
   const prevNumberRef = useRef<number | null>(null);
   const buyPanelRef = useRef<HTMLDivElement>(null);
@@ -166,19 +183,6 @@ export default function Room() {
     }, 3000);
     return () => clearInterval(timer);
   }, [localDemoGame.active]);
-
-  const handleDevAddBots = async () => {
-    if (!roomId) return;
-    setBotsLoading(true);
-    try {
-      // Mock bots — backend doesn't have this yet
-      showToast('3 bot players added!', 'success');
-    } catch (err: any) {
-      showToast(err.message || 'Failed to add bots.');
-    } finally {
-      setBotsLoading(false);
-    }
-  };
 
   const handleBuyCards = async () => {
     if (!roomId) return;
@@ -415,21 +419,19 @@ export default function Room() {
       if (navigator.vibrate) navigator.vibrate(isOnCard ? [50, 30, 80] : 50);
     } catch (e) { /* ignore */ }
 
-    // Web Speech Voice Caller ("B 12", "I 24", etc.)
-    if (isVoiceEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      try {
-        window.speechSynthesis.cancel();
-        let letter = 'B';
-        if (currentNumber >= 16 && currentNumber <= 30) letter = 'I';
-        else if (currentNumber >= 31 && currentNumber <= 45) letter = 'N';
-        else if (currentNumber >= 46 && currentNumber <= 60) letter = 'G';
-        else if (currentNumber >= 61) letter = 'O';
+    // Multilingual Web Speech Voice Caller ("B 12", "ቢ አስራ ሁለት", etc.)
+    if (isVoiceEnabled) {
+      let letter = 'B';
+      if (currentNumber >= 16 && currentNumber <= 30) letter = 'I';
+      else if (currentNumber >= 31 && currentNumber <= 45) letter = 'N';
+      else if (currentNumber >= 46 && currentNumber <= 60) letter = 'G';
+      else if (currentNumber >= 61) letter = 'O';
 
-        const utterance = new SpeechSynthesisUtterance(`${letter} ${currentNumber}`);
-        utterance.rate = 1.15;
-        utterance.pitch = 1.05;
-        window.speechSynthesis.speak(utterance);
-      } catch (e) { /* ignore speech synthesis errors */ }
+      speakBingoCall({
+        num: currentNumber,
+        letter,
+        lang: (typeof i18n !== 'undefined' ? i18n.language : 'en') || 'en'
+      });
     }
 
     // Audio ping — reuse AudioContext (Fix #7), different tone for card matches (Fix #8)
@@ -821,21 +823,23 @@ export default function Room() {
                 </div>
               )}
 
-              {/* Instant Start & Bot Controls */}
-              <div className="waiting-start-action-box">
+              {/* Instant Start & History Controls */}
+              <div className="waiting-start-action-box" style={{ display: 'flex', gap: '0.6rem', width: '100%', maxWidth: '340px' }}>
                 <button
                   onClick={handleDevStartGame}
                   disabled={startLoading}
                   className="btn-ui btn-ui-gold btn-ui-lg waiting-start-btn"
+                  style={{ flex: 2 }}
                 >
                   {startLoading ? '⏳ Starting...' : '🎮 Start Game Now'}
                 </button>
                 <button
-                  onClick={handleDevAddBots}
-                  disabled={botsLoading}
-                  className="btn-ui btn-ui-secondary btn-ui-sm waiting-bot-btn"
+                  onClick={() => setShowHistoryModal(true)}
+                  className="btn-ui btn-ui-secondary btn-ui-lg"
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}
+                  title="View Past 3 Days Game History"
                 >
-                  {botsLoading ? 'Adding...' : '🤖 Add 3 Bot Players'}
+                  <History size={16} /> History
                 </button>
               </div>
             </div>
@@ -1451,6 +1455,76 @@ export default function Room() {
         >
           +
         </button>
+      )}
+
+      {/* ─── 3-Day Game History Modal ─── */}
+      {showHistoryModal && (
+        <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', borderBottom: '1px solid var(--card-border)', paddingBottom: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <History size={20} style={{ color: 'var(--primary-blue)' }} />
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: 'var(--text-light)' }}>
+                  Past 3-Days Game History
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.2rem', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+              Verified rounds within 72 hours. Older history is automatically purged.
+            </p>
+
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              {dbService.getGameHistory().length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-muted)' }}>
+                  <Clock size={32} style={{ opacity: 0.4, marginBottom: '0.5rem' }} />
+                  <p style={{ fontSize: '0.85rem', fontWeight: 600 }}>No recent games in 3-day history</p>
+                  <p style={{ fontSize: '0.75rem', marginTop: '0.2rem' }}>Complete a round to see verified winner records here.</p>
+                </div>
+              ) : (
+                dbService.getGameHistory().map((g) => (
+                  <div
+                    key={g.id}
+                    style={{
+                      background: 'var(--surface-raised)',
+                      border: '1px solid var(--card-border)',
+                      borderRadius: '10px',
+                      padding: '0.75rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.35rem',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-light)' }}>
+                        {g.roomName}
+                      </span>
+                      <span style={{ fontWeight: 900, color: 'var(--gold)', fontSize: '0.9rem', fontFamily: 'var(--font-mono)' }}>
+                        +{g.potETB} ETB
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      <span>Winner: <strong style={{ color: 'var(--text-light)' }}>{g.winnerName}</strong></span>
+                      <span>Pattern: <strong style={{ color: 'var(--primary-blue)' }}>{g.winningPatternName}</strong></span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)', borderTop: '1px solid var(--card-border)', paddingTop: '0.3rem' }}>
+                      <span>Called Balls: {g.calledNumbersCount} / 75</span>
+                      <span>{new Date(g.playedAt).toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ─── Pattern Hints Modal ─── */}

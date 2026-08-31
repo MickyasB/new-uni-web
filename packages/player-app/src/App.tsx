@@ -62,6 +62,7 @@ function AuthRoute({ children, mode }: { children: React.ReactNode; mode: 'login
 function AppLayout() {
   const { t } = useTranslation();
   const location = useLocation();
+  const activeRoomId = useAppStore((state) => state.activeRoomId);
 
   // If in active room, hide bottom nav to maximize bingo board layout
   const showNav = !location.pathname.startsWith('/room/');
@@ -69,6 +70,9 @@ function AppLayout() {
   const isActive = (path: string) => {
     return location.pathname === path ? 'nav-item nav-item-active' : 'nav-item';
   };
+
+  // Get active or last joined room
+  const targetLiveRoom = activeRoomId || (typeof window !== 'undefined' ? localStorage.getItem('bingo_last_joined_room') : null) || 'room-classic-hall';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', position: 'relative' }}>
@@ -83,13 +87,23 @@ function AppLayout() {
               <Gamepad2 size={22} strokeWidth={2.2} />
               <span className="nav-label">{t('lobby.title') || 'Lobby'}</span>
             </Link>
+            
             <Link to="/wallet" className={isActive('/wallet')}>
               <Wallet size={22} strokeWidth={2.2} />
               <span className="nav-label">{t('wallet.title') || 'Wallet'}</span>
             </Link>
-            <Link to="/lobby" className="nav-center-action" aria-label="Play">
+
+            {/* 3rd Navigation Button: Direct route to Live Game joined */}
+            <Link 
+              to={`/room/${targetLiveRoom}`} 
+              className={`nav-center-action ${location.pathname.startsWith('/room/') ? 'active' : ''}`}
+              aria-label="Live Game"
+              title="Enter Joined Live Game"
+            >
               <Trophy size={24} strokeWidth={2.5} />
+              <span className="nav-center-live-badge">LIVE</span>
             </Link>
+
             <Link to="/profile" className={isActive('/profile')}>
               <User size={22} strokeWidth={2.2} />
               <span className="nav-label">{t('profile.title') || 'Profile'}</span>
