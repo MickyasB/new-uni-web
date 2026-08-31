@@ -6010,6 +6010,513 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 0.25rem !important;
 }
 
+/* ═══════════════════════════════════════════════════════
+   MINIMALIST CASINO ROYALE HOME PAGE (Lobby.tsx)
+   - Deep Navy (#1A1A2E / #121220) Canvas
+   - Soft, Low-Contrast Cards & Breathable Spacing
+   - Focal Points: Balance, Theme Toggle, 2 Curated Rooms
+   ═══════════════════════════════════════════════════════ */
+
+.lobby-minimal-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 0 0 calc(80px + env(safe-area-inset-bottom, 12px));
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+}
+
+/* Top Focal Header */
+.lobby-minimal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--card-border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.lobby-user-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.lobby-avatar-minimal {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0.05) 100%);
+  border: 1.5px solid rgba(212, 175, 55, 0.4);
+  color: #D4AF37;
+  font-weight: 900;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lobby-greeting-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.lobby-greeting-sub {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.lobby-greeting-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-light);
+  font-family: var(--font-heading);
+  line-height: 1.2;
+}
+
+.lobby-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.4);
+  color: #D4AF37;
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.92);
+}
+
+/* Prominent Balance Pill */
+.lobby-balance-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 14px;
+  padding: 0.35rem 0.65rem;
+  text-decoration: none;
+  color: var(--text-light);
+  transition: all 0.2s ease;
+}
+
+.lobby-balance-pill:hover {
+  background: rgba(212, 175, 55, 0.18);
+  border-color: #D4AF37;
+  transform: translateY(-1px);
+}
+
+.lobby-balance-pill:active {
+  transform: scale(0.96);
+}
+
+.balance-text-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.balance-pill-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.balance-add-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #E5BE42 0%, #D4AF37 100%);
+  color: #1A1A2E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
+}
+
+/* Main Body & Section Title */
+.lobby-main-body {
+  padding: 1.25rem 1.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.lobby-section-header-minimal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.25rem;
+}
+
+.section-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.gold-sparkle-icon {
+  color: #D4AF37;
+}
+
+.section-heading-text {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-light);
+  letter-spacing: -0.01em;
+}
+
+.section-room-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+}
+
+/* Two Curated Game Rooms Grid */
+.lobby-two-rooms-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.minimal-room-card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--card-border);
+  border-radius: 20px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.minimal-room-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(212, 175, 55, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.minimal-room-card:active {
+  transform: scale(0.98);
+}
+
+/* Subtle Card Glow Accents */
+.classic-hall-card {
+  background: linear-gradient(145deg, var(--card-bg) 0%, rgba(34, 34, 59, 0.85) 100%);
+}
+
+.gold-lounge-card {
+  background: linear-gradient(145deg, var(--card-bg) 0%, rgba(45, 40, 20, 0.85) 100%);
+  border-color: rgba(212, 175, 55, 0.35);
+}
+
+[data-theme="light"] .classic-hall-card {
+  background: linear-gradient(145deg, #FFFFFF 0%, #F8F9FD 100%);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .gold-lounge-card {
+  background: linear-gradient(145deg, #FFFFFF 0%, #FDFBF7 100%);
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+/* Room Card Top */
+.minimal-room-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.room-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.room-badge-pill {
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: #D4AF37;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  align-self: flex-start;
+  text-transform: uppercase;
+}
+
+.minimal-room-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--text-light);
+  font-family: var(--font-heading);
+  letter-spacing: -0.01em;
+  margin-top: 0.2rem;
+}
+
+.minimal-room-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.room-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 0.2rem 0.55rem;
+  border-radius: 12px;
+}
+
+.live-pulse-dot-clean {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
+  animation: pulse-accent 1.5s infinite ease;
+}
+
+/* Stats Row: Jackpot & Entry */
+.minimal-room-stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 0.75rem 0.95rem;
+}
+
+.stat-box-pot, .stat-box-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.stat-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-val-pot {
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-size: 1.15rem;
+  color: #D4AF37;
+}
+
+.stat-val-entry {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--text-light);
+}
+
+/* Room Card Footer & Rich Gold CTA */
+.minimal-room-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.25rem;
+}
+
+.room-players-count {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.room-cta-gold-btn {
+  background: linear-gradient(135deg, #E5BE42 0%, #D4AF37 50%, #B8860B 100%);
+  color: #1A1A2E;
+  font-size: 0.88rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  padding: 0.65rem 1.35rem;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.room-cta-gold-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.5);
+  filter: brightness(1.05);
+}
+
+.room-cta-gold-btn:active {
+  transform: scale(0.96);
+}
+
+/* Buy Modal Minimal Styles */
+.buy-modal-minimal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.25rem 0;
+}
+
+.buy-modal-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.card-stepper-minimal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  padding: 1rem;
+}
+
+.stepper-btn-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1.5px solid #D4AF37;
+  color: #D4AF37;
+  font-size: 1.3rem;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.stepper-btn-circle:hover:not(:disabled) {
+  background: #D4AF37;
+  color: #1A1A2E;
+  transform: scale(1.08);
+}
+
+.stepper-btn-circle:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.stepper-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+}
+
+.stepper-num {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--text-light);
+  line-height: 1;
+  font-family: var(--font-heading);
+}
+
+.stepper-unit {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.2rem;
+}
+
+.buy-cost-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--surface-raised);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--card-border);
+}
+
+.cost-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.cost-row.total-row {
+  border-top: 1px solid var(--card-border);
+  padding-top: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-light);
+}
+
+.modal-actions-dual {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+
 
 
 

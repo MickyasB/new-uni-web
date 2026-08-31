@@ -33,30 +33,30 @@ function loadStore(): LocalStore {
   return {
     users: {},
     rooms: {
-      'room-bronze-default': {
-        id: 'room-bronze-default',
-        tier: 'bronze',
+      'room-classic-hall': {
+        id: 'room-classic-hall',
+        tier: 'silver',
         entry_fee_santim: 1000,
         mode: 'auto',
         type: 'open',
         min_players: 2,
         max_cards: 6,
         status: 'waiting',
-        player_count: 0,
-        pot_santim: 0,
+        player_count: 3,
+        pot_santim: 5000,
         created_at: Date.now()
       },
-      'room-silver-default': {
-        id: 'room-silver-default',
-        tier: 'silver',
+      'room-gold-lounge': {
+        id: 'room-gold-lounge',
+        tier: 'gold',
         entry_fee_santim: 5000,
         mode: 'auto',
         type: 'open',
         min_players: 3,
         max_cards: 6,
         status: 'waiting',
-        player_count: 0,
-        pot_santim: 0,
+        player_count: 5,
+        pot_santim: 25000,
         created_at: Date.now()
       }
     },

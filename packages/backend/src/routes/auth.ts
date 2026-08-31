@@ -29,7 +29,7 @@ router.post('/register', async (req: Request, res: Response) => {
     await query(
       `INSERT INTO users (uid, phone, display_name, dob, wallet_balance_santim, referral_code, referred_by, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [uid, phone, displayName, dob || '2000-01-01', 100000, myReferralCode, referralCode || null, createdAt]
+      [uid, phone, displayName, dob || '2000-01-01', 0, myReferralCode, referralCode || null, createdAt]
     );
 
     const token = jwt.sign({ uid, phone, displayName }, JWT_SECRET, { expiresIn: '30d' });
@@ -41,7 +41,7 @@ router.post('/register', async (req: Request, res: Response) => {
         uid,
         phone,
         displayName,
-        walletBalanceSantim: 100000,
+        walletBalanceSantim: 0,
         referralCode: myReferralCode,
       },
     });
