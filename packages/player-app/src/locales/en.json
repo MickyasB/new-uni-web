@@ -13,6 +13,9 @@
   },
   "lobby": {
     "title": "Bingo Lobby",
+    "gameRooms": "Game Rooms",
+    "classicHall": "Classic Hall",
+    "goldLounge": "Gold Lounge",
     "roomName": "Room {{id}}",
     "activeRooms": "Active Rooms",
     "scheduledTournaments": "Scheduled Tournaments",
@@ -80,6 +83,7 @@
     "games": "Games"
   },
   "wallet": {
+    "title": "Wallet",
     "balance": "Wallet Balance",
     "deposit": "Deposit",
     "withdraw": "Withdraw",

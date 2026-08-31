@@ -13,6 +13,9 @@
   },
   "lobby": {
     "title": "ቢንጎ ሎቢ",
+    "gameRooms": "የጨዋታ ክፍሎች",
+    "classicHall": "ክላሲክ አዳራሽ",
+    "goldLounge": "ጎልድ ላውንጅ",
     "roomName": "ክፍል {{id}}",
     "activeRooms": "ንቁ ክፍሎች",
     "scheduledTournaments": "የታቀዱ ውድድሮች",
@@ -79,6 +82,7 @@
     "games": "ጨዋታዎች"
   },
   "wallet": {
+    "title": "ዋሌት",
     "balance": "ያለዎት ሂሳብ",
     "deposit": "ገንዘብ አስገባ",
     "withdraw": "ገንዘብ አውጣ",

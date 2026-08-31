@@ -5,8 +5,8 @@ import { useAppStore } from '../store';
 import { useTheme } from '../useTheme';
 import { api } from '../api';
 import { RoomRecord, RoomStatus, RoomTier } from '@bingo/shared';
-import { Button, CurrencyDisplay, Modal, Toast } from '../components/ui';
-import { Trophy, Users, Play, Plus, Sun, Moon, Sparkles } from 'lucide-react';
+import { Button, Badge, CurrencyDisplay, Modal, Toast } from '../components/ui';
+import { Trophy, Users, Play, Plus, Sun, Moon } from 'lucide-react';
 
 const TWO_CORE_ROOMS: RoomRecord[] = [
   {
@@ -72,10 +72,7 @@ export default function Lobby() {
         }));
 
         if (apiRooms.length >= 2) {
-          // Take the top 2 curated room offerings
           setRooms(apiRooms.slice(0, 2));
-        } else if (apiRooms.length === 1) {
-          setRooms([apiRooms[0], TWO_CORE_ROOMS[1]]);
         } else {
           setRooms(TWO_CORE_ROOMS);
         }
@@ -100,7 +97,7 @@ export default function Lobby() {
 
     const totalCost = selectedRoom.entryFeeSantim * cardCount;
     if (userRecord && userRecord.walletBalanceSantim < totalCost) {
-      setBuyError(t('errors.insufficientFunds') || 'Insufficient wallet balance to buy cards.');
+      setBuyError(t('errors.insufficientFunds') || 'Insufficient funds to buy cards.');
       return;
     }
 
@@ -109,11 +106,10 @@ export default function Lobby() {
 
     try {
       if (selectedRoom.id.includes('-demo') || selectedRoom.id.includes('classic-hall') || selectedRoom.id.includes('gold-lounge')) {
-        // Optimistic local / instant room join for demo IDs
         try {
           await api.buyCards(selectedRoom.id, cardCount);
         } catch {
-          // Fallback if backend room not yet provisioned
+          // Local fallback
         }
         setActiveRoomId(selectedRoom.id);
         navigate(`/room/${selectedRoom.id}`);
@@ -130,31 +126,38 @@ export default function Lobby() {
     }
   };
 
-  const getRoomMeta = (room: RoomRecord) => {
+  const getRoomTitle = (room: RoomRecord) => {
     const isGold = room.tier === RoomTier.GOLD || room.id.includes('gold');
-    return {
-      title: isGold ? 'Gold Lounge' : 'Classic Hall',
-      subtitle: isGold ? 'High Stakes · Royal Jackpot' : 'Standard Stakes · Fast Live Play',
-      badge: isGold ? 'VIP GOLD' : 'CLASSIC',
-      isGold,
-    };
+    return isGold ? (t('lobby.goldLounge') || 'Gold Lounge') : (t('lobby.classicHall') || 'Classic Hall');
+  };
+
+  const getRoomSubtitle = (room: RoomRecord) => {
+    const isGold = room.tier === RoomTier.GOLD || room.id.includes('gold');
+    return isGold ? 'High Stakes · Royal Jackpot' : 'Standard Stakes · Fast Live Play';
   };
 
   return (
-    <div className="page-container lobby-minimal-page">
-      {/* ── Top Focal Bar: Profile, Theme Toggle & Prominent Balance ── */}
-      <header className="lobby-minimal-header">
-        <div className="lobby-user-group">
-          <div className="lobby-avatar-minimal">
-            <span>{userRecord?.displayName ? userRecord.displayName[0].toUpperCase() : 'P'}</span>
+    <div className="page-container">
+      {/* ── Lobby Top Header ── */}
+      <div className="lobby-header">
+        <div className="lobby-user-profile">
+          <div className="lobby-avatar-ring">
+            <span style={{ fontSize: '1.2rem', fontWeight: 900 }}>
+              {userRecord?.displayName ? userRecord.displayName[0].toUpperCase() : 'P'}
+            </span>
+            <div className="lobby-avatar-badge" />
           </div>
-          <div className="lobby-greeting-text">
-            <span className="lobby-greeting-sub">{t('lobby.welcomeBack') || 'Welcome'}</span>
-            <h2 className="lobby-greeting-name">{userRecord?.displayName || 'Player'}</h2>
+          <div>
+            <div className="lobby-greeting-sub">
+              <span>{t('lobby.welcomeBack') || 'Welcome back'}</span>
+            </div>
+            <div className="lobby-greeting-name" style={{ fontFamily: 'var(--font-heading)' }}>
+              {userRecord?.displayName || 'Player'}
+            </div>
           </div>
         </div>
 
-        <div className="lobby-header-actions">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           {/* Theme Toggle Button */}
           <button
             onClick={toggle}
@@ -165,107 +168,119 @@ export default function Lobby() {
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
-          {/* Prominent Balance Chip */}
-          <Link to="/wallet" className="lobby-balance-pill" aria-label="Wallet Balance">
-            <div className="balance-text-stack">
-              <span className="balance-pill-label">{t('wallet.balance') || 'Balance'}</span>
+          {/* Balance Chip with Quick Deposit */}
+          <Link to="/wallet" className="lobby-balance-chip" aria-label="Deposit Funds">
+            <div className="lobby-balance-info">
+              <span className="lobby-balance-label">{t('wallet.balance') || 'Wallet'}</span>
               <CurrencyDisplay santim={userRecord?.walletBalanceSantim || 0} variant="gold" size="md" />
             </div>
-            <div className="balance-add-icon" title="Deposit">
-              <Plus size={15} strokeWidth={3} />
+            <div className="lobby-balance-add-btn" title="Add Funds">
+              <Plus size={16} strokeWidth={3} />
             </div>
           </Link>
         </div>
-      </header>
+      </div>
 
-      {/* ── Main Clean Rooms View ── */}
-      <main className="lobby-main-body">
-        <div className="lobby-section-header-minimal">
-          <div className="section-title-wrap">
-            <Sparkles size={16} className="gold-sparkle-icon" />
-            <h3 className="section-heading-text">{t('lobby.gameRooms') || 'Select Game Room'}</h3>
-          </div>
-          <span className="section-room-badge">2 Active Rooms</span>
-        </div>
+      {/* ── Section Title (Clean & Breathable) ── */}
+      <div className="lobby-section-title" style={{ marginTop: '0.75rem', marginBottom: '0.25rem' }}>
+        <span className="lobby-section-title-text" style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-light)' }}>
+          {t('lobby.gameRooms') || 'Game Rooms'}
+        </span>
+        <span className="lobby-room-count">
+          2 {t('lobby.activeRooms') || 'Active Rooms'}
+        </span>
+      </div>
 
-        {/* The Two Curated Game Rooms */}
-        <div className="lobby-two-rooms-grid">
-          {rooms.map((room) => {
-            const { title, subtitle, badge, isGold } = getRoomMeta(room);
-            const canAfford = (userRecord?.walletBalanceSantim || 0) >= room.entryFeeSantim;
+      {/* ── The Two Curated Game Rooms (Classic Hall & Gold Lounge) ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem', flex: 1, marginTop: '0.5rem' }}>
+        {rooms.map((room, index) => {
+          const isGold = room.tier === RoomTier.GOLD || room.id.includes('gold');
+          const canAfford = (userRecord?.walletBalanceSantim || 0) >= room.entryFeeSantim;
+          const title = getRoomTitle(room);
+          const subtitle = getRoomSubtitle(room);
 
-            return (
-              <div
-                key={room.id}
-                className={`minimal-room-card ${isGold ? 'gold-lounge-card' : 'classic-hall-card'}`}
-                onClick={() => handleOpenJoinModal(room)}
-              >
-                {/* Top Row: Room Title & Live Badge */}
-                <div className="minimal-room-top">
-                  <div className="room-title-block">
-                    <div className="room-badge-pill">{badge}</div>
-                    <h4 className="minimal-room-title">{title}</h4>
-                    <p className="minimal-room-subtitle">{subtitle}</p>
-                  </div>
-
-                  <div className="room-status-indicator">
-                    <span className="live-pulse-dot-clean" />
-                    <span>Live</span>
-                  </div>
-                </div>
-
-                {/* Center Pot & Fee Highlight */}
-                <div className="minimal-room-stats-row">
-                  <div className="stat-box-pot">
-                    <span className="stat-label">
-                      <Trophy size={13} />
-                      <span>{t('lobby.estPot') || 'Est. Jackpot'}</span>
-                    </span>
-                    <span className="stat-val-pot">
-                      <CurrencyDisplay santim={room.potSantim} variant="gold" size="lg" />
-                    </span>
-                  </div>
-
-                  <div className="stat-box-entry">
-                    <span className="stat-label">{t('lobby.entryFee') || 'Entry Fee'}</span>
-                    <span className="stat-val-entry">
-                      <CurrencyDisplay santim={room.entryFeeSantim} size="md" />
-                    </span>
+          return (
+            <div
+              key={room.id}
+              className={`room-card-premium ${isGold ? 'tier-gold' : 'tier-silver'}`}
+              style={{ animationDelay: `${index * 0.08}s` }}
+              onClick={() => handleOpenJoinModal(room)}
+            >
+              {/* Header: Tier, Room Name & Live Beacon */}
+              <div className="room-card-top">
+                <div className="room-card-tier-wrap">
+                  <Badge tier={room.tier} size="md" />
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-light)', fontFamily: 'var(--font-heading)' }}>
+                      {title}
+                    </div>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                      {subtitle}
+                    </div>
                   </div>
                 </div>
 
-                {/* Bottom Meta & Primary Rich Gold Action */}
-                <div className="minimal-room-footer">
-                  <div className="room-players-count">
-                    <Users size={14} />
-                    <span>{room.playerCount} playing</span>
-                  </div>
-
-                  <button
-                    className="room-cta-gold-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenJoinModal(room);
-                    }}
-                  >
-                    <Play size={15} fill="currentColor" />
-                    <span>{canAfford ? 'PLAY NOW' : 'BUY CARDS'}</span>
-                  </button>
+                <div className="room-live-beacon waiting">
+                  <span className="room-beacon-dot" />
+                  <span>Live</span>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </main>
+
+              {/* Pot & Entry Strip */}
+              <div className="room-card-hero-strip">
+                <div className="room-pot-box">
+                  <span className="room-pot-label">
+                    <Trophy size={14} />
+                    <span>{t('lobby.estPot') || 'Est. Jackpot'}</span>
+                  </span>
+                  <span className="room-pot-val">
+                    <CurrencyDisplay santim={room.potSantim} variant="gold" size="lg" />
+                  </span>
+                </div>
+
+                <div className="room-entry-box">
+                  <span className="room-entry-label">{t('lobby.entryFee') || 'Entry Fee'}</span>
+                  <span className="room-entry-val">
+                    <CurrencyDisplay santim={room.entryFeeSantim} size="md" />
+                  </span>
+                </div>
+              </div>
+
+              {/* Room Meta */}
+              <div className="room-card-meta" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="room-meta-item">
+                  <Users size={14} />
+                  <span>{room.playerCount} {t('lobby.players') || 'Players'}</span>
+                </div>
+                <div className="room-meta-item">
+                  <span>Max {room.maxCards} Cards</span>
+                </div>
+              </div>
+
+              {/* Primary Call to Action Button */}
+              <button
+                className={`room-play-btn ${!canAfford ? 'disabled' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenJoinModal(room);
+                }}
+              >
+                <Play size={16} fill="currentColor" />
+                <span>{canAfford ? (t('lobby.join') || 'PLAY NOW') : 'BUY CARDS'}</span>
+              </button>
+            </div>
+          );
+        })}
+      </div>
 
       {/* ── Buy Cards Modal ── */}
       {selectedRoom && (
         <Modal
           isOpen={!!selectedRoom}
           onClose={() => setSelectedRoom(null)}
-          title={`Join ${getRoomMeta(selectedRoom).title}`}
+          title={`Join ${getRoomTitle(selectedRoom)}`}
           footer={
-            <div className="modal-actions-dual">
+            <>
               <Button
                 variant="ghost"
                 size="md"
@@ -282,33 +297,31 @@ export default function Lobby() {
               >
                 {t('lobby.confirmBuy') || 'Confirm & Play'}
               </Button>
-            </div>
+            </>
           }
         >
-          <div className="buy-modal-minimal-content">
-            <p className="buy-modal-desc">
-              Select how many Bingo cards you want to play with in this round (Max {selectedRoom.maxCards}):
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+              {t('lobby.selectCardsDesc', { roomName: getRoomTitle(selectedRoom) })
+                || `Select how many Bingo cards you want to play with (Max ${selectedRoom.maxCards}).`}
             </p>
 
             {buyError && (
               <Toast message={buyError} type="error" onClose={() => setBuyError('')} />
             )}
 
-            {/* Stepper */}
-            <div className="card-stepper-minimal">
+            {/* Stepper Counter */}
+            <div className="buy-modal-counter">
               <button
-                className="stepper-btn-circle"
+                className="buy-modal-counter-btn"
                 onClick={() => setCardCount(Math.max(1, cardCount - 1))}
                 disabled={buyLoading || cardCount <= 1}
               >
                 −
               </button>
-              <div className="stepper-display">
-                <span className="stepper-num">{cardCount}</span>
-                <span className="stepper-unit">{cardCount === 1 ? 'Card' : 'Cards'}</span>
-              </div>
+              <span className="buy-modal-count">{cardCount}</span>
               <button
-                className="stepper-btn-circle"
+                className="buy-modal-counter-btn"
                 onClick={() => setCardCount(Math.min(selectedRoom.maxCards, cardCount + 1))}
                 disabled={buyLoading || cardCount >= selectedRoom.maxCards}
               >
@@ -316,14 +329,14 @@ export default function Lobby() {
               </button>
             </div>
 
-            {/* Price Breakdown */}
-            <div className="buy-cost-summary">
-              <div className="cost-row">
-                <span>Price per Card</span>
-                <CurrencyDisplay santim={selectedRoom.entryFeeSantim} size="sm" />
+            {/* Summary Breakdown */}
+            <div className="buy-modal-summary">
+              <div className="buy-modal-row">
+                <span style={{ color: 'var(--text-muted)' }}>{t('lobby.pricePerCard') || 'Price per Card:'}</span>
+                <CurrencyDisplay santim={selectedRoom.entryFeeSantim} size="sm" variant="muted" />
               </div>
-              <div className="cost-row total-row">
-                <span>Total Entry Cost</span>
+              <div className="buy-modal-row total">
+                <span>{t('lobby.totalCost') || 'Total Cost:'}</span>
                 <CurrencyDisplay santim={selectedRoom.entryFeeSantim * cardCount} size="lg" variant="gold" />
               </div>
             </div>
