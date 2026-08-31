@@ -1,23 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&family=Noto+Serif+Ethiopic:wght@300;400;700&display=swap');
 
-/* ── Brand tokens (dark = default) ── */
+/* ── Brand tokens (dark = default) — Casino Royale ── */
 :root,
 [data-theme="dark"] {
-  --bg-dark: #0B1426;
-  --bg-deep: #060D1A;
-  --card-bg: rgba(22, 30, 50, 0.92);
-  --card-border: rgba(255, 255, 255, 0.07);
-  --primary-amber: #E5A100;
-  --primary-glow: rgba(229, 161, 0, 0.4);
-  --text-light: #f0f2f5;
-  --text-muted: #8896AB;
+  --bg-dark: #1A1A2E;
+  --bg-deep: #121220;
+  --card-bg: rgba(34, 34, 59, 0.92);
+  --card-border: rgba(212, 175, 55, 0.15);
+  --primary-amber: #D4AF37;
+  --primary-glow: rgba(212, 175, 55, 0.4);
+  --text-light: #F7F7F7;
+  --text-muted: #9DA3B4;
 
   --bronze: #cd7f32;
   --silver: #c0c0c0;
-  --gold: #E5A100;
+  --gold: #D4AF37;
 
-  --success: #00C853;
-  --danger: #E53935;
+  --success: #10B981;
+  --danger: #EF4444;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-heading: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --font-serif: 'Noto Serif Ethiopic', serif;
@@ -31,9 +31,9 @@
   --radius-xl: 24px;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.12);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.15);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.2);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.15);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.18);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.45), 0 4px 8px rgba(0,0,0,0.25);
   --shadow-glow: 0 0 20px var(--primary-glow);
 
   --space-xs: 0.25rem;
@@ -43,14 +43,14 @@
   --space-xl: 1.5rem;
 
   /* Derived surfaces */
-  --surface-raised: rgba(255,255,255,0.04);
-  --scrollbar-thumb: rgba(255,255,255,0.1);
+  --surface-raised: rgba(255,255,255,0.05);
+  --scrollbar-thumb: rgba(212,175,55,0.15);
   --input-bg: rgba(0,0,0,0.3);
-  --input-text: #ffffff;
-  --input-border: rgba(255,255,255,0.1);
-  --nav-bg: rgba(8,14,28,0.97);
-  --nav-border: rgba(255,255,255,0.06);
-  --history-circle-bg: #2A3548;
+  --input-text: #F7F7F7;
+  --input-border: rgba(212,175,55,0.2);
+  --nav-bg: rgba(26,26,46,0.97);
+  --nav-border: rgba(212,175,55,0.12);
+  --history-circle-bg: #22223B;
 
   /* Premium game colors */
   --bingo-b: #2563eb;
@@ -59,44 +59,44 @@
   --bingo-g: #7c3aed;
   --bingo-o: #ea580c;
 
-  /* Header gradient — deep brand navy */
-  --header-bg: linear-gradient(135deg, #0B1426 0%, #132240 50%, #1A3060 100%);
-  --header-text: #ffffff;
-  --header-badge-bg: rgba(229, 161, 0, 0.15);
+  /* Header gradient — Casino Royale deep navy */
+  --header-bg: linear-gradient(135deg, #121220 0%, #1A1A2E 50%, #22223B 100%);
+  --header-text: #F7F7F7;
+  --header-badge-bg: rgba(212, 175, 55, 0.18);
   --header-btn-bg: rgba(255, 255, 255, 0.08);
 
   /* Game surface */
-  --game-bg: #070E1C;
-  --game-panel-bg: rgba(14, 22, 40, 0.95);
-  --game-border: rgba(229, 161, 0, 0.12);
-  --game-glow: rgba(229, 161, 0, 0.08);
+  --game-bg: #121220;
+  --game-panel-bg: rgba(26, 26, 46, 0.95);
+  --game-border: rgba(212, 175, 55, 0.12);
+  --game-glow: rgba(212, 175, 55, 0.08);
 
-  --modal-bg: rgba(16, 24, 42, 0.98);
-  --modal-text: #f0f2f5;
-  --modal-subtext: #8896AB;
-  --modal-border: rgba(255, 255, 255, 0.08);
-  --card-header-bg: linear-gradient(90deg, #0B1426 0%, #132240 100%);
+  --modal-bg: rgba(26, 26, 46, 0.98);
+  --modal-text: #F7F7F7;
+  --modal-subtext: #9DA3B4;
+  --modal-border: rgba(212, 175, 55, 0.15);
+  --card-header-bg: linear-gradient(90deg, #121220 0%, #1A1A2E 100%);
 
   /* Card & Cell Tokens */
-  --cell-bg: rgba(255, 255, 255, 0.04);
-  --cell-border: rgba(255, 255, 255, 0.07);
-  --cell-text: #f0f2f5;
-  --panel-subtext: #8896AB;
+  --cell-bg: rgba(255, 255, 255, 0.05);
+  --cell-border: rgba(212, 175, 55, 0.1);
+  --cell-text: #F7F7F7;
+  --panel-subtext: #9DA3B4;
 }
 
 [data-theme="light"] {
-  --bg-dark: #F8FAFC;
-  --bg-deep: #EFF3F8;
+  --bg-dark: #F4F4F9;
+  --bg-deep: #EBEBF5;
   --card-bg: #FFFFFF;
-  --card-border: rgba(0, 0, 0, 0.10);
-  --primary-amber: #D97706;
-  --primary-glow: rgba(217, 119, 6, 0.25);
-  --text-light: #0F172A;
-  --text-muted: #475569;
+  --card-border: rgba(212, 175, 55, 0.18);
+  --primary-amber: #B8860B;
+  --primary-glow: rgba(184, 134, 11, 0.25);
+  --text-light: #1A1A2E;
+  --text-muted: #6B7280;
 
   --bronze: #a0522d;
   --silver: #64748b;
-  --gold: #d97706;
+  --gold: #B8860B;
 
   --success: #059669;
   --danger: #dc2626;
@@ -109,33 +109,33 @@
   --surface-raised: rgba(0,0,0,0.03);
   --scrollbar-thumb: rgba(0,0,0,0.15);
   --input-bg: #FFFFFF;
-  --input-text: #0F172A;
-  --input-border: rgba(0, 0, 0, 0.18);
+  --input-text: #1A1A2E;
+  --input-border: rgba(212, 175, 55, 0.25);
   --nav-bg: rgba(255,255,255,0.98);
-  --nav-border: rgba(0,0,0,0.10);
+  --nav-border: rgba(212, 175, 55, 0.18);
   --history-circle-bg: #e2e8f0;
 
-  --header-bg: linear-gradient(135deg, #0B1426 0%, #132240 50%, #1A3060 100%);
-  --header-text: #ffffff;
-  --header-badge-bg: rgba(229, 161, 0, 0.2);
+  --header-bg: linear-gradient(135deg, #121220 0%, #1A1A2E 50%, #22223B 100%);
+  --header-text: #F7F7F7;
+  --header-badge-bg: rgba(212, 175, 55, 0.2);
   --header-btn-bg: rgba(255, 255, 255, 0.15);
 
   --game-bg: #F1F5F9;
   --game-panel-bg: #FFFFFF;
-  --game-border: rgba(0, 0, 0, 0.10);
-  --game-glow: rgba(217, 119, 6, 0.06);
+  --game-border: rgba(212, 175, 55, 0.15);
+  --game-glow: rgba(184, 134, 11, 0.06);
 
   --modal-bg: #FFFFFF;
-  --modal-text: #0F172A;
-  --modal-subtext: #475569;
-  --modal-border: rgba(0, 0, 0, 0.10);
-  --card-header-bg: linear-gradient(90deg, #0B1426, #132240);
+  --modal-text: #1A1A2E;
+  --modal-subtext: #6B7280;
+  --modal-border: rgba(212, 175, 55, 0.18);
+  --card-header-bg: linear-gradient(90deg, #121220, #1A1A2E);
 
   /* Card & Cell Tokens for Light Mode */
   --cell-bg: #FFFFFF;
   --cell-border: #E2E8F0;
-  --cell-text: #0F172A;
-  --panel-subtext: #475569;
+  --cell-text: #1A1A2E;
+  --panel-subtext: #6B7280;
 }
 
 /* Theme transitions — targeted to containers only, not every element */
@@ -383,13 +383,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+  background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
+  color: #1A1A2E;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
 }
 .btn-primary:active {
   transform: scale(0.97);
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
+  box-shadow: 0 2px 6px rgba(212, 175, 55, 0.2);
 }
 .btn-primary:disabled {
   background: #374151;
@@ -543,7 +543,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .game-header-badge.tier-bronze { background: rgba(205,127,50,0.25); color: #cd7f32; border: 1px solid rgba(205,127,50,0.4); }
 .game-header-badge.tier-silver { background: rgba(192,192,192,0.25); color: #e2e8f0; border: 1px solid rgba(192,192,192,0.4); }
-.game-header-badge.tier-gold { background: rgba(229,161,0,0.25); color: #E5A100; border: 1px solid rgba(229,161,0,0.5); }
+.game-header-badge.tier-gold { background: rgba(212,175,55,0.25); color: #D4AF37; border: 1px solid rgba(212,175,55,0.5); }
 
 .game-header-actions {
   display: flex;
@@ -3800,10 +3800,10 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
   max-width: 440px;
   height: 66px;
-  background: rgba(15, 18, 33, 0.88);
+  background: rgba(26, 26, 46, 0.92);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(212, 175, 55, 0.18);
   border-radius: 36px;
   display: flex;
   justify-content: space-around;
@@ -3811,8 +3811,8 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0 0.6rem;
   box-shadow:
     0 16px 36px rgba(0, 0, 0, 0.35),
-    0 4px 14px rgba(245, 158, 11, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    0 4px 14px rgba(212, 175, 55, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -3853,17 +3853,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .nav-item.nav-item-active {
-  color: #ffffff !important;
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45);
+  color: #1A1A2E !important;
+  background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.45);
   transform: translateY(-2px);
   padding: 0.35rem 0.85rem;
 }
 
 [data-theme="light"] .nav-item.nav-item-active {
-  color: #ffffff !important;
-  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
-  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.4);
+  color: #1A1A2E !important;
+  background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.4);
 }
 
 .nav-item.nav-item-active .nav-icon {
