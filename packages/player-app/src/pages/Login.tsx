@@ -56,7 +56,7 @@ export default function Login() {
         uid: 'user-' + Date.now(),
         phone,
         displayName: displayName || (isRegister ? 'Player' : 'Test Player'),
-        walletBalanceSantim: 100000,
+        walletBalanceSantim: 0,
         referralCode: 'REF' + Math.random().toString(36).substring(2, 6).toUpperCase(),
         kycStatus: 'verified',
       });
@@ -84,7 +84,7 @@ export default function Login() {
           uid: 'tester-device-' + Date.now(),
           phone: '+251911000000',
           displayName: 'Test Player',
-          walletBalanceSantim: 100000,
+          walletBalanceSantim: 0,
           referralCode: 'TEST' + Math.random().toString(36).substring(2, 6).toUpperCase(),
           kycStatus: 'verified',
         });
