@@ -1301,12 +1301,11 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ── Card Container — Frosted Elevated Surface ── */
 .bingo-card-v2 {
-  background: linear-gradient(165deg, #f8f9fc 0%, #eef0f7 100%);
-  border-radius: 12px;
+  background: #F7F7F7 !important; /* Ivory background */
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow:
-    0 3px 10px rgba(0,0,0,0.08),
-    0 0 0 1px rgba(100,116,180,0.12);
+  border: 1.5px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
   animation: fadeIn 0.35s ease;
@@ -1317,14 +1316,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 [data-theme="dark"] .bingo-card-v2 {
-  background: linear-gradient(165deg, #161928 0%, #1c2035 100%);
-  box-shadow:
-    0 3px 10px rgba(0,0,0,0.35),
-    0 0 0 1px rgba(99,102,241,0.15);
+  background: #F7F7F7 !important; /* Ivory background */
+  border: 1.5px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(212, 175, 55, 0.2);
 }
 
 .bingo-card-v2.one-away {
-  box-shadow: 0 0 0 2px #f59e0b, 0 0 18px rgba(245, 158, 11, 0.35) !important;
+  box-shadow: 0 0 0 2px #D4AF37, 0 0 18px rgba(212, 175, 55, 0.55) !important;
   animation: goldGlowPulse 1.2s ease-in-out infinite alternate !important;
 }
 
@@ -1336,16 +1334,17 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(-1px);
 }
 
-/* ── Card Header — Deep Gradient Strip ── */
+/* ── Card Header — Deep Navy Strip ── */
 .card-header-strip {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.25rem 0.45rem;
-  background: linear-gradient(135deg, #2d1b69 0%, #3730a3 50%, #4338ca 100%);
-  color: #ffffff;
-  font-size: 0.62rem;
+  padding: 0.3rem 0.5rem;
+  background: #1A1A2E;
+  color: #F7F7F7;
+  font-size: 0.65rem;
   font-weight: 700;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.3);
 }
 
 .card-header-left {
@@ -1355,10 +1354,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .card-id-label {
-  opacity: 0.9;
+  color: #D4AF37;
+  font-weight: 800;
   font-family: 'Inter', monospace;
-  letter-spacing: 0.3px;
-  font-size: 0.62rem;
+  letter-spacing: 0.4px;
+  font-size: 0.65rem;
 }
 
 .card-header-right {
@@ -1379,7 +1379,7 @@ h1, h2, h3, h4, h5, h6 {
 .card-progress-fill {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, #a5b4fc, #fbbf24);
+  background: linear-gradient(90deg, #D4AF37, #E5BE42);
   border-radius: 2px;
   transition: width 0.5s ease;
 }
@@ -1408,33 +1408,35 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.5px;
   text-align: center;
   border: none;
-  color: #fff;
+  color: #1A1A2E;
 }
 
 .card-claim-banner.active {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+  background: linear-gradient(135deg, #E5BE42 0%, #D4AF37 50%, #B8860B 100%);
   cursor: pointer;
   animation: goldGlowPulse 1s ease-in-out infinite alternate;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 2px 8px rgba(245,158,11,0.4);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 8px rgba(212, 175, 55, 0.45);
   font-size: 0.72rem;
   padding: 0.35rem;
+  color: #1A1A2E;
 }
 .card-claim-banner.active:hover { filter: brightness(1.1); }
 .card-claim-banner.active:disabled { opacity: 0.7; cursor: not-allowed; }
 
 .card-claim-banner.manual-ready {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
   cursor: pointer;
   padding: 0.35rem 0.5rem;
   font-size: 0.7rem;
   border-radius: 6px;
   margin: 3px 4px;
-  color: #ffffff;
+  color: #1A1A2E;
+  font-weight: 900;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
 }
 .card-claim-banner.manual-ready:hover {
-  background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #E5BE42 0%, #D4AF37 100%);
   filter: brightness(1.15);
 }
 .card-claim-banner.manual-ready:disabled {
@@ -1443,16 +1445,18 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .card-claim-banner.pulse-win {
-  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%) !important;
+  background: linear-gradient(135deg, #E5BE42 0%, #D4AF37 100%) !important;
   animation: goldGlowPulse 0.8s ease-in-out infinite alternate;
   font-size: 0.75rem;
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.6) !important;
+  color: #1A1A2E !important;
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.7) !important;
 }
 
 .card-claim-banner.urgency {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   font-size: 0.6rem;
   padding: 0.2rem;
+  color: #fff;
   animation: pulse-accent 1.5s ease infinite;
 }
 
@@ -1501,22 +1505,22 @@ h1, h2, h3, h4, h5, h6 {
   color: rgba(255,255,255,0.85);
 }
 .card-rank-badge.rank-best {
-  background: rgba(251,191,36,0.25);
-  color: #fbbf24;
+  background: rgba(212, 175, 55, 0.35);
+  color: #D4AF37;
 }
 
 /* ── Chance Meter ── */
 .chance-meter-bar {
   position: relative;
   height: 8px;
-  background: rgba(0,0,0,0.04);
+  background: rgba(0,0,0,0.06);
   overflow: hidden;
 }
-[data-theme="dark"] .chance-meter-bar { background: rgba(255,255,255,0.04); }
+[data-theme="dark"] .chance-meter-bar { background: rgba(0,0,0,0.06); }
 
 .chance-meter-fill {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1 0%, #a5b4fc 40%, #fbbf24 80%, #ef4444 100%);
+  background: linear-gradient(90deg, #10b981 0%, #D4AF37 70%, #E5BE42 100%);
   border-radius: 0 3px 3px 0;
   transition: width 0.6s ease;
   min-width: 2px;
@@ -1528,8 +1532,8 @@ h1, h2, h3, h4, h5, h6 {
   transform: translate(-50%, -50%);
   font-size: 0.42rem;
   font-weight: 900;
-  color: rgba(255,255,255,0.9);
-  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  color: #1A1A2E;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.8);
 }
 
 /* ══ B I N G O Column Headers — Gradient Pill Badges ══ */
@@ -1538,7 +1542,7 @@ h1, h2, h3, h4, h5, h6 {
   grid-template-columns: repeat(5, 1fr);
   gap: 2px;
   padding: 3px 3px 2px;
-  background: transparent;
+  background: #121220;
 }
 
 .bingo-col-pill {
@@ -1565,64 +1569,74 @@ h1, h2, h3, h4, h5, h6 {
   grid-template-columns: repeat(5, 1fr);
   gap: 2px;
   padding: 2px 3px 4px;
+  background: #EBEBF2;
 }
 
-/* ── Individual Cell ── */
+/* ── Individual Cell — Ivory Background with Crisp Deep Navy Numbers ── */
 .card-cell {
   aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
-  font-size: clamp(0.7rem, 2.8vw, 0.82rem);
-  color: #1e293b;
-  background: #ffffff;
+  font-weight: 900;
+  font-size: clamp(0.72rem, 2.9vw, 0.85rem);
+  color: #1A1A2E !important; /* Deep Navy number */
+  background: #FFFFFF !important; /* Crisp Ivory / White cell */
   border-radius: 5px;
   position: relative;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #D5D5E0;
   transition: all 0.15s ease;
   user-select: none;
   touch-action: manipulation;
 }
 [data-theme="dark"] .card-cell {
-  color: #f1f5f9;
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.08);
+  color: #1A1A2E !important;
+  background: #FFFFFF !important;
+  border-color: #D5D5E0;
 }
 
-/* ── Daubed Cells — Ink Stamp Effect ── */
+/* ── Daubed Cells — Rich Gold Ink Stamp Effect ── */
 .card-cell.marked {
-  border-radius: 50%;
-  color: #fff;
-  font-weight: 900;
+  border-radius: 50% !important;
+  color: #1A1A2E !important;
+  font-weight: 900 !important;
   font-size: clamp(0.65rem, 2.5vw, 0.78rem);
-  border-color: transparent;
+  border-color: transparent !important;
+  background: radial-gradient(circle, #E5BE42 0%, #D4AF37 60%, #B8860B 100%) !important;
   animation: markedCellPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   box-shadow:
-    inset 0 2px 4px rgba(0,0,0,0.25),
-    inset 0 -1px 2px rgba(255,255,255,0.15),
-    0 1px 3px rgba(0,0,0,0.15);
+    inset 0 2px 4px rgba(255,255,255,0.6),
+    inset 0 -2px 4px rgba(0,0,0,0.3),
+    0 2px 8px rgba(212, 175, 55, 0.6) !important;
 }
 
-.card-cell.marked.col-b { background: linear-gradient(145deg, #60a5fa, #2563eb); }
-.card-cell.marked.col-i { background: linear-gradient(145deg, #fb7185, #e11d48); }
-.card-cell.marked.col-n { background: linear-gradient(145deg, #34d399, #059669); }
-.card-cell.marked.col-g { background: linear-gradient(145deg, #c084fc, #7c3aed); }
-.card-cell.marked.col-o { background: linear-gradient(145deg, #fb923c, #ea580c); }
-
-/* ── FREE Cell — Golden Star ── */
-.card-cell.free-cell {
-  border-radius: 50%;
-  background: linear-gradient(145deg, #fbbf24, #d97706);
-  color: #fff;
-  border-color: transparent;
+.card-cell.marked.col-b,
+.card-cell.marked.col-i,
+.card-cell.marked.col-n,
+.card-cell.marked.col-g,
+.card-cell.marked.col-o {
+  background: radial-gradient(circle, #E5BE42 0%, #D4AF37 60%, #B8860B 100%) !important;
+  color: #1A1A2E !important;
   box-shadow:
-    inset 0 2px 4px rgba(0,0,0,0.2),
-    0 0 8px rgba(251,191,36,0.3);
+    inset 0 2px 4px rgba(255,255,255,0.6),
+    inset 0 -2px 4px rgba(0,0,0,0.3),
+    0 2px 8px rgba(212, 175, 55, 0.6) !important;
+}
+
+/* ── FREE Cell — Rich Gold Center Star ── */
+.card-cell.free-cell {
+  border-radius: 50% !important;
+  background: radial-gradient(circle, #E5BE42 0%, #D4AF37 60%, #B8860B 100%) !important;
+  color: #1A1A2E !important;
+  border-color: transparent !important;
+  box-shadow:
+    inset 0 2px 4px rgba(255,255,255,0.6),
+    0 0 10px rgba(212, 175, 55, 0.6) !important;
 }
 .free-star {
-  font-size: 0.8rem;
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+  font-size: 0.85rem;
+  color: #1A1A2E;
+  filter: drop-shadow(0 1px 1px rgba(255,255,255,0.4));
 }
 
 
@@ -1632,7 +1646,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 @keyframes flashPop {
   0% { transform: scale(1); }
-  30% { transform: scale(1.2); box-shadow: 0 0 12px rgba(251,191,36,0.6); }
+  30% { transform: scale(1.2); box-shadow: 0 0 12px rgba(212, 175, 55, 0.8); }
   100% { transform: scale(1); }
 }
 
@@ -1642,8 +1656,8 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-tap-highlight-color: transparent;
 }
 .card-number-grid.interactive .card-cell:not(.marked):not(.free-cell):not(.cell-blocked):hover {
-  background: rgba(99,102,241,0.06);
-  border-color: rgba(99,102,241,0.25);
+  background: rgba(212, 175, 55, 0.15) !important;
+  border-color: #D4AF37;
   transform: scale(1.06);
 }
 .card-number-grid.interactive .card-cell:not(.marked):not(.free-cell):not(.cell-blocked):active {
@@ -1651,17 +1665,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .card-cell.manual-marked {
-  border-radius: 50%;
-  border: 2px dashed rgba(99,102,241,0.45) !important;
-  background: rgba(99,102,241,0.05);
-  font-weight: 800;
+  border-radius: 50% !important;
+  border: 2.5px dashed #D4AF37 !important;
+  background: rgba(212, 175, 55, 0.2) !important;
+  color: #1A1A2E !important;
+  font-weight: 900;
   animation: manualMarkPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.card-cell.manual-marked.col-b { border-color: rgba(59,130,246,0.45) !important; }
-.card-cell.manual-marked.col-i { border-color: rgba(239,68,68,0.45) !important; }
-.card-cell.manual-marked.col-n { border-color: rgba(34,197,94,0.45) !important; }
-.card-cell.manual-marked.col-g { border-color: rgba(139,92,246,0.45) !important; }
-.card-cell.manual-marked.col-o { border-color: rgba(249,115,22,0.45) !important; }
+.card-cell.manual-marked.col-b,
+.card-cell.manual-marked.col-i,
+.card-cell.manual-marked.col-n,
+.card-cell.manual-marked.col-g,
+.card-cell.manual-marked.col-o {
+  border-color: #D4AF37 !important;
+  color: #1A1A2E !important;
+}
 
 @keyframes manualMarkPop {
   0% { transform: scale(0.8); opacity: 0.5; }
@@ -5842,63 +5860,44 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ── Bingo Cards in Light Mode ── */
 [data-theme="light"] .bingo-card-v2 {
-  background: linear-gradient(165deg, #ffffff 0%, #fdfbf7 50%, #f6f0e4 100%) !important;
-  border: 1.5px solid rgba(217, 119, 6, 0.3) !important;
-  box-shadow: 0 6px 18px rgba(180, 120, 30, 0.12), 0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+  background: #F7F7F7 !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.4) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255,255,255,0.9) !important;
 }
 
 [data-theme="light"] .card-header-strip {
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%) !important;
-  box-shadow: 0 2px 6px rgba(30, 27, 75, 0.25) !important;
+  background: #1A1A2E !important;
+  color: #F7F7F7 !important;
+  box-shadow: 0 2px 6px rgba(26, 26, 46, 0.25) !important;
 }
 
 [data-theme="light"] .card-id-label {
-  color: #fbbf24 !important;
+  color: #D4AF37 !important;
   font-weight: 800 !important;
 }
 
 [data-theme="light"] .card-cell {
   background: #ffffff !important;
-  color: #0f172a !important;
+  color: #1A1A2E !important;
   font-weight: 900 !important;
-  border: 1px solid #e5dfd3 !important;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05), inset 0 -1px 0 rgba(0,0,0,0.04) !important;
+  border: 1px solid #D5D5E0 !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
 }
 
 [data-theme="light"] .card-cell:hover {
-  background: #fffbeb !important;
-  border-color: #f59e0b !important;
+  background: rgba(212, 175, 55, 0.15) !important;
+  border-color: #D4AF37 !important;
 }
 
-/* Daubed / Marked Cells with vibrant 3D gloss */
-[data-theme="light"] .card-cell.marked.col-b {
-  background: linear-gradient(145deg, #3b82f6 0%, #1d4ed8 100%) !important;
-  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.45), inset 0 1px 2px rgba(255,255,255,0.4) !important;
-  color: #ffffff !important;
-}
-
-[data-theme="light"] .card-cell.marked.col-i {
-  background: linear-gradient(145deg, #ef4444 0%, #b91c1c 100%) !important;
-  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.45), inset 0 1px 2px rgba(255,255,255,0.4) !important;
-  color: #ffffff !important;
-}
-
-[data-theme="light"] .card-cell.marked.col-n {
-  background: linear-gradient(145deg, #10b981 0%, #047857 100%) !important;
-  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.45), inset 0 1px 2px rgba(255,255,255,0.4) !important;
-  color: #ffffff !important;
-}
-
-[data-theme="light"] .card-cell.marked.col-g {
-  background: linear-gradient(145deg, #8b5cf6 0%, #6d28d9 100%) !important;
-  box-shadow: 0 3px 10px rgba(139, 92, 246, 0.45), inset 0 1px 2px rgba(255,255,255,0.4) !important;
-  color: #ffffff !important;
-}
-
+/* Daubed / Marked Cells with Rich Gold */
+[data-theme="light"] .card-cell.marked.col-b,
+[data-theme="light"] .card-cell.marked.col-i,
+[data-theme="light"] .card-cell.marked.col-n,
+[data-theme="light"] .card-cell.marked.col-g,
 [data-theme="light"] .card-cell.marked.col-o {
-  background: linear-gradient(145deg, #f97316 0%, #c2410c 100%) !important;
-  box-shadow: 0 3px 10px rgba(249, 115, 22, 0.45), inset 0 1px 2px rgba(255,255,255,0.4) !important;
-  color: #ffffff !important;
+  background: radial-gradient(circle, #E5BE42 0%, #D4AF37 60%, #B8860B 100%) !important;
+  box-shadow: 0 3px 10px rgba(212, 175, 55, 0.5), inset 0 1px 2px rgba(255,255,255,0.5) !important;
+  color: #1A1A2E !important;
 }
 
 /* FREE center cell in Light Mode */
