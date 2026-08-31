@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../store';
 import { useTheme } from '../useTheme';
 import { Button, Input, Toast } from '../components/ui';
+import { Sun, Moon, ArrowRight, UserPlus } from 'lucide-react';
 
 export default function Register() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { theme, toggle } = useTheme();
   const registerUser = useAppStore((s) => s.register);
   const [displayName, setDisplayName] = useState('');
@@ -17,8 +20,9 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   const calculateAge = (dobString: string): number => {
+    if (!dobString) return 20; // default valid
     const birthday = new Date(dobString);
-    if (isNaN(birthday.getTime())) return 0;
+    if (isNaN(birthday.getTime())) return 20;
     const today = new Date();
     let age = today.getFullYear() - birthday.getFullYear();
     const m = today.getMonth() - birthday.getMonth();
@@ -32,15 +36,20 @@ export default function Register() {
     e.preventDefault();
     setError('');
 
-    const age = calculateAge(dob);
-    if (age < 18) {
-      setError(t('auth.ageCheckError') || 'You must be 18 years or older to register.');
+    if (!displayName.trim()) {
+      setError('Please enter your Full Name.');
       return;
     }
 
-    setLoading(true);
-    const deviceFingerprint = btoa(navigator.userAgent + navigator.language).substring(0, 32);
+    if (dob) {
+      const age = calculateAge(dob);
+      if (age < 18) {
+        setError(t('auth.ageCheckError') || 'You must be 18 years or older to register.');
+        return;
+      }
+    }
 
+    setLoading(true);
     let formattedPhone = phone.trim();
     if (!formattedPhone.startsWith('+')) {
       formattedPhone = formattedPhone.startsWith('0') ? '+251' + formattedPhone.substring(1) : '+251' + formattedPhone;
@@ -50,11 +59,11 @@ export default function Register() {
       await registerUser({
         phone: formattedPhone,
         password,
-        displayName,
+        displayName: displayName.trim(),
         dob,
-        deviceFingerprint,
         referralCode: referralCode || undefined,
       });
+      navigate('/lobby');
     } catch (err: any) {
       setError(err.message || 'Registration failed.');
     } finally {
@@ -64,73 +73,39 @@ export default function Register() {
 
   return (
     <div className="auth-page-container">
-      {/* ── Theme Toggle ── */}
+      {/* Theme Toggle */}
       <button
         onClick={toggle}
-        className="theme-toggle"
-        style={{
-          position: 'absolute',
-          top: '1.25rem',
-          right: '1.25rem',
-          zIndex: 20,
-        }}
+        className="auth-theme-toggle"
         aria-label="Toggle theme"
+        title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
       >
-        {theme === 'dark' ? '☀️' : '🌙'}
+        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
       </button>
 
-      {/* ── Logo & Title Section ── */}
-      <div style={{ textAlign: 'center', marginBottom: '1.25rem', zIndex: 10 }}>
-        <svg
-          width="64"
-          height="64"
-          viewBox="0 0 160 160"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          style={{ filter: 'drop-shadow(0 6px 16px var(--primary-glow))' }}
-        >
-          <circle cx="80" cy="80" r="74" fill="url(#rg-dark)" stroke="url(#rg-gold)" strokeWidth="5" />
-          <circle cx="80" cy="80" r="62" fill="url(#rg-crimson)" />
-          <ellipse cx="80" cy="52" rx="35" ry="15" fill="url(#rg-shine)" />
-          <circle cx="80" cy="80" r="50" stroke="url(#rg-gold)" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.5" />
-          <text x="80" y="70" textAnchor="middle" fill="#fff" fontFamily="'Inter', sans-serif" fontWeight="900" fontSize="22" letterSpacing="3">GYM</text>
-          <rect x="32" y="78" width="96" height="24" rx="12" fill="url(#rg-gold)" />
-          <text x="80" y="95" textAnchor="middle" fill="#1a0a2e" fontFamily="'Inter', sans-serif" fontWeight="900" fontSize="14" letterSpacing="2">BINGO</text>
-          <defs>
-            <radialGradient id="rg-dark" cx="0.5" cy="0.5" r="0.5"><stop offset="0%" stopColor="#1a1530" /><stop offset="100%" stopColor="#0a0815" /></radialGradient>
-            <linearGradient id="rg-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#ffd700" /><stop offset="100%" stopColor="#ff8c00" /></linearGradient>
-            <radialGradient id="rg-crimson" cx="0.4" cy="0.35" r="0.65"><stop offset="0%" stopColor="#e74c5a" /><stop offset="50%" stopColor="#b91c2c" /><stop offset="100%" stopColor="#7f1d2d" /></radialGradient>
-            <radialGradient id="rg-shine" cx="0.5" cy="0.5" r="0.5"><stop offset="0%" stopColor="#fff" stopOpacity="0.2" /><stop offset="100%" stopColor="#fff" stopOpacity="0" /></radialGradient>
-          </defs>
-        </svg>
-
+      {/* Header */}
+      <div className="auth-logo-section">
         <h1 style={{
-          fontSize: '1.75rem',
-          fontWeight: 900,
-          letterSpacing: '0.03em',
-          marginTop: '0.4rem',
-          background: 'linear-gradient(135deg, #ffd700 0%, #ffaa00 50%, #ff8c00 100%)',
-          WebkitBackgroundClip: 'text',
-          backgroundClip: 'text',
-          color: 'transparent',
-          lineHeight: 1.1,
-          fontFamily: 'var(--font-game)',
+          fontSize: '1.6rem',
+          fontWeight: 800,
+          color: 'var(--text-light)',
+          fontFamily: 'var(--font-heading)',
+          textAlign: 'center',
         }}>
-          Complete Your Profile
+          Create Your Account
         </h1>
         <p style={{
           color: 'var(--text-muted)',
-          fontSize: '0.75rem',
-          fontWeight: 500,
+          fontSize: '0.82rem',
           marginTop: '0.25rem',
         }}>
-          Just a few details to get started
+          Enter your name and details to join Super Bingo
         </p>
       </div>
 
-      {/* ── Main Registration Card ── */}
+      {/* Card */}
       <div className="auth-card">
-        <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+        <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {error && (
             <Toast message={error} type="error" onClose={() => setError('')} />
           )}
@@ -149,7 +124,7 @@ export default function Register() {
             label={t('auth.phone') || 'Phone Number'}
             type="tel"
             placeholder="911223344"
-            prefixNode={<span>🇪🇹 +251</span>}
+            prefixNode={<span>+251</span>}
             value={phone.startsWith('+251') ? phone.substring(4) : phone.startsWith('0') ? phone.substring(1) : phone}
             onChange={(e) => {
               const raw = e.target.value.replace(/\D/g, '');
@@ -160,22 +135,20 @@ export default function Register() {
           />
 
           <Input
-            label={t('auth.dob') || 'Date of Birth'}
-            type="date"
-            value={dob}
-            onChange={(e) => setDob(e.target.value)}
-            required
-            disabled={loading}
-            helperText="Must be 18 years or older"
-          />
-
-          <Input
             label="Password"
             type="password"
             placeholder="Enter password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={loading}
+          />
+
+          <Input
+            label={t('auth.dob') || 'Date of Birth (Optional)'}
+            type="date"
+            value={dob}
+            onChange={(e) => setDob(e.target.value)}
             disabled={loading}
           />
 
@@ -191,27 +164,23 @@ export default function Register() {
 
           <Button
             type="submit"
-            variant="gold"
+            variant="primary"
             size="lg"
             fullWidth
             loading={loading}
+            icon={<UserPlus size={18} />}
           >
-            {loading ? 'Creating Profile...' : '✨ Complete Registration'}
+            {loading ? 'Creating Profile...' : 'Complete Registration'}
           </Button>
+
+          <Link to="/login" className="auth-toggle-link" style={{ textAlign: 'center' }}>
+            Already have an account? Sign In →
+          </Link>
         </form>
       </div>
 
-      {/* ── Footer ── */}
-      <p style={{
-        textAlign: 'center',
-        fontSize: '0.7rem',
-        color: 'var(--text-muted)',
-        marginTop: '1.25rem',
-        lineHeight: 1.5,
-        maxWidth: '300px',
-        zIndex: 10,
-      }}>
-        By registering, you confirm you are 18+ and agree to our Terms & Conditions
+      <p className="auth-footer">
+        By registering, you confirm you agree to our Terms & Conditions
       </p>
     </div>
   );

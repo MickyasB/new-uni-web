@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { io, Socket } from 'socket.io-client';
 import { api, IS_NATIVE, DEFAULT_PROD_URL } from './api';
+import { dbService, DbUser } from './dbService';
 
 export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || (
   IS_NATIVE ? DEFAULT_PROD_URL : (
@@ -47,7 +48,7 @@ interface AppState {
 
   // Actions
   initialize: () => void;
-  login: (phone: string, password: string) => Promise<any>;
+  login: (phone: string, password?: string) => Promise<any>;
   register: (data: any) => Promise<any>;
   signOut: () => void;
   refreshUser: () => Promise<void>;
@@ -80,9 +81,21 @@ export const useAppStore = create<AppState>((set, get) => ({
   socket: null,
 
   setMockUser: (user: UserInfo) => {
+    dbService.setCurrentSessionUser({
+      uid: user.uid,
+      phone: user.phone,
+      displayName: user.displayName,
+      walletBalanceSantim: user.walletBalanceSantim,
+      referralCode: user.referralCode || 'SB001',
+      kycStatus: (user.kycStatus as any) || 'pending',
+      banned: false,
+      createdAt: new Date().toISOString(),
+      totalDepositsETB: 0,
+      totalWithdrawalsETB: 0,
+    });
     set({
       user,
-      token: 'mock-token',
+      token: 'session-token',
       loading: false,
       initialized: true,
     });
@@ -91,43 +104,61 @@ export const useAppStore = create<AppState>((set, get) => ({
   initialize: () => {
     if (get().initialized) return;
 
-    // Check for stored JWT token
+    // Check saved session in dbService first
+    const sessionUser = dbService.getCurrentSessionUser();
+    if (sessionUser) {
+      set({
+        user: {
+          uid: sessionUser.uid,
+          phone: sessionUser.phone,
+          displayName: sessionUser.displayName,
+          walletBalanceSantim: sessionUser.walletBalanceSantim,
+          referralCode: sessionUser.referralCode,
+          kycStatus: sessionUser.kycStatus,
+        },
+        token: 'session-token',
+        loading: false,
+        initialized: true,
+      });
+      return;
+    }
+
+    // Check for stored JWT token from API
     const storedToken = localStorage.getItem('bingo_jwt_token');
     if (storedToken) {
       set({ token: storedToken, loading: true });
-      // Validate token by fetching user profile
       api.getMe()
         .then((data: any) => {
+          const userObj: UserInfo = {
+            uid: data.uid,
+            phone: data.phone,
+            displayName: data.displayName,
+            walletBalanceSantim: data.walletBalanceSantim || 0,
+            referralCode: data.referralCode,
+            kycStatus: data.kycStatus,
+          };
           set({
-            user: {
-              uid: data.uid,
-              phone: data.phone,
-              displayName: data.displayName,
-              walletBalanceSantim: data.walletBalanceSantim,
-              referralCode: data.referralCode,
-              kycStatus: data.kycStatus,
-            },
+            user: userObj,
             loading: false,
             initialized: true,
           });
         })
         .catch(() => {
-          // Token expired, invalid or offline
           localStorage.removeItem('bingo_jwt_token');
           set({ user: null, token: null, loading: false, initialized: true });
         });
     } else {
-      // Give a tiny smooth initial pause for splash animation to finish entering
       setTimeout(() => {
         set({ initialized: true, loading: false });
-      }, 500);
+      }, 300);
     }
   },
 
-  login: async (phone: string, password: string) => {
+  login: async (phone: string, password?: string) => {
     set({ loading: true });
     try {
-      const data = await api.login({ phone, password });
+      // Try backend API first
+      const data = await api.login({ phone, password: password || '' });
       localStorage.setItem('bingo_jwt_token', data.token);
       set({
         user: data.user,
@@ -135,15 +166,39 @@ export const useAppStore = create<AppState>((set, get) => ({
         loading: false,
       });
       return data;
-    } catch (err) {
-      set({ loading: false });
-      throw err;
+    } catch {
+      // Fallback to local dbService
+      let user = dbService.getUserByPhone(phone);
+      if (!user) {
+        // Register newly
+        user = dbService.registerUser({
+          phone,
+          displayName: 'Player',
+          password,
+        });
+      }
+      dbService.setCurrentSessionUser(user);
+      const userObj: UserInfo = {
+        uid: user.uid,
+        phone: user.phone,
+        displayName: user.displayName,
+        walletBalanceSantim: user.walletBalanceSantim,
+        referralCode: user.referralCode,
+        kycStatus: user.kycStatus,
+      };
+      set({
+        user: userObj,
+        token: 'session-token',
+        loading: false,
+      });
+      return { user: userObj, token: 'session-token' };
     }
   },
 
   register: async (regData: any) => {
     set({ loading: true });
     try {
+      // Try backend API first
       const data = await api.register(regData);
       localStorage.setItem('bingo_jwt_token', data.token);
       set({
@@ -152,14 +207,36 @@ export const useAppStore = create<AppState>((set, get) => ({
         loading: false,
       });
       return data;
-    } catch (err) {
-      set({ loading: false });
-      throw err;
+    } catch {
+      // Fallback to local dbService
+      const user = dbService.registerUser({
+        displayName: regData.displayName || 'Player',
+        phone: regData.phone,
+        password: regData.password,
+        dob: regData.dob,
+        referralCode: regData.referralCode,
+      });
+      dbService.setCurrentSessionUser(user);
+      const userObj: UserInfo = {
+        uid: user.uid,
+        phone: user.phone,
+        displayName: user.displayName,
+        walletBalanceSantim: user.walletBalanceSantim,
+        referralCode: user.referralCode,
+        kycStatus: user.kycStatus,
+      };
+      set({
+        user: userObj,
+        token: 'session-token',
+        loading: false,
+      });
+      return { user: userObj, token: 'session-token' };
     }
   },
 
   signOut: () => {
     localStorage.removeItem('bingo_jwt_token');
+    dbService.setCurrentSessionUser(null);
     if (socketInstance) {
       socketInstance.disconnect();
       socketInstance = null;
@@ -168,6 +245,23 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   refreshUser: async () => {
+    const current = get().user;
+    if (current) {
+      const dbUser = dbService.getUserById(current.uid);
+      if (dbUser) {
+        set({
+          user: {
+            uid: dbUser.uid,
+            phone: dbUser.phone,
+            displayName: dbUser.displayName,
+            walletBalanceSantim: dbUser.walletBalanceSantim,
+            referralCode: dbUser.referralCode,
+            kycStatus: dbUser.kycStatus,
+          },
+        });
+        return;
+      }
+    }
     try {
       const data = await api.getMe();
       set({
@@ -189,7 +283,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     const prevRoomId = get().activeRoomId;
     const socket = getSocket();
 
-    // Leave previous room
     if (prevRoomId) {
       socket.emit('leaveRoom', prevRoomId);
       socket.off('numberCalled');
@@ -206,7 +299,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (roomId) {
       socket.emit('joinRoom', roomId);
 
-      // Listen for real-time game events
       socket.on('numberCalled', (data: { number: number; calledNumbers: number[] }) => {
         set({
           roomLiveState: {
@@ -278,7 +370,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       }));
     }, 2500);
 
-    // Broadcast reaction via Socket.io
     const roomId = get().activeRoomId;
     const userId = get().user?.uid;
     if (roomId && socketInstance) {

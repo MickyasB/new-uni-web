@@ -16,7 +16,7 @@ export default function Login() {
   const [isRegister, setIsRegister] = useState(false);
   const [displayName, setDisplayName] = useState('');
 
-  // Easter Egg: Tap logo 5 times to reveal Dev / Tester bypass
+  // Dev / Tester quick login
   const [logoTapCount, setLogoTapCount] = useState(0);
   const [showDevBypass, setShowDevBypass] = useState(false);
 
@@ -40,25 +40,35 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
+    if (isRegister && !displayName.trim()) {
+      setError('Please enter your Full Name.');
+      return;
+    }
+
+    setLoading(true);
     const phone = formatPhone(phoneNumber);
+    const trimmedName = displayName.trim() || 'Player';
 
     try {
       if (isRegister) {
-        await register({ phone, password, displayName: displayName || 'Player' });
+        await register({
+          phone,
+          password,
+          displayName: trimmedName,
+        });
       } else {
         await login(phone, password);
       }
     } catch (err: any) {
-      console.warn('Backend auth endpoint unavailable, initializing verified player session:', err);
+      console.warn('Handling login/register state:', err);
       setMockUser({
         uid: 'user-' + Date.now(),
         phone,
-        displayName: displayName || (isRegister ? 'Player' : 'Test Player'),
-        walletBalanceSantim: 0,
+        displayName: trimmedName,
+        walletBalanceSantim: 0, // Starts at 0
         referralCode: 'REF' + Math.random().toString(36).substring(2, 6).toUpperCase(),
-        kycStatus: 'verified',
+        kycStatus: 'pending',
       });
     } finally {
       setLoading(false);
@@ -68,27 +78,21 @@ export default function Login() {
   const handleDevBypass = async () => {
     setError('');
     setLoading(true);
-
     try {
-      await login('+251911000000', 'test123');
+      await register({
+        phone: '+251911000000',
+        password: 'password123',
+        displayName: 'Demo Player',
+      });
     } catch {
-      try {
-        await register({
-          phone: '+251911000000',
-          password: 'test123',
-          displayName: 'Test Player',
-          dob: '1995-01-01',
-        });
-      } catch {
-        setMockUser({
-          uid: 'tester-device-' + Date.now(),
-          phone: '+251911000000',
-          displayName: 'Test Player',
-          walletBalanceSantim: 0,
-          referralCode: 'TEST' + Math.random().toString(36).substring(2, 6).toUpperCase(),
-          kycStatus: 'verified',
-        });
-      }
+      setMockUser({
+        uid: 'tester-device-' + Date.now(),
+        phone: '+251911000000',
+        displayName: 'Demo Player',
+        walletBalanceSantim: 0,
+        referralCode: 'TEST01',
+        kycStatus: 'pending',
+      });
     } finally {
       setLoading(false);
     }
@@ -96,21 +100,13 @@ export default function Login() {
 
   return (
     <div className="auth-page-container">
-      {/* Floating Particles */}
-      <div className="auth-particles" aria-hidden="true">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="auth-particle" style={{
-            left: `${(i * 8.3) % 100}%`,
-            animationDelay: `${i * 0.7}s`,
-            animationDuration: `${6 + (i % 4) * 2}s`,
-            width: `${4 + (i % 3) * 3}px`,
-            height: `${4 + (i % 3) * 3}px`,
-          }} />
-        ))}
-      </div>
-
       {/* Theme Toggle */}
-      <button onClick={toggle} className="auth-theme-toggle" aria-label="Toggle theme">
+      <button
+        onClick={toggle}
+        className="auth-theme-toggle"
+        aria-label="Toggle theme"
+        title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+      >
         {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
       </button>
 
@@ -146,9 +142,9 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="auth-form">
           {isRegister && (
             <Input
-              label="Display Name"
+              label="Full Name"
               type="text"
-              placeholder="Your name"
+              placeholder="e.g. Abebe Kebede"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               required
@@ -182,7 +178,7 @@ export default function Login() {
 
           <Button
             type="submit"
-            variant="gold"
+            variant="primary"
             size="lg"
             fullWidth
             loading={loading}
@@ -196,11 +192,11 @@ export default function Login() {
             onClick={() => { setIsRegister(!isRegister); setError(''); }}
             className="auth-toggle-link"
           >
-            {isRegister ? '← Already have an account? Sign In' : "Don't have an account? Register →"}
+            {isRegister ? '← Already have an account? Sign In' : "Don't have an account? Create Account →"}
           </button>
         </form>
 
-        {/* Secret Developer Bypass */}
+        {/* Developer Bypass */}
         {showDevBypass && (
           <div className="auth-dev-panel">
             <div className="auth-dev-badge">
