@@ -86,13 +86,8 @@ function AppLayout() {
             <Gamepad2 size={20} strokeWidth={2.2} />
             <span className="nav-label">{t('lobby.title') || 'Lobby'}</span>
           </Link>
-          
-          <Link to="/wallet" className={isActive('/wallet')}>
-            <Wallet size={20} strokeWidth={2.2} />
-            <span className="nav-label">{t('wallet.title') || 'Wallet'}</span>
-          </Link>
 
-          {/* 3rd Navigation Button: 3D Bingo Ball with Number */}
+          {/* 2nd Navigation Button: 3D Bingo Ball with Number */}
           <Link 
             to={`/room/${targetLiveRoom}`} 
             className={`nav-ball-button-wrap ${isRoomActive ? 'active' : ''}`}
@@ -109,6 +104,12 @@ function AppLayout() {
             <span className="nav-label" style={{ fontWeight: 800, color: isRoomActive ? 'var(--primary-blue)' : 'inherit' }}>
               Game
             </span>
+          </Link>
+          
+          {/* 3rd Navigation Button: Wallet */}
+          <Link to="/wallet" className={isActive('/wallet')}>
+            <Wallet size={20} strokeWidth={2.2} />
+            <span className="nav-label">{t('wallet.title') || 'Wallet'}</span>
           </Link>
 
           <Link to="/profile" className={isActive('/profile')}>

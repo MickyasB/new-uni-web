@@ -62,12 +62,12 @@ function getBallStyles(num: number) {
 
 function getRowColor(letter: string) {
   switch (letter) {
-    case 'B': return '#3b5998';
-    case 'I': return '#dc2626';
-    case 'N': return '#16a34a';
-    case 'G': return '#7c3aed';
-    case 'O': return '#ea580c';
-    default: return '#374151';
+    case 'B': return '#2563EB'; // Royal Blue
+    case 'I': return '#DC2626'; // Crimson Red
+    case 'N': return '#059669'; // Emerald Green
+    case 'G': return '#7C3AED'; // Deep Purple
+    case 'O': return '#D97706'; // Amber Orange
+    default: return '#1E293B';
   }
 }
 
@@ -1333,38 +1333,20 @@ export default function Room() {
               );
             })}
           </div>
-        ) : (
+        ) : !isGameWaiting ? (
           <div style={{
-            color: '#818cf8',
+            color: 'var(--text-muted)',
             textAlign: 'center',
-            padding: '2.5rem 1rem',
+            padding: '2rem 1rem',
             fontSize: '0.85rem',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '1rem'
+            gap: '0.75rem'
           }}>
-            <p style={{ margin: 0 }}>{t('game.noCardsInRoom') || "You don't have any cards in this room."}</p>
-            <button
-              onClick={handleBuyCards}
-              disabled={buyLoading}
-              style={{
-                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                color: '#ffffff',
-                border: 'none',
-                padding: '0.75rem 1.75rem',
-                borderRadius: '9999px',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              {buyLoading ? 'Generating Cards...' : '🎟 Get Cards Now'}
-            </button>
+            <p style={{ margin: 0, fontWeight: 600 }}>{t('game.noCardsInRoom') || "You don't have any cards in this round."}</p>
           </div>
-        )}
+        ) : null}
 
         {/* ─── Emoji Reactions ─── */}
         {isGameActive && (

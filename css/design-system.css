@@ -98,6 +98,8 @@
   /* Layout */
   --container-max: 1240px;
   --container-wide: 1400px;
+  --top-bar-height: 32px;
+  --header-height: 72px;
 }
 
 /* Base Reset */

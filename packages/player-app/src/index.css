@@ -899,6 +899,127 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1;
   z-index: 4;
   position: relative;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* ═══════════════════════════════════════════════════════
+   75-NUMBER GRID BOARD (CALL TRACKER MATRIX)
+   ═══════════════════════════════════════════════════════ */
+.numbers-grid-board {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 0.6rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.board-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.board-row-label {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 0.75rem;
+  color: #FFFFFF !important;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  font-family: var(--font-heading);
+}
+
+.board-cell {
+  flex: 1;
+  height: 24px;
+  min-width: 0;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.board-cell.called {
+  color: #FFFFFF !important;
+  font-weight: 900 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  transform: scale(1.04);
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+.board-cell.latest-called {
+  border: 2px solid #FFFFFF !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.7) !important;
+  transform: scale(1.12);
+  z-index: 2;
+  animation: pulse-latest-cell 1.5s infinite;
+}
+
+@keyframes pulse-latest-cell {
+  0% { transform: scale(1.04); }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1.04); }
+}
+
+/* ── Light Mode High-Contrast Overrides for 75-Number Board ── */
+[data-theme="light"] .numbers-grid-board,
+.light .numbers-grid-board {
+  background: #FFFFFF !important;
+  border: 1.5px solid #CBD5E1 !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08) !important;
+}
+
+[data-theme="light"] .board-row-label,
+.light .board-row-label {
+  color: #FFFFFF !important;
+  font-weight: 900 !important;
+}
+
+[data-theme="light"] .board-cell,
+.light .board-cell {
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+  font-weight: 800 !important;
+  border: 1px solid #CBD5E1 !important;
+}
+
+[data-theme="light"] .board-cell:hover,
+.light .board-cell:hover {
+  background: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+[data-theme="light"] .board-cell.called,
+.light .board-cell.called {
+  color: #FFFFFF !important;
+  font-weight: 900 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-theme="light"] .board-cell.latest-called,
+.light .board-cell.latest-called {
+  border: 2px solid #0F172A !important;
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.4) !important;
 }
 
 /* ── Current / Latest Ball — hero showcase ── */
@@ -1902,10 +2023,14 @@ h1, h2, h3, h4, h5, h6 {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding-bottom: 16px;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem 110px 1rem;
   position: relative;
   z-index: 1;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ── Emoji reaction bar ── */
@@ -2458,16 +2583,23 @@ h1, h2, h3, h4, h5, h6 {
    ═══════════════════════════════════════ */
 
 .waiting-lobby-container {
-  background: var(--game-panel-bg);
+  background: transparent;
   display: flex;
   flex-direction: column;
-  gap: 0;
-  border-bottom: 1px solid var(--card-border);
+  gap: 0.85rem;
+  width: 100%;
 }
 
 .waiting-animation-section {
   text-align: center;
-  padding: 1.25rem 1rem 0.75rem;
+  padding: 1.35rem 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .waiting-spinner {
@@ -2583,12 +2715,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .buy-panel-body {
-  padding: 0.9rem 1rem;
-  border-top: 1px solid var(--card-border);
+  padding: 1.1rem 1rem;
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
   background: var(--card-bg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
 }
 
 .buy-panel-title-row {
@@ -5768,8 +5902,8 @@ h1, h2, h3, h4, h5, h6 {
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 [data-theme="light"] .game-room-page {
-  background: radial-gradient(circle at 50% 0%, #ffffff 0%, #fbf6ec 35%, #f4ebd8 75%, #eee3cb 100%) !important;
-  color: #0f172a !important;
+  background: #F8FAFC !important;
+  color: #0F172A !important;
 }
 
 [data-theme="light"] .game-room-scroll {

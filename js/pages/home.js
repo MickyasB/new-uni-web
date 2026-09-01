@@ -212,7 +212,7 @@ const home = {
           </div>
 
           <!-- Campus Detail Panel -->
-          <div id="campus-panel" class="card" style="border-radius: 16px; overflow: hidden; border: 1px solid var(--color-light-grey); background: var(--color-bg-alt); display: grid; grid-template-columns: 1.2fr 1fr; min-height: 380px;">
+          <div id="campus-panel" class="card campus-panel-grid" style="border-radius: 16px; overflow: hidden; border: 1px solid var(--color-light-grey); background: var(--color-bg-alt); min-height: 380px;">
             <div style="padding: 2.5rem;">
               <span class="badge" style="background: var(--color-primary); color: white; margin-bottom: 10px;">Historic Heart &bull; Est. 1583</span>
               <h3 style="font-family: var(--font-heading); color: var(--color-primary); font-size: 2rem; margin: 0 0 1rem;">Central Area, Old College &amp; George Square</h3>
@@ -238,6 +238,17 @@ const home = {
               </div>
             </div>
           </div>
+          <style>
+            .campus-panel-grid {
+              display: grid;
+              grid-template-columns: 1.2fr 1fr;
+            }
+            @media (max-width: 840px) {
+              .campus-panel-grid {
+                grid-template-columns: 1fr !important;
+              }
+            }
+          </style>
 
         </div>
       </section>

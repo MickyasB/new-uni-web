@@ -255,9 +255,11 @@ const Portal = {
           content: `
             <div style="font-size: 0.9rem;">
               <p style="color: var(--color-slate); margin-bottom: 12px;">Upload updated transcripts, certificates, or recommendation letters for committee review.</p>
-              <div style="border: 2px dashed var(--color-medium-grey); border-radius: 8px; padding: 1.5rem; text-align: center; background: var(--color-bg-alt); cursor: pointer;" id="modal-dropzone">
+              <div style="border: 2px dashed var(--color-medium-grey); border-radius: 8px; padding: 1.5rem; text-align: center; background: var(--color-bg-alt); cursor: pointer; transition: all 0.2s;" id="modal-dropzone">
                 <div style="font-size: 2rem; margin-bottom: 6px;">📁</div>
-                <p style="margin: 0; font-weight: 600; color: var(--color-primary);">Click or Drag & Drop Supplementary PDF Files</p>
+                <p style="margin: 0; font-weight: 600; color: var(--color-primary);" id="modal-file-status">Click or Drag & Drop Supplementary PDF Files</p>
+                <p style="margin: 4px 0 0; font-size: 0.78rem; color: var(--color-slate);">Accepted: PDF, PNG, JPG (Max 10MB)</p>
+                <input type="file" id="modal-file-input" accept=".pdf,.png,.jpg,.jpeg" style="display:none;">
               </div>
             </div>
           `,
@@ -267,10 +269,43 @@ const Portal = {
           `
         });
 
+        const dropzone = document.getElementById('modal-dropzone');
+        const fileInput = document.getElementById('modal-file-input');
+        const statusText = document.getElementById('modal-file-status');
+        let selectedFile = null;
+
+        if (dropzone && fileInput) {
+          dropzone.addEventListener('click', () => fileInput.click());
+          fileInput.addEventListener('change', (ev) => {
+            if (ev.target.files.length) {
+              selectedFile = ev.target.files[0];
+              statusText.textContent = `Selected: ${selectedFile.name} (${(selectedFile.size/1024/1024).toFixed(2)} MB)`;
+            }
+          });
+          dropzone.addEventListener('dragover', (ev) => {
+            ev.preventDefault();
+            dropzone.style.borderColor = 'var(--color-secondary)';
+            dropzone.style.background = '#E8F4F8';
+          });
+          dropzone.addEventListener('dragleave', () => {
+            dropzone.style.borderColor = 'var(--color-medium-grey)';
+            dropzone.style.background = 'var(--color-bg-alt)';
+          });
+          dropzone.addEventListener('drop', (ev) => {
+            ev.preventDefault();
+            dropzone.style.borderColor = 'var(--color-medium-grey)';
+            dropzone.style.background = 'var(--color-bg-alt)';
+            if (ev.dataTransfer.files.length) {
+              selectedFile = ev.dataTransfer.files[0];
+              statusText.textContent = `Selected: ${selectedFile.name} (${(selectedFile.size/1024/1024).toFixed(2)} MB)`;
+            }
+          });
+        }
+
         document.querySelector('.modal-close-btn')?.addEventListener('click', () => closeModal());
         document.getElementById('btn-modal-upload-confirm')?.addEventListener('click', () => {
           closeModal();
-          showToast('Supplementary documents received by Faculty Board ✓', 'success');
+          showToast(selectedFile ? `Supplementary document "${selectedFile.name}" received by Faculty Board ✓` : 'Supplementary documents received by Faculty Board ✓', 'success');
         });
       });
     });

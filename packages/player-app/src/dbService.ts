@@ -50,16 +50,32 @@ export interface DbWithdrawal {
   processedAt?: string;
 }
 
+export interface DbTransfer {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderPhone: string;
+  recipientId: string;
+  recipientName: string;
+  recipientPhone: string;
+  amountETB: number;
+  note?: string;
+  createdAt: string;
+  status: 'completed';
+}
+
 export interface DbUserTransaction {
   id: string;
-  type: 'deposit' | 'withdrawal';
+  type: 'deposit' | 'withdrawal' | 'transfer_out' | 'transfer_in';
   amountETB: number;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'completed';
   method: string;
   reference: string;
   createdAt: string;
   rejectionReason?: string;
   processedAt?: string;
+  counterpartName?: string;
+  counterpartPhone?: string;
 }
 
 export interface DbRoom {
@@ -95,6 +111,7 @@ const STORAGE_KEYS = {
   USERS: 'bingo_db_users_v2',
   DEPOSITS: 'bingo_db_deposits_v2',
   WITHDRAWALS: 'bingo_db_withdrawals_v2',
+  TRANSFERS: 'bingo_db_transfers_v2',
   ROOMS: 'bingo_db_rooms_v2',
   GAME_HISTORY: 'bingo_db_game_history_v2',
   CURRENT_USER: 'bingo_current_user_session',
@@ -132,6 +149,7 @@ class DatabaseService {
   private users: DbUser[] = [];
   private deposits: DbDeposit[] = [];
   private withdrawals: DbWithdrawal[] = [];
+  private transfers: DbTransfer[] = [];
   private rooms: DbRoom[] = DEFAULT_ROOMS;
   private gameHistory: DbGameHistory[] = [];
   private listeners: Array<() => void> = [];
@@ -177,6 +195,9 @@ class DatabaseService {
       const w = localStorage.getItem(STORAGE_KEYS.WITHDRAWALS);
       this.withdrawals = w ? JSON.parse(w) : [];
 
+      const tr = localStorage.getItem(STORAGE_KEYS.TRANSFERS);
+      this.transfers = tr ? JSON.parse(tr) : [];
+
       const r = localStorage.getItem(STORAGE_KEYS.ROOMS);
       this.rooms = r ? JSON.parse(r) : DEFAULT_ROOMS;
 
@@ -188,6 +209,7 @@ class DatabaseService {
       this.users = [];
       this.deposits = [];
       this.withdrawals = [];
+      this.transfers = [];
       this.rooms = DEFAULT_ROOMS;
       this.gameHistory = [];
     }
@@ -201,6 +223,7 @@ class DatabaseService {
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(this.users));
       localStorage.setItem(STORAGE_KEYS.DEPOSITS, JSON.stringify(this.deposits));
       localStorage.setItem(STORAGE_KEYS.WITHDRAWALS, JSON.stringify(this.withdrawals));
+      localStorage.setItem(STORAGE_KEYS.TRANSFERS, JSON.stringify(this.transfers));
       localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(this.rooms));
       localStorage.setItem(STORAGE_KEYS.GAME_HISTORY, JSON.stringify(this.gameHistory));
       this.notify();
@@ -214,6 +237,7 @@ class DatabaseService {
     this.users = [];
     this.deposits = [];
     this.withdrawals = [];
+    this.transfers = [];
     this.gameHistory = [];
     this.rooms = [
       {
@@ -458,9 +482,82 @@ class DatabaseService {
     return true;
   }
 
-  // ── USER TRANSACTION FEED (WITH PENDING, APPROVED, REJECTED STATES) ──
+  // ── P2P WALLET TRANSFERS (PHONE-TO-PHONE) ──
+  public getTransfers(): DbTransfer[] {
+    return [...this.transfers];
+  }
+
+  public transferBalance(params: {
+    senderId: string;
+    recipientPhone: string;
+    amountETB: number;
+    note?: string;
+  }): { success: boolean; error?: string; transfer?: DbTransfer } {
+    const sender = this.getUserById(params.senderId);
+    if (!sender) {
+      return { success: false, error: 'Sender account not found.' };
+    }
+
+    if (params.amountETB <= 0) {
+      return { success: false, error: 'Please enter a valid transfer amount.' };
+    }
+
+    const santimNeeded = Math.round(params.amountETB * 100);
+    if (sender.walletBalanceSantim < santimNeeded) {
+      return { success: false, error: 'Insufficient wallet balance.' };
+    }
+
+    // Clean phone format
+    const cleanPhone = params.recipientPhone.trim();
+    const recipient = this.users.find(
+      (u) =>
+        u.phone === cleanPhone ||
+        u.phone.replace(/\s+/g, '') === cleanPhone.replace(/\s+/g, '') ||
+        u.phone.endsWith(cleanPhone.slice(-9))
+    );
+
+    if (!recipient) {
+      return {
+        success: false,
+        error: `No registered player found with phone number ${cleanPhone}. Please verify the number.`,
+      };
+    }
+
+    if (recipient.uid === sender.uid) {
+      return { success: false, error: 'You cannot transfer funds to your own account.' };
+    }
+
+    if (recipient.banned) {
+      return { success: false, error: 'Recipient account is currently suspended.' };
+    }
+
+    // Execute transfer
+    sender.walletBalanceSantim -= santimNeeded;
+    recipient.walletBalanceSantim += santimNeeded;
+
+    const newTransfer: DbTransfer = {
+      id: 'tx-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      senderId: sender.uid,
+      senderName: sender.displayName,
+      senderPhone: sender.phone,
+      recipientId: recipient.uid,
+      recipientName: recipient.displayName,
+      recipientPhone: recipient.phone,
+      amountETB: params.amountETB,
+      note: params.note?.trim() || '',
+      createdAt: new Date().toISOString(),
+      status: 'completed',
+    };
+
+    this.transfers.unshift(newTransfer);
+    this.save();
+
+    return { success: true, transfer: newTransfer };
+  }
+
+  // ── USER TRANSACTION FEED (WITH PENDING, APPROVED, REJECTED, AND TRANSFER STATES) ──
   public getUserTransactions(playerId: string): DbUserTransaction[] {
-    const userDeposits = this.deposits
+    const userDeposits: DbUserTransaction[] = this.deposits
       .filter((d) => d.playerId === playerId)
       .map((d) => ({
         id: d.id,
@@ -474,7 +571,7 @@ class DatabaseService {
         processedAt: d.processedAt,
       }));
 
-    const userWithdrawals = this.withdrawals
+    const userWithdrawals: DbUserTransaction[] = this.withdrawals
       .filter((w) => w.playerId === playerId)
       .map((w) => ({
         id: w.id,
@@ -488,7 +585,37 @@ class DatabaseService {
         processedAt: w.processedAt,
       }));
 
-    const combined = [...userDeposits, ...userWithdrawals];
+    const userTransfersOut: DbUserTransaction[] = this.transfers
+      .filter((t) => t.senderId === playerId)
+      .map((t) => ({
+        id: t.id,
+        type: 'transfer_out' as const,
+        amountETB: t.amountETB,
+        status: 'completed' as const,
+        method: 'P2P Transfer (Sent)',
+        reference: `To: ${t.recipientName} (${t.recipientPhone})`,
+        counterpartName: t.recipientName,
+        counterpartPhone: t.recipientPhone,
+        createdAt: t.createdAt,
+        processedAt: t.createdAt,
+      }));
+
+    const userTransfersIn: DbUserTransaction[] = this.transfers
+      .filter((t) => t.recipientId === playerId)
+      .map((t) => ({
+        id: t.id,
+        type: 'transfer_in' as const,
+        amountETB: t.amountETB,
+        status: 'completed' as const,
+        method: 'P2P Transfer (Received)',
+        reference: `From: ${t.senderName} (${t.senderPhone})`,
+        counterpartName: t.senderName,
+        counterpartPhone: t.senderPhone,
+        createdAt: t.createdAt,
+        processedAt: t.createdAt,
+      }));
+
+    const combined = [...userDeposits, ...userWithdrawals, ...userTransfersOut, ...userTransfersIn];
     combined.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return combined;
   }

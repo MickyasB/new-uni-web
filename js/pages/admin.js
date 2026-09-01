@@ -3,7 +3,6 @@ import api from '../api.js';
 import { showModal, closeModal } from '../components/modal.js';
 import { showToast } from '../components/toast.js';
 import { renderKanban } from '../components/kanban.js';
-import { sendTelegramAlert, sendTestMessage, getChatId, BOT_LINK } from '../telegram.js';
 
 const mockKanbanCards = [
     { id: 'app1', title: "Aisha Patel", subtitle: "Vice-Chancellor's Scholarship", status: "Submitted", extra: "GPA: 3.8" },
@@ -16,151 +15,182 @@ const mockKanbanCards = [
     { id: 'app8', title: "Raj Patel", subtitle: "Engineering Excellence", status: "Submitted", extra: "GPA: 3.6" }
 ];
 
+function getAdminCards() {
+    try {
+        const local = JSON.parse(localStorage.getItem('all_applications') || '[]');
+        return [...local, ...mockKanbanCards];
+    } catch (e) {
+        return mockKanbanCards;
+    }
+}
+
+function getRegisteredUsers() {
+    try {
+        return JSON.parse(localStorage.getItem('registered_users') || '[]');
+    } catch (e) {
+        return [];
+    }
+}
+
+function getAdminLogs() {
+    const defaultLogs = [
+        { icon: '📝', text: 'Dr. Chen reviewed <strong>Aisha Patel\'s</strong> application <span style="font-family: var(--font-mono); font-weight: 700; color: var(--color-success);">(8.2)</span>', time: '2 hours ago' },
+        { icon: '🔄', text: 'Application from <strong>Marcus Johnson</strong> moved to <span style="color: #D97706; font-weight: 700;">Under Review</span>', time: '4 hours ago' },
+        { icon: '🆕', text: 'New application received for <strong>Developing Solutions</strong>', time: '1 day ago' },
+        { icon: '🎓', text: '<strong>Sarah O\'Brien</strong> awarded Dean\'s Scholarship <span style="color: var(--color-success); font-weight: 700;">(£5,000)</span>', time: '2 days ago' },
+        { icon: '⚠️', text: 'Document re-upload requested for <strong>Li Wei</strong>', time: '3 days ago' }
+    ];
+    try {
+        const local = JSON.parse(localStorage.getItem('admin_activity_log') || '[]');
+        return [...local, ...defaultLogs];
+    } catch (e) {
+        return defaultLogs;
+    }
+}
+
 const Admin = {
     render: function (container, params) {
-        if (!state.user || (state.user.role !== 'ADMIN' && state.user.role !== 'REVIEWER')) {
-            container.innerHTML = `
-                <div class="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center">
-                    <h2 class="text-2xl font-['Playfair_Display'] text-[#10263B] mb-4">Access Denied</h2>
-                    <p class="text-[#61615F] mb-6">You do not have permission to view this page. Please log in with admin or reviewer credentials.</p>
-                    <a href="#/login" class="bg-[#10263B] text-white px-6 py-2 rounded font-semibold hover:bg-[#D4AF37] transition-colors">Login</a>
-                </div>
-            `;
-            return this.init();
-        }
+        const cards = getAdminCards();
+        const logs = getAdminLogs();
+        const users = getRegisteredUsers();
 
         container.innerHTML = `
-            <div class="p-4 md:p-8 max-w-[1600px] mx-auto font-['Inter']">
-                <header class="mb-8 flex justify-between items-end border-b border-[#E9ECEF] pb-4">
+            <div style="padding: 1.5rem; max-width: 1600px; margin: 0 auto; font-family: var(--font-body);">
+                <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--color-light-grey); padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
                     <div>
-                        <h1 class="text-3xl font-['Playfair_Display'] text-[#10263B] font-bold">${state.user.role === 'ADMIN' ? 'Admin Dashboard' : 'Reviewer Dashboard'}</h1>
-                        <p class="text-[#61615F] mt-1">Manage applications and scholarship allocations</p>
+                        <h1 style="font-family: var(--font-heading); color: var(--color-primary); font-size: 2rem; margin: 0 0 4px; font-weight: 700;">Applicant Inputs &amp; Submissions Console</h1>
+                        <p style="color: var(--color-slate); margin: 0; font-size: 0.95rem;">Comprehensive dashboard showing all student user inputs, account sign-ups, and scholarship applications</p>
                     </div>
-                    <div class="text-sm font-semibold text-[#10263B] bg-[#F8F9FA] px-3 py-1 rounded border border-[#E9ECEF]">
-                        Current Cycle: 2024/2025
+                    <div style="font-size: 0.85rem; font-weight: 600; color: var(--color-primary); background: var(--color-bg-alt); padding: 6px 14px; border-radius: 6px; border: 1px solid var(--color-light-grey);">
+                        Current Cycle: 2026/2027
                     </div>
                 </header>
 
-                <!-- Telegram Live Alerts Control Console -->
-                <div class="p-5 rounded-lg shadow-sm border border-[#D50032] mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4" style="background: linear-gradient(135deg, #021230 0%, #041E42 70%, #0A2E5C 100%); color: white;">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-[#0088cc] flex items-center justify-center text-2xl shrink-0 shadow-md">
-                            ✈️
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h3 class="font-bold text-base text-white">Telegram Real-Time Dispatch Channel (@assistmetobot)</h3>
-                                <span class="px-2 py-0.5 rounded text-xs font-bold bg-[#28A745] text-white">ACTIVE</span>
-                            </div>
-                            <p class="text-xs text-[#CBD2D9] mt-1">Live bot alert stream for student sign-ups, personal statements, and application submissions.</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                        <a href="https://t.me/assistmetobot" target="_blank" class="bg-[#0088cc] hover:bg-[#0077b5] text-white px-4 py-2 rounded text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
-                            <span>🤖 Connect Bot (/start)</span>
-                        </a>
-                        <button id="tg-test-btn" class="bg-[#D50032] hover:bg-[#B30029] text-white px-4 py-2 rounded text-xs font-bold transition-all shadow-sm">
-                            ⚡ Send Test Alert
-                        </button>
+                <!-- User Account Inputs Live Section -->
+                ${users.length > 0 ? `
+                <div style="background: white; padding: 1.25rem 1.5rem; border-radius: 12px; border: 1px solid var(--color-primary); margin-bottom: 2rem; box-shadow: var(--shadow-sm);">
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin: 0 0 0.75rem; display: flex; align-items: center; gap: 8px;">
+                        <span>👤</span> Live Registered User Account Inputs (${users.length} Student Sign-Ups)
+                    </h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem;">
+                            <thead>
+                                <tr style="background: var(--color-bg-alt); border-bottom: 1px solid var(--color-light-grey); color: var(--color-slate); font-size: 0.78rem; text-transform: uppercase;">
+                                    <th style="padding: 8px 12px;">Full Name</th>
+                                    <th style="padding: 8px 12px;">Email Address</th>
+                                    <th style="padding: 8px 12px;">Phone</th>
+                                    <th style="padding: 8px 12px;">Country</th>
+                                    <th style="padding: 8px 12px;">Registered At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${users.map(u => `
+                                    <tr style="border-bottom: 1px solid var(--color-light-grey);">
+                                        <td style="padding: 8px 12px; font-weight: 700; color: var(--color-primary);">${u.fullName || 'Student'}</td>
+                                        <td style="padding: 8px 12px; color: var(--color-slate);">${u.email}</td>
+                                        <td style="padding: 8px 12px;">${u.phone || 'N/A'}</td>
+                                        <td style="padding: 8px 12px;">🌍 ${u.country || 'Global'}</td>
+                                        <td style="padding: 8px 12px; font-size: 0.78rem; color: var(--color-slate);">${u.registeredAt ? new Date(u.registeredAt).toLocaleString() : 'Recent'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
+                ` : ''}
 
                 <!-- Metrics Row -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-[#E9ECEF] relative overflow-hidden group hover:shadow-md transition-shadow">
-                        <div class="absolute right-[-10px] bottom-[-10px] text-7xl opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">📋</div>
-                        <h3 class="text-[#61615F] text-xs font-bold uppercase tracking-wider mb-2">Total Applications</h3>
-                        <div class="text-3xl font-['JetBrains_Mono'] text-[#10263B] font-bold mb-2 counter" data-target="1245">0</div>
-                        <div class="text-[#28A745] text-xs font-semibold flex items-center gap-1">
-                            <span class="bg-[#28A745]/20 text-[#28A745] px-1 rounded">↑</span> +12 this week
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="card" style="position: relative; overflow: hidden; background: white; padding: 1.25rem; border-radius: 10px; border: 1px solid var(--color-light-grey);">
+                        <div style="position: absolute; right: -10px; bottom: -10px; font-size: 4.5rem; opacity: 0.04; pointer-events: none;">📋</div>
+                        <h3 style="color: var(--color-slate); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 6px;">Total Applications</h3>
+                        <div style="font-size: 2rem; font-family: var(--font-mono); color: var(--color-primary); font-weight: 800; margin-bottom: 6px;" class="counter" data-target="${1245 + cards.length}">0</div>
+                        <div style="color: var(--color-success); font-size: 0.8rem; font-weight: 600;">
+                            <span style="background: rgba(40,167,69,0.15); padding: 2px 6px; border-radius: 4px;">↑</span> +${cards.length} new
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-[#E9ECEF] relative overflow-hidden group hover:shadow-md transition-shadow">
-                        <div class="absolute right-[-10px] bottom-[-10px] text-7xl opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">💰</div>
-                        <h3 class="text-[#61615F] text-xs font-bold uppercase tracking-wider mb-2">Total Funds Allocated</h3>
-                        <div class="text-3xl font-['JetBrains_Mono'] text-[#10263B] font-bold mb-2">£<span class="counter" data-target="450000">0</span></div>
-                        <div class="text-[#28A745] text-xs font-semibold flex items-center gap-1">
-                            <span class="bg-[#28A745]/20 text-[#28A745] px-1 rounded">↑</span> +£50k this month
+                    <div class="card" style="position: relative; overflow: hidden; background: white; padding: 1.25rem; border-radius: 10px; border: 1px solid var(--color-light-grey);">
+                        <div style="position: absolute; right: -10px; bottom: -10px; font-size: 4.5rem; opacity: 0.04; pointer-events: none;">💰</div>
+                        <h3 style="color: var(--color-slate); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 6px;">Total Funds Allocated</h3>
+                        <div style="font-size: 2rem; font-family: var(--font-mono); color: var(--color-primary); font-weight: 800; margin-bottom: 6px;">£<span class="counter" data-target="450000">0</span></div>
+                        <div style="color: var(--color-success); font-size: 0.8rem; font-weight: 600;">
+                            <span style="background: rgba(40,167,69,0.15); padding: 2px 6px; border-radius: 4px;">↑</span> +£50k this month
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-[#E9ECEF] relative overflow-hidden group hover:shadow-md transition-shadow">
-                        <div class="absolute right-[-10px] bottom-[-10px] text-7xl opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">⏳</div>
-                        <h3 class="text-[#61615F] text-xs font-bold uppercase tracking-wider mb-2">Pending Reviews</h3>
-                        <div class="text-3xl font-['JetBrains_Mono'] text-[#10263B] font-bold mb-2 counter" data-target="86">0</div>
-                        <div class="text-[#DC3545] text-xs font-semibold flex items-center gap-1">
-                            <span class="bg-[#DC3545]/20 text-[#DC3545] px-1 rounded">↓</span> -5 from yesterday
+                    <div class="card" style="position: relative; overflow: hidden; background: white; padding: 1.25rem; border-radius: 10px; border: 1px solid var(--color-light-grey);">
+                        <div style="position: absolute; right: -10px; bottom: -10px; font-size: 4.5rem; opacity: 0.04; pointer-events: none;">⏳</div>
+                        <h3 style="color: var(--color-slate); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 6px;">Pending Reviews</h3>
+                        <div style="font-size: 2rem; font-family: var(--font-mono); color: var(--color-primary); font-weight: 800; margin-bottom: 6px;" class="counter" data-target="${86 + cards.length}">0</div>
+                        <div style="color: var(--color-urgent); font-size: 0.8rem; font-weight: 600;">
+                            <span style="background: rgba(220,53,69,0.15); padding: 2px 6px; border-radius: 4px;">↓</span> active review queue
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-[#E9ECEF] relative overflow-hidden group hover:shadow-md transition-shadow">
-                        <div class="absolute right-[-10px] bottom-[-10px] text-7xl opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">🎓</div>
-                        <h3 class="text-[#61615F] text-xs font-bold uppercase tracking-wider mb-2">Awarded This Cycle</h3>
-                        <div class="text-3xl font-['JetBrains_Mono'] text-[#10263B] font-bold mb-2"><span class="counter" data-target="42">0</span> <span class="text-lg text-[#61615F] font-['Inter'] font-normal">(12%)</span></div>
-                        <div class="text-[#28A745] text-xs font-semibold flex items-center gap-1">
-                            <span class="bg-[#28A745]/20 text-[#28A745] px-1 rounded">↑</span> +2 this week
+                    <div class="card" style="position: relative; overflow: hidden; background: white; padding: 1.25rem; border-radius: 10px; border: 1px solid var(--color-light-grey);">
+                        <div style="position: absolute; right: -10px; bottom: -10px; font-size: 4.5rem; opacity: 0.04; pointer-events: none;">🎓</div>
+                        <h3 style="color: var(--color-slate); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 6px;">Awarded This Cycle</h3>
+                        <div style="font-size: 2rem; font-family: var(--font-mono); color: var(--color-primary); font-weight: 800; margin-bottom: 6px;"><span class="counter" data-target="42">0</span> <span style="font-size: 1.1rem; color: var(--color-slate); font-weight: 400;">(12%)</span></div>
+                        <div style="color: var(--color-success); font-size: 0.8rem; font-weight: 600;">
+                            <span style="background: rgba(40,167,69,0.15); padding: 2px 6px; border-radius: 4px;">↑</span> +2 this week
                         </div>
                     </div>
                 </div>
 
                 <!-- Quick Actions Bar -->
-                <div class="flex flex-wrap items-center justify-between gap-4 mb-8 bg-white p-4 rounded-lg shadow-sm border border-[#E9ECEF]">
-                    <div class="flex gap-3">
-                        <button id="add-scholarship-btn" class="bg-[#D4AF37] text-[#10263B] px-4 py-2 rounded font-bold hover:bg-[#F0D78C] transition-colors shadow-sm flex items-center gap-2">
+                <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 2rem; background: white; padding: 1rem 1.25rem; border-radius: 10px; border: 1px solid var(--color-light-grey);">
+                    <div style="display: flex; gap: 10px;">
+                        <button id="add-scholarship-btn" class="btn btn-secondary" style="font-weight: 700;">
                             <span>+</span> Add Scholarship
                         </button>
-                        <button class="bg-white text-[#10263B] border border-[#E9ECEF] px-4 py-2 rounded font-semibold hover:bg-[#F8F9FA] transition-colors shadow-sm flex items-center gap-2">
+                        <button class="btn btn-outline" style="font-weight: 600;">
                             <span>📥</span> Export Report
                         </button>
                     </div>
-                    <div class="flex items-center gap-4 flex-1 justify-end min-w-[300px]">
-                        <div class="relative w-full max-w-sm">
-                            <input type="text" id="search-input" placeholder="Search applications by name or ID..." class="w-full pl-10 pr-4 py-2 rounded bg-[#F8F9FA] border border-[#E9ECEF] focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all">
-                            <span class="absolute left-3 top-2.5 text-[#61615F]">🔍</span>
+                    <div style="display: flex; items-center: center; gap: 12px; flex-wrap: wrap;">
+                        <div style="position: relative;">
+                            <input type="text" id="search-input" placeholder="Search applications by name or ID..." style="padding: 8px 12px 8px 34px; border-radius: 6px; background: var(--color-bg-alt); border: 1px solid var(--color-medium-grey); font-size: 0.88rem; width: 260px;">
+                            <span style="position: absolute; left: 10px; top: 8px; color: var(--color-slate);">🔍</span>
                         </div>
-                        <div class="flex bg-[#E9ECEF] rounded p-1">
-                            <button id="view-kanban-btn" class="px-4 py-1.5 rounded bg-white shadow-sm font-semibold text-[#10263B] text-sm transition-all">Board View</button>
-                            <button id="view-list-btn" class="px-4 py-1.5 rounded font-semibold text-[#61615F] hover:text-[#10263B] text-sm transition-all">List View</button>
+                        <div style="display: flex; background: var(--color-light-grey); border-radius: 6px; padding: 3px;">
+                            <button id="view-kanban-btn" class="btn" style="padding: 6px 14px; border-radius: 4px; background: white; font-weight: 700; color: var(--color-primary); font-size: 0.85rem;">Board View</button>
+                            <button id="view-list-btn" class="btn" style="padding: 6px 14px; border-radius: 4px; background: transparent; font-weight: 600; color: var(--color-slate); font-size: 0.85rem;">List View</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex flex-col xl:flex-row gap-8">
+                <div style="display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem;" class="admin-main-grid">
                     <!-- Main Content Area -->
-                    <div class="flex-1 min-w-0" id="main-content-area">
+                    <div id="main-content-area">
                         <!-- Kanban View -->
-                        <div id="kanban-view" class="h-[calc(100vh-400px)] min-h-[600px] overflow-x-auto overflow-y-hidden pb-4">
+                        <div id="kanban-view" style="overflow-x: auto; padding-bottom: 1rem;">
                             <!-- Kanban will be injected here -->
                         </div>
 
                         <!-- List View (Hidden by default) -->
-                        <div id="list-view" class="hidden bg-white rounded-lg shadow-sm border border-[#E9ECEF] overflow-hidden">
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <div id="list-view" style="display: none; background: white; border-radius: 10px; border: 1px solid var(--color-light-grey); overflow: hidden;">
+                            <div style="overflow-x: auto;">
+                                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
                                     <thead>
-                                        <tr class="bg-[#F8F9FA] border-b border-[#E9ECEF] text-xs uppercase tracking-wider text-[#61615F]">
-                                            <th class="p-4 font-bold cursor-pointer hover:bg-[#E9ECEF] transition-colors">Applicant ↕</th>
-                                            <th class="p-4 font-bold cursor-pointer hover:bg-[#E9ECEF] transition-colors">Scholarship ↕</th>
-                                            <th class="p-4 font-bold">Status</th>
-                                            <th class="p-4 font-bold cursor-pointer hover:bg-[#E9ECEF] transition-colors">GPA/Score ↕</th>
-                                            <th class="p-4 font-bold text-right">Actions</th>
+                                        <tr style="background: var(--color-bg-alt); border-bottom: 1px solid var(--color-light-grey); font-size: 0.78rem; text-transform: uppercase; color: var(--color-slate);">
+                                            <th style="padding: 12px 16px; font-weight: 700;">Applicant</th>
+                                            <th style="padding: 12px 16px; font-weight: 700;">Scholarship</th>
+                                            <th style="padding: 12px 16px; font-weight: 700;">Status</th>
+                                            <th style="padding: 12px 16px; font-weight: 700;">GPA/Score</th>
+                                            <th style="padding: 12px 16px; font-weight: 700; text-align: right;">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="list-view-body">
-                                        ${mockKanbanCards.map(c => `
-                                            <tr class="border-b border-[#E9ECEF] hover:bg-[#F8F9FA] transition-colors group cursor-pointer" onclick="document.querySelector('.review-btn[data-id=\\'${c.id}\\']').click()">
-                                                <td class="p-4 font-semibold text-[#10263B]">${c.title}</td>
-                                                <td class="p-4 text-[#61615F]">${c.subtitle}</td>
-                                                <td class="p-4">
-                                                    <span class="px-2 py-1 rounded text-xs font-bold border 
-                                                        ${c.status === 'Submitted' ? 'bg-[#17A2B8]/10 text-[#17A2B8] border-[#17A2B8]/20' : 
-                                                          c.status === 'Under Review' ? 'bg-[#FD7E14]/10 text-[#FD7E14] border-[#FD7E14]/20' : 
-                                                          c.status.includes('Decision') ? 'bg-[#28A745]/10 text-[#28A745] border-[#28A745]/20' : 
-                                                          'bg-[#E9ECEF] text-[#61615F] border-[#61615F]/20'}">
+                                        ${cards.map(c => `
+                                            <tr style="border-bottom: 1px solid var(--color-light-grey); cursor: pointer;" onclick="document.querySelector('.review-btn[data-id=\\'${c.id}\\']').click()">
+                                                <td style="padding: 12px 16px; font-weight: 700; color: var(--color-primary);">${c.title}</td>
+                                                <td style="padding: 12px 16px; color: var(--color-slate);">${c.subtitle}</td>
+                                                <td style="padding: 12px 16px;">
+                                                    <span class="badge ${c.status === 'Submitted' ? 'badge-info' : c.status === 'Under Review' ? 'badge-warning' : c.status.includes('Decision') ? 'badge-success' : 'badge-grey'}">
                                                         ${c.status}
                                                     </span>
                                                 </td>
-                                                <td class="p-4 font-['JetBrains_Mono'] text-sm font-semibold">${c.extra}</td>
-                                                <td class="p-4 text-right">
-                                                    <button class="bg-[#10263B] text-white px-3 py-1 rounded text-sm font-semibold hover:bg-[#D4AF37] transition-colors review-btn" data-id="${c.id}" data-name="${c.title}" data-extra="${c.extra}" onclick="event.stopPropagation()">Review</button>
+                                                <td style="padding: 12px 16px; font-family: var(--font-mono); font-weight: 700; font-size: 0.88rem;">${c.extra}</td>
+                                                <td style="padding: 12px 16px; text-align: right;">
+                                                    <button class="btn btn-primary review-btn" data-id="${c.id}" data-name="${c.title}" data-extra="${c.extra}" style="padding: 6px 14px; font-size: 0.82rem;" onclick="event.stopPropagation()">Review</button>
                                                 </td>
                                             </tr>
                                         `).join('')}
@@ -171,47 +201,32 @@ const Admin = {
                     </div>
 
                     <!-- Sidebar: Recent Activity -->
-                    <div class="w-full xl:w-80 bg-[#F8F9FA] rounded-lg shadow-inner border border-[#E9ECEF] p-5 self-start h-[calc(100vh-400px)] min-h-[600px] overflow-y-auto">
-                        <h2 class="text-lg font-bold text-[#10263B] mb-5 flex items-center gap-2">
+                    <div style="background: white; border-radius: 10px; border: 1px solid var(--color-light-grey); padding: 1.25rem; height: fit-content;">
+                        <h2 style="font-size: 1.05rem; font-weight: 700; color: var(--color-primary); margin: 0 0 1rem; display: flex; align-items: center; gap: 8px;">
                             <span>⚡</span> Recent Activity
                         </h2>
-                        <div class="relative border-l-2 border-[#E9ECEF] ml-3 pl-5 space-y-6">
-                            <div class="relative">
-                                <span class="absolute -left-[27px] bg-[#F0D78C] p-1.5 rounded-full text-[10px] border-4 border-[#F8F9FA]">📝</span>
-                                <p class="text-sm text-[#10263B] mb-1">Dr. Chen reviewed <strong>Aisha Patel's</strong> application <span class="font-['JetBrains_Mono'] font-bold text-[#28A745]">(8.2)</span></p>
-                                <span class="text-xs text-[#61615F] font-semibold">2 hours ago</span>
-                            </div>
-                            <div class="relative">
-                                <span class="absolute -left-[27px] bg-[#FD7E14]/20 text-[#FD7E14] p-1.5 rounded-full text-[10px] border-4 border-[#F8F9FA]">🔄</span>
-                                <p class="text-sm text-[#10263B] mb-1">Application from <strong>Marcus Johnson</strong> moved to <span class="text-[#FD7E14] font-semibold">Under Review</span></p>
-                                <span class="text-xs text-[#61615F] font-semibold">4 hours ago</span>
-                            </div>
-                            <div class="relative">
-                                <span class="absolute -left-[27px] bg-[#17A2B8]/20 text-[#17A2B8] p-1.5 rounded-full text-[10px] border-4 border-[#F8F9FA]">🆕</span>
-                                <p class="text-sm text-[#10263B] mb-1">New application received for <strong>Developing Solutions</strong></p>
-                                <span class="text-xs text-[#61615F] font-semibold">1 day ago</span>
-                            </div>
-                            <div class="relative">
-                                <span class="absolute -left-[27px] bg-[#28A745]/20 text-[#28A745] p-1.5 rounded-full text-[10px] border-4 border-[#F8F9FA]">🎓</span>
-                                <p class="text-sm text-[#10263B] mb-1"><strong>Sarah O'Brien</strong> awarded Dean's Scholarship <span class="text-[#28A745] font-bold">(£5,000)</span></p>
-                                <span class="text-xs text-[#61615F] font-semibold">2 days ago</span>
-                            </div>
-                            <div class="relative">
-                                <span class="absolute -left-[27px] bg-[#DC3545]/20 text-[#DC3545] p-1.5 rounded-full text-[10px] border-4 border-[#F8F9FA]">⚠️</span>
-                                <p class="text-sm text-[#10263B] mb-1">Document re-upload requested for <strong>Li Wei</strong></p>
-                                <span class="text-xs text-[#61615F] font-semibold">3 days ago</span>
-                            </div>
+                        <div style="display: flex; flex-direction: column; gap: 1rem; border-left: 2px solid var(--color-light-grey); padding-left: 1rem; margin-left: 0.5rem;">
+                            ${logs.map(log => `
+                                <div>
+                                    <p style="font-size: 0.88rem; color: var(--color-primary); margin: 0 0 2px;">${log.text}</p>
+                                    <span style="font-size: 0.75rem; color: var(--color-slate);">${log.time}</span>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 </div>
             </div>
+            <style>
+                @media (max-width: 960px) {
+                    .admin-main-grid { grid-template-columns: 1fr !important; }
+                }
+            </style>
         `;
 
         this.init();
     },
 
     init: function () {
-        if (!state.user || (state.user.role !== 'ADMIN' && state.user.role !== 'REVIEWER')) return;
 
         // Counter Animation
         const counters = document.querySelectorAll('.counter');
@@ -246,30 +261,6 @@ const Admin = {
             listView.classList.add('hidden');
         });
 
-        // Telegram Live Test Alert Action
-        const tgTestBtn = document.getElementById('tg-test-btn');
-        tgTestBtn?.addEventListener('click', async () => {
-            tgTestBtn.textContent = 'Sending...';
-            try {
-                const res = await sendTestMessage();
-                if (res.ok) {
-                    showToast('Live test alert successfully dispatched to Telegram! ✓', 'success');
-                    tgTestBtn.textContent = '✓ Alert Sent';
-                } else if (res.reason === 'NO_CHAT_ID') {
-                    showToast('Please open https://t.me/smartscholarshipbot and click START first!', 'warning');
-                    window.open(BOT_LINK, '_blank');
-                    tgTestBtn.textContent = '⚡ Send Test Alert';
-                } else {
-                    showToast(`Telegram status: ${res.reason}`, 'info');
-                    tgTestBtn.textContent = '⚡ Send Test Alert';
-                }
-            } catch (err) {
-                showToast(`Telegram alert error: ${err.message}`, 'error');
-                tgTestBtn.textContent = '⚡ Send Test Alert';
-            }
-            setTimeout(() => { if (tgTestBtn) tgTestBtn.textContent = '⚡ Send Test Alert'; }, 3500);
-        });
-
         listBtn.addEventListener('click', () => {
             listBtn.classList.add('bg-white', 'shadow-sm', 'text-[#10263B]');
             listBtn.classList.remove('text-[#61615F]');
@@ -296,12 +287,13 @@ const Admin = {
         });
 
         // Initialize Kanban
+        const cards = getAdminCards();
         const columns = [
-            { id: 'col-submitted', title: 'Submitted', color: '#17A2B8', cards: mockKanbanCards.filter(c => c.status === 'Submitted') },
-            { id: 'col-shortlisted', title: 'Shortlisted', color: '#FFC107', cards: mockKanbanCards.filter(c => c.status === 'Shortlisted') },
-            { id: 'col-review', title: 'Under Review', color: '#FD7E14', cards: mockKanbanCards.filter(c => c.status === 'Under Review') },
-            { id: 'col-interview', title: 'Interviewing', color: '#D4AF37', cards: mockKanbanCards.filter(c => c.status === 'Interviewing') },
-            { id: 'col-decision', title: 'Decision Made', color: '#28A745', cards: mockKanbanCards.filter(c => c.status.includes('Decision Made')) }
+            { id: 'col-submitted', title: 'Submitted', color: '#17A2B8', cards: cards.filter(c => c.status === 'Submitted') },
+            { id: 'col-shortlisted', title: 'Shortlisted', color: '#FFC107', cards: cards.filter(c => c.status === 'Shortlisted') },
+            { id: 'col-review', title: 'Under Review', color: '#FD7E14', cards: cards.filter(c => c.status === 'Under Review') },
+            { id: 'col-interview', title: 'Interviewing', color: '#D4AF37', cards: cards.filter(c => c.status === 'Interviewing') },
+            { id: 'col-decision', title: 'Decision Made', color: '#28A745', cards: cards.filter(c => c.status.includes('Decision Made')) }
         ];
 
         renderKanban('kanban-view', columns, (cardId, sourceCol, targetCol) => {

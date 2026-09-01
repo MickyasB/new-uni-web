@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Applicant Inputs & Submissions Console — The University of Edinburgh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    body {
+      background: #F4F6F8;
+      font-family: 'Inter', sans-serif;
+      color: #10263B;
+      margin: 0;
+      padding: 0;
+    }
+    .side-header {
+      background: linear-gradient(135deg, #041E42 0%, #0A2E5C 100%);
+      color: white;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .side-header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      margin: 0;
+      color: white;
+    }
+    .side-container {
+      max-width: 1500px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .metric-card {
+      background: white;
+      padding: 1.25rem 1.5rem;
+      border-radius: 10px;
+      border: 1px solid #E9ECEF;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .metric-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #61615F;
+      margin-bottom: 6px;
+    }
+    .metric-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2rem;
+      font-weight: 800;
+      color: #10263B;
+    }
+    .panel-card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #E9ECEF;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+    .panel-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #10263B;
+      margin: 0 0 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    th {
+      background: #F8F9FA;
+      padding: 12px 16px;
+      font-weight: 700;
+      color: #61615F;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      border-bottom: 2px solid #E9ECEF;
+    }
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #E9ECEF;
+    }
+    tr:hover {
+      background: #F8F9FA;
+    }
+    .badge-status {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .badge-submitted { background: #E3F2FD; color: #0D47A1; }
+    .badge-user { background: #E8F5E9; color: #1B5E20; }
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 1rem;
+    }
+    .modal-box {
+      background: white;
+      border-radius: 12px;
+      max-width: 650px;
+      width: 100%;
+      padding: 2rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Side Website Header -->
+  <div class="side-header">
+    <div>
+      <h1>🏛️ Applicant Inputs & Submissions Console</h1>
+      <span style="font-size: 0.85rem; color: #CBD2D9;">The University of Edinburgh &bull; Live Candidate Data Viewer</span>
+    </div>
+    <div>
+      <a href="index.html" style="background: rgba(255,255,255,0.15); color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.88rem;">
+        &larr; Return to Main Portal
+      </a>
+    </div>
+  </div>
+
+  <div class="side-container">
+    <!-- Metrics Row -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-title">Total Registered Accounts</div>
+        <div class="metric-value" id="count-users">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Submitted Applications</div>
+        <div class="metric-value" id="count-apps">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Scholarship Funds Claimed</div>
+        <div class="metric-value">£450,000</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Verification Status</div>
+        <div class="metric-value" style="color: #28A745; font-size: 1.4rem;">✓ ACTIVE</div>
+      </div>
+    </div>
+
+    <!-- Section 1: All User Sign-Ups & Account Inputs -->
+    <div class="panel-card">
+      <h2 class="panel-title">
+        <span>👤</span> Registered User Account Inputs (<span id="user-total-badge">0</span> Accounts)
+      </h2>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Applicant Name</th>
+              <th>Email Address</th>
+              <th>Phone Number</th>
+              <th>Country</th>
+              <th>Registration Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body">
+            <tr><td colspan="6" style="text-align: center; color: #61615F; padding: 2rem;">No user registrations recorded yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section 2: All Submitted Scholarship Applications & Details -->
+    <div class="panel-card">
+      <h2 class="panel-title">
+        <span>📝</span> Submitted Scholarship Applications & Inputs (<span id="app-total-badge">0</span> Submissions)
+      </h2>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Candidate Name</th>
+              <th>Target Scholarship</th>
+              <th>Email Address</th>
+              <th>Phone</th>
+              <th>GPA</th>
+              <th>Submitted Time</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="apps-table-body">
+            <tr><td colspan="7" style="text-align: center; color: #61615F; padding: 2rem;">No applications submitted yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal-box">
+      <h3 style="margin: 0 0 1rem; color: #041E42; font-family: 'Playfair Display', serif;" id="modal-title">Candidate Details</h3>
+      <div id="modal-content" style="font-size: 0.92rem; line-height: 1.6; color: #52606D;"></div>
+      <div style="margin-top: 1.5rem; text-align: right;">
+        <button onclick="document.getElementById('detail-modal').style.display='none'" style="background: #041E42; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 700; cursor: pointer;">Close Inspector</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const defaultMockApps = [
+      { id: 'app1', title: "Aisha Patel", subtitle: "Vice-Chancellor's Scholarship", status: "Submitted", extra: "GPA: 3.8", email: "aisha.patel@example.com", phone: "+44 7700 900077", country: "United Kingdom", statement: "Enthusiastic about clinical informatics and NHS data pipelines." },
+      { id: 'app2', title: "Marcus Johnson", subtitle: "Developing Solutions", status: "Under Review", extra: "GPA: 3.6", email: "marcus.j@example.com", phone: "+44 7700 900088", country: "Jamaica", statement: "Focusing on sustainable software architectures." },
+      { id: 'app3', title: "Li Wei", subtitle: "Chinese Government Scholarship", status: "Shortlisted", extra: "GPA: 3.9", email: "li.wei@example.com", phone: "+86 138 0013 8000", country: "China", statement: "Researched deep neural networks for medical imaging." }
+    ];
+
+    function loadData() {
+      // 1. Load registered users
+      let users = [];
+      try {
+        users = JSON.parse(localStorage.getItem('registered_users') || '[]');
+      } catch(e){}
+
+      document.getElementById('count-users').textContent = users.length;
+      document.getElementById('user-total-badge').textContent = users.length;
+
+      const usersBody = document.getElementById('users-table-body');
+      if (users.length > 0) {
+        usersBody.innerHTML = users.map(u => `
+          <tr>
+            <td style="font-weight: 700; color: #041E42;">${u.fullName || 'Student Applicant'}</td>
+            <td style="color: #52606D;">${u.email}</td>
+            <td>${u.phone || 'N/A'}</td>
+            <td>🌍 ${u.country || 'Global'}</td>
+            <td style="font-size: 0.8rem; color: #52606D;">${u.registeredAt ? new Date(u.registeredAt).toLocaleString() : 'Recent'}</td>
+            <td><span class="badge-status badge-user">ACCOUNT CREATED</span></td>
+          </tr>
+        `).join('');
+      } else {
+        usersBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #61615F; padding: 1.5rem;">No registered user accounts yet. Create an account on main website to see live inputs here!</td></tr>`;
+      }
+
+      // 2. Load submitted applications
+      let apps = [];
+      try {
+        const storedApps = JSON.parse(localStorage.getItem('all_applications') || '[]');
+        apps = [...storedApps, ...defaultMockApps];
+      } catch(e) {
+        apps = defaultMockApps;
+      }
+
+      document.getElementById('count-apps').textContent = apps.length;
+      document.getElementById('app-total-badge').textContent = apps.length;
+
+      const appsBody = document.getElementById('apps-table-body');
+      appsBody.innerHTML = apps.map((a, idx) => `
+        <tr>
+          <td style="font-weight: 700; color: #041E42;">${a.title}</td>
+          <td style="color: #0088cc; font-weight: 600;">${a.subtitle}</td>
+          <td style="color: #52606D;">${a.email || 'N/A'}</td>
+          <td>${a.phone || 'N/A'}</td>
+          <td style="font-family: monospace; font-weight: 700;">${a.extra || 'GPA: 3.8'}</td>
+          <td style="font-size: 0.8rem; color: #52606D;">${a.submittedAt ? new Date(a.submittedAt).toLocaleString() : 'Submitted'}</td>
+          <td>
+            <button onclick="viewDetail(${idx})" style="background: #041E42; color: white; border: none; padding: 4px 12px; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 0.8rem;">Inspect Inputs</button>
+          </td>
+        </tr>
+      `).join('');
+
+      window._currentApps = apps;
+    }
+
+    function viewDetail(idx) {
+      const app = window._currentApps[idx];
+      if (!app) return;
+      document.getElementById('modal-title').textContent = `Candidate Input File: ${app.title}`;
+      document.getElementById('modal-content').innerHTML = `
+        <div style="background: #F8F9FA; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #E9ECEF;">
+          <div><strong>Full Name:</strong> ${app.title}</div>
+          <div><strong>Verified Email:</strong> ${app.email || 'N/A'}</div>
+          <div><strong>Phone Number:</strong> ${app.phone || 'N/A'}</div>
+          <div><strong>Country of Residence:</strong> ${app.country || 'N/A'}</div>
+          <div><strong>Target Scholarship:</strong> ${app.subtitle}</div>
+          <div><strong>Academic Metric:</strong> ${app.extra}</div>
+        </div>
+        <div>
+          <strong>Personal Statement Input:</strong>
+          <p style="background: white; border: 1px solid #E9ECEF; padding: 1rem; border-radius: 8px; font-style: italic; margin-top: 6px;">
+            "${app.statement || 'Personal statement and transcripts verified for admissions committee evaluation.'}"
+          </p>
+        </div>
+      `;
+      document.getElementById('detail-modal').style.display = 'flex';
+    }
+
+    loadData();
+  </script>
+</body>
+</html>

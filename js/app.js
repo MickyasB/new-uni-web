@@ -6,7 +6,6 @@ import { render as renderHeader, init as initHeader } from './components/header.
 import { render as renderFooter } from './components/footer.js';
 import { showToast } from './components/toast.js';
 import { getCountryOptionsHTML } from './data/countries.js';
-import { sendTelegramAlert } from './telegram.js';
 
 class App {
   constructor() {
@@ -21,21 +20,22 @@ class App {
 
     this.setupRoutes();
 
-    // Auth Guard
+    // Auth Guard — Require Account for Application & Portal Access
     this.router.addGuard(async (path) => {
       const isAuth = state.getState().isAuthenticated;
-      const user = state.getState().user;
-      const isAdminPath = path.startsWith('/admin');
       const isPortalPath = path.startsWith('/portal');
+      const isApplyPath = path.includes('/apply/');
 
-      if ((isAdminPath || isPortalPath) && !isAuth) {
+      // REQUIRE ACCOUNT BEFORE APPLYING TO ANY PROGRAM
+      if (isApplyPath && !isAuth) {
+        localStorage.setItem('auth_redirect', path);
+        showToast('Account Required: Please create an account or sign in to start your application.', 'warning');
         this.router.navigate('/login');
         return false;
       }
 
-      if (isAdminPath && user && user.role !== 'ADMIN' && user.role !== 'REVIEWER') {
-        this.router.navigate('/');
-        showToast('Access restricted to verified university staff.', 'error');
+      if (isPortalPath && !isAuth) {
+        this.router.navigate('/login');
         return false;
       }
 
@@ -62,12 +62,14 @@ class App {
       <div id="modal-root"></div>
     `;
 
+    this.container = document.getElementById('page-content');
     // Init header interactivity
     initHeader();
   }
 
   async loadPage(moduleName, params = {}) {
-    if (!this.container) this.container = document.getElementById('page-content');
+    this.container = document.getElementById('page-content');
+    if (!this.container) return;
     this.container.style.opacity = '0';
 
     try {
@@ -340,14 +342,6 @@ class App {
           return;
         }
 
-        // Real-time Telegram alert
-        sendTelegramAlert({
-          fullName: email.split('@')[0],
-          email,
-          country: 'United Kingdom',
-          eventType: '🔑 Student Logged In (MyEd Portal)'
-        });
-
         try {
           const res = await api.post('/users/login', { email, password });
           state.setState({ user: { ...res.user, role: 'STUDENT', token: res.token } });
@@ -359,8 +353,9 @@ class App {
         }
 
         this.renderLayout();
-        // Lead users directly to scholarship application list
-        this.router.navigate('/scholarships');
+        const redirectPath = localStorage.getItem('auth_redirect') || '/scholarships';
+        localStorage.removeItem('auth_redirect');
+        this.router.navigate(redirectPath);
       });
 
       // Handle Applicant Registration (Students Only)
@@ -388,14 +383,20 @@ class App {
           return;
         }
 
-        // Dispatch real-time Telegram notification
-        sendTelegramAlert({
-          fullName,
-          email,
-          country,
-          phone,
-          eventType: '🎓 New Student Registration (Applicant Portal)'
-        });
+        // Log registration for Admin Portal / Side Website
+        try {
+          const existingLogs = JSON.parse(localStorage.getItem('admin_activity_log') || '[]');
+          existingLogs.unshift({
+            icon: '🎓',
+            text: `New applicant account registered: <strong>${fullName}</strong> (${country})`,
+            time: 'Just now'
+          });
+          localStorage.setItem('admin_activity_log', JSON.stringify(existingLogs));
+
+          const existingUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
+          existingUsers.unshift({ fullName, email, country, phone, registeredAt: new Date().toISOString() });
+          localStorage.setItem('registered_users', JSON.stringify(existingUsers));
+        } catch (e) {}
 
         try {
           const res = await api.post('/users/register', { fullName, email, country, password, phone, role: 'STUDENT' });
@@ -409,8 +410,9 @@ class App {
         }
 
         this.renderLayout();
-        // Lead students directly to scholarship applications!
-        this.router.navigate('/scholarships');
+        const redirectPath = localStorage.getItem('auth_redirect') || '/scholarships';
+        localStorage.removeItem('auth_redirect');
+        this.router.navigate(redirectPath);
       });
 
     }, 120);

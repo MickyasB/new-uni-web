@@ -27,9 +27,18 @@ export default function Wallet() {
   const { user, refreshUser } = useAppStore();
   const userRecord = user;
 
-  const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw' | 'history'>('deposit');
+  const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw' | 'transfer' | 'history'>('deposit');
   const [depositMode, setDepositMode] = useState<'direct' | 'gateway'>('direct');
   const [ledgerEntries, setLedgerEntries] = useState<any[]>([]);
+
+  // P2P Wallet Transfer State
+  const [transferPhone, setTransferPhone] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
+  const [transferNote, setTransferNote] = useState('');
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [transferError, setTransferError] = useState('');
+  const [transferSuccess, setTransferSuccess] = useState('');
+  const [recipientPreview, setRecipientPreview] = useState<{ name: string; found: boolean } | null>(null);
 
   // Direct Transfer & FT Verification State
   const [selectedGateway, setSelectedGateway] = useState<'telebirr' | 'cbe'>('telebirr');
@@ -340,15 +349,89 @@ export default function Wallet() {
     }
   };
 
-  const formatLedgerType = (type: string) => {
-    switch (type) {
-      case 'deposit': return 'Deposit (Direct/FT)';
-      case 'withdrawal': return 'Withdrawal';
-      case 'win': return 'Prize Winnings';
-      case 'bonus': return 'Bonus';
-      case 'entry_fee': return 'Card Purchase';
-      case 'house_cut': return 'Commission';
-      default: return type;
+  // Real-time recipient lookup on phone change
+  const handleTransferPhoneChange = (val: string) => {
+    setTransferPhone(val);
+    setTransferError('');
+    setTransferSuccess('');
+
+    const clean = val.trim();
+    if (clean.length >= 9) {
+      const allUsers = dbService.getUsers();
+      const match = allUsers.find(
+        (u) =>
+          u.phone === clean ||
+          u.phone.replace(/\s+/g, '') === clean.replace(/\s+/g, '') ||
+          u.phone.endsWith(clean.slice(-9))
+      );
+      if (match) {
+        if (userRecord && match.uid === userRecord.uid) {
+          setRecipientPreview({ name: 'Your Own Account (Cannot Transfer)', found: false });
+        } else {
+          setRecipientPreview({ name: match.displayName, found: true });
+        }
+      } else {
+        setRecipientPreview({ name: 'No registered user found', found: false });
+      }
+    } else {
+      setRecipientPreview(null);
+    }
+  };
+
+  const handleTransferSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setTransferError('');
+    setTransferSuccess('');
+
+    if (!userRecord) {
+      setTransferError('Please sign in to transfer funds.');
+      return;
+    }
+
+    const amt = parseFloat(transferAmount);
+    if (isNaN(amt) || amt <= 0) {
+      setTransferError('Please enter a valid transfer amount in ETB.');
+      return;
+    }
+
+    const availableETB = (userRecord.walletBalanceSantim || 0) / 100;
+    if (amt > availableETB) {
+      setTransferError(`Insufficient funds. Your available balance is ${availableETB.toFixed(2)} ETB.`);
+      return;
+    }
+
+    if (!transferPhone.trim()) {
+      setTransferError('Please enter the recipient\'s phone number.');
+      return;
+    }
+
+    setTransferLoading(true);
+
+    try {
+      const res = dbService.transferBalance({
+        senderId: userRecord.uid,
+        recipientPhone: transferPhone.trim(),
+        amountETB: amt,
+        note: transferNote.trim(),
+      });
+
+      if (!res.success) {
+        setTransferError(res.error || 'Transfer failed. Please check recipient phone number.');
+        setTransferLoading(false);
+        return;
+      }
+
+      setTransferSuccess(`🎉 Successfully sent ${amt.toFixed(2)} ETB to ${res.transfer?.recipientName} (${res.transfer?.recipientPhone})!`);
+      setTransferAmount('');
+      setTransferPhone('');
+      setTransferNote('');
+      setRecipientPreview(null);
+      if (refreshUser) refreshUser();
+      fetchHistory();
+    } catch (err: any) {
+      setTransferError(err?.message || 'Transfer failed.');
+    } finally {
+      setTransferLoading(false);
     }
   };
 
@@ -380,6 +463,13 @@ export default function Wallet() {
         >
           <ArrowUpCircle size={16} />
           <span>{t('wallet.withdraw') || 'Withdraw'}</span>
+        </button>
+        <button
+          className={`tab-item ${activeTab === 'transfer' ? 'active' : ''}`}
+          onClick={() => { setActiveTab('transfer'); setSimulatedCheckoutUrl(''); }}
+        >
+          <Send size={16} />
+          <span>Send / P2P</span>
         </button>
         <button
           className={`tab-item ${activeTab === 'history' ? 'active' : ''}`}
@@ -838,7 +928,139 @@ export default function Wallet() {
         </div>
       )}
 
-      {/* ─── TAB 3: TRANSACTION HISTORY ─────────────────────────────────── */}
+      {/* ─── TAB 3: P2P WALLET TRANSFER (SEND/RECEIVE BY PHONE) ─────────── */}
+      {activeTab === 'transfer' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {transferError && <Toast message={transferError} type="error" onClose={() => setTransferError('')} />}
+          {transferSuccess && <Toast message={transferSuccess} type="success" onClose={() => setTransferSuccess('')} />}
+
+          <div className="section-card">
+            <div className="section-title" style={{ fontFamily: 'var(--font-heading)' }}>
+              <Send size={18} style={{ color: 'var(--primary-blue)' }} />
+              <span>Send Balance to Player (P2P)</span>
+            </div>
+
+            <div
+              style={{
+                background: 'rgba(37, 99, 235, 0.08)',
+                border: '1px solid rgba(37, 99, 235, 0.25)',
+                borderRadius: '12px',
+                padding: '0.75rem 0.9rem',
+                fontSize: '0.82rem',
+                color: 'var(--text-light)',
+                lineHeight: 1.45,
+              }}
+            >
+              <div style={{ fontWeight: 800, color: 'var(--primary-blue)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <Sparkles size={14} /> Instant 0% Fee P2P Transfer
+              </div>
+              Send balance directly to friends or fellow players by entering their registered phone number. Funds are transferred instantly.
+            </div>
+
+            <form onSubmit={handleTransferSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+              {/* Recipient Phone */}
+              <div>
+                <label className="input-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Recipient Phone Number</span>
+                  {recipientPreview && (
+                    <span
+                      style={{
+                        fontWeight: 800,
+                        fontSize: '0.74rem',
+                        color: recipientPreview.found ? '#10B981' : '#F59E0B',
+                      }}
+                    >
+                      {recipientPreview.found ? `✓ ${recipientPreview.name}` : `⚠ ${recipientPreview.name}`}
+                    </span>
+                  )}
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <Input
+                    type="tel"
+                    placeholder="e.g. 0911223344 or +251911223344"
+                    value={transferPhone}
+                    onChange={(e) => handleTransferPhoneChange(e.target.value)}
+                    required
+                    disabled={transferLoading}
+                  />
+                </div>
+              </div>
+
+              {/* Amount in ETB */}
+              <div>
+                <label className="input-label">
+                  Transfer Amount (ETB)
+                </label>
+                <Input
+                  type="number"
+                  min="1"
+                  step="any"
+                  placeholder="0.00"
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
+                  required
+                  disabled={transferLoading}
+                />
+
+                {/* Quick Presets */}
+                <div className="quick-amounts-bar">
+                  {[25, 50, 100, 250, 500].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      className={`quick-amount-btn ${transferAmount === String(preset) ? 'selected' : ''}`}
+                      onClick={() => setTransferAmount(String(preset))}
+                    >
+                      +{preset}
+                    </button>
+                  ))}
+                  {userRecord && userRecord.walletBalanceSantim > 0 && (
+                    <button
+                      type="button"
+                      className="quick-amount-btn"
+                      style={{ borderColor: 'var(--primary-blue)', color: 'var(--primary-blue)' }}
+                      onClick={() => setTransferAmount(String(Math.floor(userRecord.walletBalanceSantim / 100)))}
+                    >
+                      Max
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Optional Note */}
+              <div>
+                <label className="input-label">
+                  Note / Message (Optional)
+                </label>
+                <Input
+                  type="text"
+                  placeholder="e.g. For Bingo cards, thanks!"
+                  value={transferNote}
+                  onChange={(e) => setTransferNote(e.target.value)}
+                  disabled={transferLoading}
+                />
+              </div>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                fullWidth
+                loading={transferLoading}
+                disabled={transferLoading || !transferPhone.trim() || !transferAmount}
+                icon={<Send size={16} />}
+              >
+                {transferAmount && parseFloat(transferAmount) > 0
+                  ? `Send ${parseFloat(transferAmount).toFixed(2)} ETB`
+                  : 'Send Funds'}
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── TAB 4: TRANSACTION HISTORY ─────────────────────────────────── */}
       {activeTab === 'history' && (
         <div className="section-card" style={{ maxHeight: '520px', overflowY: 'auto' }}>
           <div className="section-title" style={{ fontFamily: 'var(--font-heading)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -861,12 +1083,25 @@ export default function Wallet() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               {ledgerEntries.map((entry) => {
                 const isDeposit = entry.type === 'deposit';
-                const isApproved = entry.status === 'approved';
+                const isWithdrawal = entry.type === 'withdrawal';
+                const isTransferOut = entry.type === 'transfer_out';
+                const isTransferIn = entry.type === 'transfer_in';
+                const isPositive = isDeposit || isTransferIn;
+
+                const isApproved = entry.status === 'approved' || entry.status === 'completed';
                 const isPending = entry.status === 'pending';
                 const isRejected = entry.status === 'rejected';
                 
                 const amountETB = entry.amountETB || (entry.amount_santim ? entry.amount_santim / 100 : 0);
                 const dateStr = new Date(entry.createdAt || entry.created_at || Date.now()).toLocaleString();
+
+                const getTypeTitle = () => {
+                  if (isDeposit) return 'Deposit';
+                  if (isWithdrawal) return 'Withdrawal';
+                  if (isTransferOut) return 'Sent to Player';
+                  if (isTransferIn) return 'Received from Player';
+                  return entry.type;
+                };
 
                 return (
                   <div
@@ -889,21 +1124,21 @@ export default function Wallet() {
                             width: '28px',
                             height: '28px',
                             borderRadius: '50%',
-                            background: isDeposit ? 'rgba(37, 99, 235, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                            color: isDeposit ? 'var(--primary-blue)' : 'var(--danger)',
+                            background: isPositive ? 'rgba(37, 99, 235, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                            color: isPositive ? 'var(--primary-blue)' : 'var(--danger)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                           }}
                         >
-                          {isDeposit ? <ArrowDownCircle size={16} /> : <ArrowUpCircle size={16} />}
+                          {isPositive ? <ArrowDownCircle size={16} /> : <ArrowUpCircle size={16} />}
                         </div>
                         <div>
                           <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-light)' }}>
-                            {isDeposit ? 'Deposit' : 'Withdrawal'}
+                            {getTypeTitle()}
                           </div>
                           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                            {entry.method || (isDeposit ? 'Telebirr / CBE' : 'Payout')}
+                            {entry.method || (isDeposit ? 'Telebirr / CBE' : isWithdrawal ? 'Payout' : 'P2P Transfer')}
                           </div>
                         </div>
                       </div>
@@ -913,11 +1148,11 @@ export default function Wallet() {
                           style={{
                             fontWeight: 900,
                             fontSize: '0.95rem',
-                            color: isDeposit ? 'var(--primary-blue)' : 'var(--text-light)',
+                            color: isPositive ? 'var(--primary-blue)' : 'var(--text-light)',
                             fontFamily: 'var(--font-mono)',
                           }}
                         >
-                          {isDeposit ? '+' : '-'}{amountETB.toFixed(2)} ETB
+                          {isPositive ? '+' : '-'}{amountETB.toFixed(2)} ETB
                         </div>
                         
                         {/* Status Badge */}
@@ -951,7 +1186,7 @@ export default function Wallet() {
                                 letterSpacing: '0.03rem',
                               }}
                             >
-                              ✓ Approved
+                              ✓ {entry.status === 'completed' ? 'Completed' : 'Approved'}
                             </span>
                           )}
                           {isRejected && (
@@ -987,7 +1222,7 @@ export default function Wallet() {
                         fontFamily: 'var(--font-mono)',
                       }}
                     >
-                      <span>Ref / FT: {entry.reference || entry.id}</span>
+                      <span>Ref / Info: {entry.reference || entry.id}</span>
                       <span>{dateStr}</span>
                     </div>
 

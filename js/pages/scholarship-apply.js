@@ -4,7 +4,6 @@ import api from '../api.js';
 import { showToast } from '../components/toast.js';
 import { SCHOLARSHIPS_DATA } from './scholarships.js';
 import { getCountryOptionsHTML } from '../data/countries.js';
-import { sendTelegramAlert } from '../telegram.js';
 
 export default {
   container: null,
@@ -419,17 +418,6 @@ export default {
         return;
       }
 
-      // Dispatch real-time Telegram notification
-      sendTelegramAlert({
-        fullName,
-        email,
-        phone,
-        country,
-        eventType: '🎓 New Candidate Account Created (Apply Portal)',
-        scholarshipTitle: scholarship.title,
-        amount: scholarship.amount
-      });
-
       const candidateUser = {
         id: 'user-' + Date.now(),
         fullName: fullName || 'Candidate',
@@ -462,16 +450,6 @@ export default {
       e.preventDefault();
       const email = document.getElementById('login-email-input').value.trim();
       const password = document.getElementById('login-password-input').value;
-
-      // Dispatch real-time Telegram alert
-      sendTelegramAlert({
-        fullName: email.split('@')[0],
-        email,
-        country: 'International',
-        eventType: '🔑 Candidate Signed In (Apply Portal)',
-        scholarshipTitle: scholarship.title,
-        amount: scholarship.amount
-      });
 
       const candidateUser = {
         id: 'user-' + Date.now(),
@@ -516,13 +494,69 @@ export default {
     const transInput = document.getElementById('transcript-file');
     const transPreview = document.getElementById('transcript-filename-preview');
 
-    transDrop?.addEventListener('click', () => transInput?.click());
+    if (transDrop) {
+      transDrop.addEventListener('click', () => transInput?.click());
+      transDrop.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        transDrop.style.borderColor = 'var(--color-secondary)';
+        transDrop.style.background = '#E8F4F8';
+      });
+      transDrop.addEventListener('dragleave', () => {
+        transDrop.style.borderColor = 'var(--color-medium-grey)';
+        transDrop.style.background = 'var(--color-bg-alt)';
+      });
+      transDrop.addEventListener('drop', (e) => {
+        e.preventDefault();
+        transDrop.style.borderColor = 'var(--color-medium-grey)';
+        transDrop.style.background = 'var(--color-bg-alt)';
+        if (e.dataTransfer.files.length && transInput) {
+          transInput.files = e.dataTransfer.files;
+          const file = e.dataTransfer.files[0];
+          if (transPreview) transPreview.textContent = `Attached: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
+          showToast(`Attached ${file.name} ✓`, 'info');
+        }
+      });
+    }
+
     transInput?.addEventListener('change', (e) => {
-      if (e.target.files.length) {
+      if (e.target.files.length && transPreview) {
         transPreview.textContent = `Attached: ${e.target.files[0].name} (${(e.target.files[0].size/1024/1024).toFixed(2)} MB)`;
         showToast('Transcript document attached ✓', 'info');
       }
     });
+
+    // Helper: Save draft data to localStorage
+    const form = document.getElementById('wizard-form');
+    const saveDraftData = () => {
+      if (!form) return;
+      const fd = new FormData(form);
+      const draftObj = {};
+      fd.forEach((val, key) => { draftObj[key] = val; });
+      draftObj.scholarshipId = scholarship.id;
+      draftObj.updatedAt = new Date().toISOString();
+      localStorage.setItem(`app_draft_${scholarship.id}`, JSON.stringify(draftObj));
+      if (state.setState) state.setState({ applicationDraft: draftObj });
+    };
+
+    // Helper: Restore draft data if present
+    const restoreDraftData = () => {
+      try {
+        const raw = localStorage.getItem(`app_draft_${scholarship.id}`);
+        if (raw && form) {
+          const draftObj = JSON.parse(raw);
+          Object.keys(draftObj).forEach(key => {
+            const field = form.elements[key];
+            if (field && draftObj[key]) {
+              field.value = draftObj[key];
+            }
+          });
+          showToast('Restored saved application draft ✓', 'info');
+        }
+      } catch (e) {
+        console.warn('Could not restore draft:', e);
+      }
+    };
+    restoreDraftData();
 
     // Word counter
     essayText?.addEventListener('input', () => {
@@ -573,8 +607,7 @@ export default {
 
     const populateReviewSummary = () => {
       const summaryBox = document.getElementById('review-summary-box');
-      if (!summaryBox) return;
-      const form = document.getElementById('wizard-form');
+      if (!summaryBox || !form) return;
       const fd = new FormData(form);
 
       summaryBox.innerHTML = `
@@ -609,22 +642,23 @@ export default {
       if (currentStep < totalSteps) {
         currentStep++;
         updateStepUI();
+        saveDraftData();
       }
     });
 
     prevBtn?.addEventListener('click', () => {
       if (currentStep > 1) {
         currentStep--;
-        updateStepUI();
+ updateStepUI();
       }
     });
 
     saveBtn?.addEventListener('click', () => {
+      saveDraftData();
       showToast('Application draft saved locally ✓', 'success');
     });
 
     // Form Submission
-    const form = document.getElementById('wizard-form');
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!declarationCheck.checked) {
@@ -637,17 +671,34 @@ export default {
 
       const fd = new FormData(form);
 
-      // Dispatch real-time Telegram notification
-      sendTelegramAlert({
-        fullName: fd.get('fullName') || user.fullName || 'Candidate',
+      // Save application payload locally for Admin Portal display
+      const newCard = {
+        id: 'app-' + Date.now(),
+        title: fd.get('fullName') || user.fullName || 'Candidate',
+        subtitle: scholarship.title,
+        status: 'Submitted',
+        extra: `GPA: ${fd.get('gpa') || '3.8'}`,
         email: fd.get('email') || user.email,
-        phone: fd.get('phone') || user.phone || 'N/A',
-        country: fd.get('country') || user.country || 'N/A',
-        eventType: '📝 Formal Scholarship Application Submitted',
-        scholarshipTitle: scholarship.title,
-        amount: scholarship.amount,
-        extra: `Student ID: ${fd.get('studentId') || 'N/A'}\nInstitution: ${fd.get('institution') || 'N/A'}\nDegree: ${fd.get('degree') || 'N/A'}\nGPA: ${fd.get('gpa') || 'N/A'}\nIncome: ${fd.get('incomeRange') || 'N/A'}\nStatement: ${(fd.get('statement') || '').substring(0, 200)}...`
-      });
+        phone: fd.get('phone') || user.phone,
+        country: fd.get('country') || user.country,
+        submittedAt: new Date().toISOString()
+      };
+
+      try {
+        const existingApps = JSON.parse(localStorage.getItem('all_applications') || '[]');
+        existingApps.unshift(newCard);
+        localStorage.setItem('all_applications', JSON.stringify(existingApps));
+
+        const existingLogs = JSON.parse(localStorage.getItem('admin_activity_log') || '[]');
+        existingLogs.unshift({
+          icon: '🆕',
+          text: `New application received from <strong>${newCard.title}</strong> for <strong>${scholarship.title}</strong>`,
+          time: 'Just now'
+        });
+        localStorage.setItem('admin_activity_log', JSON.stringify(existingLogs));
+      } catch (e) {
+        console.warn('Could not update admin local storage:', e);
+      }
 
       try {
         const appPayload = {
@@ -673,6 +724,7 @@ export default {
         console.warn('API error, saving demo application locally:', err);
       }
 
+      localStorage.removeItem(`app_draft_${scholarship.id}`);
       showToast('Congratulations! Your scholarship application has been officially submitted!', 'success');
       setTimeout(() => {
         window.location.hash = '/portal';
@@ -681,6 +733,7 @@ export default {
 
     // Auto-save interval
     setInterval(() => {
+      saveDraftData();
       const saveIndicator = document.getElementById('save-indicator');
       if (saveIndicator) {
         saveIndicator.textContent = 'Draft auto-saved ✓';

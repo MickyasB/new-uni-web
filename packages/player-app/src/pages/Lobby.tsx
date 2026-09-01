@@ -4,38 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../store';
 import { useTheme } from '../useTheme';
 import { api } from '../api';
+import { dbService, DbRoom } from '../dbService';
 import { RoomRecord, RoomStatus, RoomTier } from '@bingo/shared';
 import { Button, Badge, CurrencyDisplay, Modal, Toast } from '../components/ui';
 import { Trophy, Users, Play, Plus, Sun, Moon } from 'lucide-react';
-
-const TWO_CORE_ROOMS: RoomRecord[] = [
-  {
-    id: 'room-classic-hall',
-    tier: RoomTier.SILVER,
-    status: RoomStatus.WAITING,
-    mode: 'auto',
-    type: 'open',
-    entryFeeSantim: 1000, // 10 ETB
-    potSantim: 5000,      // 50 ETB
-    minPlayers: 2,
-    maxCards: 6,
-    playerCount: 14,
-    createdAt: Date.now(),
-  },
-  {
-    id: 'room-gold-lounge',
-    tier: RoomTier.GOLD,
-    status: RoomStatus.WAITING,
-    mode: 'auto',
-    type: 'open',
-    entryFeeSantim: 5000, // 50 ETB
-    potSantim: 25000,     // 250 ETB
-    minPlayers: 3,
-    maxCards: 6,
-    playerCount: 22,
-    createdAt: Date.now() - 1000,
-  },
-];
 
 export default function Lobby() {
   const { t } = useTranslation();
@@ -44,7 +16,7 @@ export default function Lobby() {
   const { theme, toggle } = useTheme();
   const userRecord = user;
 
-  const [rooms, setRooms] = useState<RoomRecord[]>(TWO_CORE_ROOMS);
+  const [rooms, setRooms] = useState<RoomRecord[]>([]);
 
   // Buy Cards modal state
   const [selectedRoom, setSelectedRoom] = useState<RoomRecord | null>(null);
@@ -52,38 +24,28 @@ export default function Lobby() {
   const [buyLoading, setBuyLoading] = useState(false);
   const [buyError, setBuyError] = useState('');
 
+  const loadRooms = () => {
+    const dbRooms = dbService.getRooms();
+    const mapped: RoomRecord[] = dbRooms.map((r, idx) => ({
+      id: r.id,
+      tier: (r.tier as RoomTier) || RoomTier.SILVER,
+      status: r.status === 'active' ? RoomStatus.IN_PROGRESS : RoomStatus.WAITING,
+      mode: 'auto',
+      type: 'open',
+      entryFeeSantim: Math.round(r.entryFeeETB * 100),
+      potSantim: Math.round((r.potETB || r.entryFeeETB * 5) * 100),
+      minPlayers: 2,
+      maxCards: 6,
+      playerCount: r.playerCount || (idx === 0 ? 14 : idx === 1 ? 22 : 8),
+      createdAt: Date.now() - idx * 1000,
+    }));
+    setRooms(mapped);
+  };
+
   useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        const data = await api.getRooms();
-        const apiRooms: RoomRecord[] = (data.rooms || []).map((r: any) => ({
-          id: r.id,
-          tier: (r.tier as RoomTier) || RoomTier.SILVER,
-          status: (r.status as RoomStatus) || RoomStatus.WAITING,
-          mode: r.mode || 'auto',
-          type: r.type || 'open',
-          entryFeeSantim: parseInt(r.entry_fee_santim || r.entryFeeSantim || 1000),
-          potSantim: parseInt(r.pot_santim || r.potSantim || 5000),
-          minPlayers: r.min_players || r.minPlayers || 2,
-          maxCards: r.max_cards || r.maxCards || 6,
-          playerCount: r.player_count || r.playerCount || 12,
-          scheduledAt: r.scheduled_at || r.scheduledAt,
-          createdAt: parseInt(r.created_at || r.createdAt || Date.now()),
-        }));
-
-        if (apiRooms.length >= 2) {
-          setRooms(apiRooms.slice(0, 2));
-        } else {
-          setRooms(TWO_CORE_ROOMS);
-        }
-      } catch {
-        setRooms(TWO_CORE_ROOMS);
-      }
-    };
-
-    fetchRooms();
-    const interval = setInterval(fetchRooms, 12000);
-    return () => clearInterval(interval);
+    loadRooms();
+    const unsub = dbService.subscribe(loadRooms);
+    return unsub;
   }, []);
 
   const handleOpenJoinModal = (room: RoomRecord) => {

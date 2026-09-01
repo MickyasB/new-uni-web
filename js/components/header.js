@@ -1,9 +1,11 @@
-// js/components/header.js — Authentic University of Nottingham Header
+// js/components/header.js — Authentic University of Edinburgh Header
 import { state } from '../state.js';
 
 export function render() {
   const user = state.getState ? state.getState().user : state.user;
   const isAuth = !!user;
+  const isStaff = isAuth && (user.role === 'ADMIN' || user.role === 'REVIEWER');
+  const isStudent = isAuth && user.role === 'STUDENT';
   const userLabel = user ? (user.fullName || user.email.split('@')[0]) : 'Sign In';
 
   return `
@@ -33,21 +35,30 @@ export function render() {
             <a href="#/academics">Study</a>
             <a href="#/research">Research</a>
             <a href="#/campus-life">Accommodation</a>
-            <span class="topbar-divider">|</span>
-            <a href="#/portal" style="color: #FFF; font-weight: 600;" title="MyEd Student & Applicant Portal">
-              🎓 Applicant Portal
-            </a>
-            <span class="topbar-divider">&bull;</span>
-            <a href="#/admin" style="color: var(--color-accent-gold-light); font-weight: 700;" title="EASE Staff & Reviewer Internal Access">
-              🏛️ Staff Admin
-            </a>
+            ${!isStaff ? `
+              <span class="topbar-divider">|</span>
+              <a href="#/portal" style="color: #FFF; font-weight: 600;" title="MyEd Student & Applicant Portal">
+                🎓 Applicant Portal
+              </a>
+            ` : ''}
+            ${isStaff ? `
+              <span class="topbar-divider">&bull;</span>
+              <a href="#/admin" style="color: var(--color-accent-gold-light); font-weight: 700;" title="EASE Staff & Reviewer Internal Access">
+                🏛️ Staff Admin
+              </a>
+            ` : ''}
             ${isAuth ? `
               <span class="topbar-divider">|</span>
-              <a href="#/portal" style="color: var(--color-accent-gold); font-weight: 700;">
+              <a href="#/${isStaff ? 'admin' : 'portal'}" style="color: var(--color-accent-gold); font-weight: 700;">
                 👤 ${userLabel}
               </a>
               <a href="#/logout" style="color: rgba(255,255,255,0.7); margin-left: 4px;">Sign Out</a>
-            ` : ''}
+            ` : `
+              <span class="topbar-divider">&bull;</span>
+              <a href="#/login?tab=staff" style="color: var(--color-accent-gold-light); font-weight: 700;" title="EASE Staff Access">
+                🏛️ Staff Portal
+              </a>
+            `}
           </div>
         </div>
       </div>
@@ -89,22 +100,22 @@ export function render() {
                   <span class="badge badge-urgent" style="font-size: 10px; padding: 2px 6px;">6-Day Deadline</span>
                 </a>
               </li>
-              <li><a href="#/portal" class="nav-link">Applicant Portal</a></li>
-              <li><a href="#/admin" class="nav-link" style="color: var(--color-primary); font-weight: 700;">Staff Admin</a></li>
+              ${!isStaff ? `<li><a href="#/portal" class="nav-link">Applicant Portal</a></li>` : ''}
+              ${isStaff ? `<li><a href="#/admin" class="nav-link" style="color: var(--color-primary); font-weight: 700;">Staff Admin</a></li>` : ''}
             </ul>
 
             <div class="nav-actions">
               ${isAuth ? `
-                <a href="#/${user?.role === 'ADMIN' || user?.role === 'REVIEWER' ? 'admin' : 'portal'}" class="user-auth-btn">
+                <a href="#/${isStaff ? 'admin' : 'portal'}" class="user-auth-btn">
                   <span>👤</span>
-                  <span>${user?.role === 'ADMIN' || user?.role === 'REVIEWER' ? 'Admin Dashboard' : 'Applicant Portal'}</span>
+                  <span>${isStaff ? 'Admin Dashboard' : 'Applicant Portal'}</span>
                 </a>
               ` : `
                 <div style="display: flex; gap: 8px;">
                   <a href="#/login" class="btn btn-outline" style="font-size: 0.82rem; padding: 6px 12px;">
                     Applicant Sign In
                   </a>
-                  <a href="#/admin" class="btn btn-primary" style="font-size: 0.82rem; padding: 6px 12px; background: var(--color-primary);">
+                  <a href="#/login?tab=staff" class="btn btn-primary" style="font-size: 0.82rem; padding: 6px 12px; background: var(--color-primary);">
                     Staff EASE
                   </a>
                 </div>
