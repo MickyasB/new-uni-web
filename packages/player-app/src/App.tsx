@@ -58,59 +58,65 @@ function AuthRoute({ children, mode }: { children: React.ReactNode; mode: 'login
   return <>{children}</>;
 }
 
-// Layout wrapper including bottom navigation
+// Layout wrapper including persistent bottom navigation
 function AppLayout() {
   const { t } = useTranslation();
   const location = useLocation();
   const activeRoomId = useAppStore((state) => state.activeRoomId);
 
-  // If in active room, hide bottom nav to maximize bingo board layout
-  const showNav = !location.pathname.startsWith('/room/');
-
   const isActive = (path: string) => {
     return location.pathname === path ? 'nav-item nav-item-active' : 'nav-item';
   };
+
+  const isRoomActive = location.pathname.startsWith('/room/');
 
   // Get active or last joined room
   const targetLiveRoom = activeRoomId || (typeof window !== 'undefined' ? localStorage.getItem('bingo_last_joined_room') : null) || 'room-classic-hall';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', position: 'relative' }}>
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '76px' }}>
         <Outlet />
       </div>
 
-      {showNav && (
-        <div className="bottom-nav-container">
-          <nav className="bottom-nav">
-            <Link to="/lobby" className={isActive('/lobby')}>
-              <Gamepad2 size={22} strokeWidth={2.2} />
-              <span className="nav-label">{t('lobby.title') || 'Lobby'}</span>
-            </Link>
-            
-            <Link to="/wallet" className={isActive('/wallet')}>
-              <Wallet size={22} strokeWidth={2.2} />
-              <span className="nav-label">{t('wallet.title') || 'Wallet'}</span>
-            </Link>
+      {/* Persistent Bottom Navigation — Visible Everywhere */}
+      <div className="bottom-nav-container">
+        <nav className="bottom-nav">
+          <Link to="/lobby" className={isActive('/lobby')}>
+            <Gamepad2 size={20} strokeWidth={2.2} />
+            <span className="nav-label">{t('lobby.title') || 'Lobby'}</span>
+          </Link>
+          
+          <Link to="/wallet" className={isActive('/wallet')}>
+            <Wallet size={20} strokeWidth={2.2} />
+            <span className="nav-label">{t('wallet.title') || 'Wallet'}</span>
+          </Link>
 
-            {/* 3rd Navigation Button: Direct route to Live Game joined */}
-            <Link 
-              to={`/room/${targetLiveRoom}`} 
-              className={`nav-center-action ${location.pathname.startsWith('/room/') ? 'active' : ''}`}
-              aria-label="Live Game"
-              title="Enter Joined Live Game"
-            >
-              <Trophy size={24} strokeWidth={2.5} />
-              <span className="nav-center-live-badge">LIVE</span>
-            </Link>
+          {/* 3rd Navigation Button: 3D Bingo Ball with Number */}
+          <Link 
+            to={`/room/${targetLiveRoom}`} 
+            className={`nav-ball-button-wrap ${isRoomActive ? 'active' : ''}`}
+            aria-label="Live Bingo Game"
+            title="Enter Live Game"
+          >
+            <div className="nav-bingo-ball">
+              <div className="nav-bingo-ball-inner">
+                <span className="nav-bingo-ball-letter">B</span>
+                <span className="nav-bingo-ball-number">77</span>
+              </div>
+              <span className="nav-bingo-ball-live-pill">LIVE</span>
+            </div>
+            <span className="nav-label" style={{ fontWeight: 800, color: isRoomActive ? 'var(--primary-blue)' : 'inherit' }}>
+              Game
+            </span>
+          </Link>
 
-            <Link to="/profile" className={isActive('/profile')}>
-              <User size={22} strokeWidth={2.2} />
-              <span className="nav-label">{t('profile.title') || 'Profile'}</span>
-            </Link>
-          </nav>
-        </div>
-      )}
+          <Link to="/profile" className={isActive('/profile')}>
+            <User size={20} strokeWidth={2.2} />
+            <span className="nav-label">{t('profile.title') || 'Profile'}</span>
+          </Link>
+        </nav>
+      </div>
     </div>
   );
 }

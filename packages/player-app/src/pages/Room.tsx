@@ -90,7 +90,6 @@ export default function Room() {
   const [gameRecord, setGameRecord] = useState<GameRecord | null>(null);
   const [verifyStatus, setVerifyStatus] = useState<'idle' | 'verifying' | 'valid' | 'invalid'>('idle');
   const [calculatedHash, setCalculatedHash] = useState('');
-  const [startLoading, setStartLoading] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showGameInfo, setShowGameInfo] = useState(false);
   const [showAllNumbers, setShowAllNumbers] = useState(false);
@@ -144,26 +143,30 @@ export default function Room() {
     calledNumbers: number[];
   }>({ active: false, calledNumbers: [] });
 
-  const handleDevStartGame = async () => {
-    if (!roomId) return;
-    setStartLoading(true);
-    // Guarantee player has at least 2 cards before starting
-    if (cards.length === 0) {
-      setCards([
-        { id: `card-auto-${Date.now()}-1`, numbers: generateBingoCard() },
-        { id: `card-auto-${Date.now()}-2`, numbers: generateBingoCard() },
-      ]);
-    }
-    try {
-      await api.startGame(roomId);
-    } catch (err: any) {
-      console.warn('startGame API notice (initiating browser game loop):', err);
-    }
-    // Always start local game loop so solo testers can play immediately
-    setLocalDemoGame({ active: true, calledNumbers: [] });
-    showToast('🎮 Game Started! Calling numbers...', 'success');
-    setStartLoading(false);
-  };
+  // Auto-start listener: Game automatically starts when Admin starts room OR minimum players reached
+  useEffect(() => {
+    const checkStart = () => {
+      if (!roomId) return;
+      const dbRoom = dbService.getRooms().find(r => r.id === roomId);
+      const isDbActive = dbRoom && dbRoom.status === 'active';
+      const isRecordActive = roomRecord && ((roomRecord.status as string) === 'active' || (roomRecord.status as string) === 'in_progress');
+      const isPlayerThresholdMet = (roomRecord?.playerCount || 0) >= (roomRecord?.minPlayers || 3) && (roomRecord?.playerCount || 0) > 0;
+
+      if ((isDbActive || isRecordActive || isPlayerThresholdMet) && !localDemoGame.active) {
+        if (cards.length === 0) {
+          setCards([
+            { id: `card-auto-${Date.now()}-1`, numbers: generateBingoCard() },
+            { id: `card-auto-${Date.now()}-2`, numbers: generateBingoCard() },
+          ]);
+        }
+        setLocalDemoGame({ active: true, calledNumbers: [] });
+      }
+    };
+
+    checkStart();
+    const unsub = dbService.subscribe(checkStart);
+    return unsub;
+  }, [roomId, roomRecord, cards.length, localDemoGame.active]);
 
   useEffect(() => {
     if (!localDemoGame.active) return;
@@ -823,23 +826,34 @@ export default function Room() {
                 </div>
               )}
 
-              {/* Instant Start & History Controls */}
-              <div className="waiting-start-action-box" style={{ display: 'flex', gap: '0.6rem', width: '100%', maxWidth: '340px' }}>
-                <button
-                  onClick={handleDevStartGame}
-                  disabled={startLoading}
-                  className="btn-ui btn-ui-gold btn-ui-lg waiting-start-btn"
-                  style={{ flex: 2 }}
+              {/* Automated Matchmaking Status & History Action */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', width: '100%', maxWidth: '360px', alignItems: 'center', marginTop: '0.5rem' }}>
+                <div
+                  style={{
+                    background: 'var(--surface-raised)',
+                    border: '1px solid var(--card-border)',
+                    borderRadius: '12px',
+                    padding: '0.75rem 1rem',
+                    fontSize: '0.8rem',
+                    color: 'var(--text-muted)',
+                    textAlign: 'center',
+                    lineHeight: 1.45,
+                    width: '100%',
+                  }}
                 >
-                  {startLoading ? '⏳ Starting...' : '🎮 Start Game Now'}
-                </button>
+                  <div style={{ fontWeight: 800, color: 'var(--primary-blue)', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+                    <Sparkles size={14} /> Automatic Matchmaking
+                  </div>
+                  The game will automatically begin as soon as minimum players join or the admin starts the round.
+                </div>
+
                 <button
                   onClick={() => setShowHistoryModal(true)}
-                  className="btn-ui btn-ui-secondary btn-ui-lg"
-                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}
+                  className="btn-ui btn-ui-secondary btn-ui-md"
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', padding: '0.55rem 1.25rem' }}
                   title="View Past 3 Days Game History"
                 >
-                  <History size={16} /> History
+                  <History size={16} /> Past 3 Days History
                 </button>
               </div>
             </div>

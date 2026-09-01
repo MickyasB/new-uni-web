@@ -3805,14 +3805,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ═══════════════════════════════════════════════════════
-   SPLASHSCREEN — Missing Keyframes
+   PERSISTENT BOTTOM NAVIGATION & 3D BINGO BALL BUTTON
    ═══════════════════════════════════════════════════════ */
-@keyframes glow-pulse {
+.bottom-nav-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
   right: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0 0.85rem calc(0.65rem + env(safe-area-inset-bottom, 8px));
+  padding: 0 0.85rem calc(0.5rem + env(safe-area-inset-bottom, 8px));
   pointer-events: none;
   z-index: 1000;
 }
@@ -3822,30 +3825,22 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
   width: 100%;
   max-width: 440px;
-  height: 66px;
-  background: rgba(26, 26, 46, 0.92);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1.5px solid rgba(212, 175, 55, 0.18);
-  border-radius: 36px;
+  height: 64px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 32px;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 0 0.6rem;
-  box-shadow:
-    0 16px 36px rgba(0, 0, 0, 0.35),
-    0 4px 14px rgba(212, 175, 55, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0 0.5rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  transition: all 0.25s ease;
 }
 
 [data-theme="light"] .bottom-nav {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1.5px solid rgba(245, 158, 11, 0.35);
-  box-shadow:
-    0 16px 36px rgba(100, 116, 139, 0.22),
-    0 4px 16px rgba(245, 158, 11, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.12);
 }
 
 .nav-item {
@@ -3857,18 +3852,12 @@ h1, h2, h3, h4, h5, h6 {
   text-decoration: none;
   font-size: 0.68rem;
   font-weight: 700;
-  gap: 0.18rem;
-  padding: 0.35rem 0.65rem;
-  border-radius: 20px;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  gap: 0.15rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 18px;
+  transition: all 0.2s ease;
   position: relative;
-  min-width: 60px;
-}
-
-.nav-item .nav-icon {
-  font-size: 1.25rem;
-  line-height: 1;
-  transition: transform 0.25s ease;
+  min-width: 56px;
 }
 
 .nav-item:hover {
@@ -3877,64 +3866,108 @@ h1, h2, h3, h4, h5, h6 {
 
 .nav-item.nav-item-active {
   color: #FFFFFF !important;
-  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
-  transform: translateY(-2px);
-  padding: 0.35rem 0.85rem;
+  background: var(--primary-blue) !important;
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.35) !important;
+  transform: translateY(-1px);
 }
 
-[data-theme="light"] .nav-item.nav-item-active {
-  color: #FFFFFF !important;
-  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+/* ── 3D Bingo Ball Navigation Button ── */
+.nav-ball-button-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--text-muted);
+  gap: 0.15rem;
+  transform: translateY(-10px);
+  transition: transform 0.2s ease;
+  position: relative;
+  cursor: pointer;
 }
 
-.nav-item.nav-item-active .nav-icon {
-  transform: scale(1.1);
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+.nav-ball-button-wrap:hover {
+  transform: translateY(-13px) scale(1.05);
 }
 
-.nav-item-active::after {
-  display: none !important;
+.nav-ball-button-wrap:active {
+  transform: translateY(-8px) scale(0.95);
 }
 
-/* Center Floating Theme Toggle Action */
-.nav-center-action {
-  width: 44px;
-  height: 44px;
+.nav-bingo-ball {
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%);
-  border: 2px solid rgba(245, 158, 11, 0.5);
-  color: #fde047;
+  background: radial-gradient(circle at 35% 28%, #60A5FA 0%, #2563EB 55%, #1E3A8A 100%);
+  box-shadow: 
+    0 6px 16px rgba(37, 99, 235, 0.45),
+    inset -2px -2px 5px rgba(0, 0, 0, 0.5),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  flex-shrink: 0;
-  margin: 0 0.25rem;
+  position: relative;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
 }
 
-[data-theme="light"] .nav-center-action {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border: 2px solid #f59e0b;
-  color: #b45309;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+.nav-ball-button-wrap.active .nav-bingo-ball {
+  background: radial-gradient(circle at 35% 28%, #FDE047 0%, #EAB308 55%, #A16207 100%);
+  box-shadow: 
+    0 6px 20px rgba(234, 179, 8, 0.6),
+    inset -2px -2px 5px rgba(0, 0, 0, 0.45),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.75);
 }
 
-.nav-center-action:hover {
-  transform: scale(1.08) rotate(15deg);
-  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.5);
+.nav-bingo-ball-inner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
-.nav-center-action:active {
-  transform: scale(0.95);
-}
-
-.nav-center-icon {
-  font-size: 1.25rem;
+.nav-bingo-ball-letter {
+  font-size: 6px;
+  font-weight: 900;
   line-height: 1;
+  color: #2563EB;
+}
+
+.nav-ball-button-wrap.active .nav-bingo-ball-letter {
+  color: #B45309;
+}
+
+.nav-bingo-ball-number {
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+  color: #0F172A;
+  font-family: var(--font-mono);
+}
+
+.nav-bingo-ball-live-pill {
+  position: absolute;
+  top: -3px;
+  right: -5px;
+  background: #EF4444;
+  color: #FFFFFF;
+  font-size: 7px;
+  font-weight: 900;
+  padding: 1px 4px;
+  border-radius: 6px;
+  letter-spacing: 0.03rem;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.7);
+  animation: live-pulse-pill 1.6s infinite;
+}
+
+@keyframes live-pulse-pill {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.85; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 
@@ -5865,66 +5898,84 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ── Bingo Cards in Light Mode ── */
 [data-theme="light"] .bingo-card-v2 {
-  background: #292524 !important;
-  border: 1.5px solid rgba(212, 175, 55, 0.4) !important;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+  background: #FFFFFF !important;
+  border: 1.5px solid #CBD5E1 !important;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08) !important;
 }
 
 [data-theme="light"] .card-header-strip {
-  background: #292524 !important;
-  color: #292524 !important;
-  box-shadow: 0 2px 6px rgba(26, 26, 46, 0.25) !important;
+  background: #2563EB !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25) !important;
 }
 
 [data-theme="light"] .card-id-label {
-  color: #D4AF37 !important;
+  color: #FFFFFF !important;
   font-weight: 800 !important;
 }
 
 [data-theme="light"] .card-cell {
-  background: #ffffff !important;
-  color: #292524 !important;
+  background: #FFFFFF !important;
+  color: #0F172A !important;
   font-weight: 900 !important;
-  border: 1px solid #D5D5E0 !important;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+  border: 1px solid #CBD5E1 !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
 }
 
 [data-theme="light"] .card-cell:hover {
-  background: rgba(212, 175, 55, 0.15) !important;
-  border-color: #D4AF37 !important;
+  background: rgba(37, 99, 235, 0.08) !important;
+  border-color: #2563EB !important;
 }
 
-/* Daubed / Marked Cells with Rich Gold */
+/* Daubed / Marked Cells with Royal Blue & White text */
+[data-theme="light"] .card-cell.marked,
 [data-theme="light"] .card-cell.marked.col-b,
 [data-theme="light"] .card-cell.marked.col-i,
 [data-theme="light"] .card-cell.marked.col-n,
 [data-theme="light"] .card-cell.marked.col-g,
 [data-theme="light"] .card-cell.marked.col-o {
-  background: radial-gradient(circle, #E5BE42 0%, #D4AF37 60%, #B8860B 100%) !important;
-  box-shadow: 0 3px 10px rgba(212, 175, 55, 0.5), inset 0 1px 2px rgba(255,255,255,0.5) !important;
-  color: #292524 !important;
+  background: #2563EB !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35) !important;
+  color: #FFFFFF !important;
+  border-color: #1D4ED8 !important;
 }
 
-/* FREE center cell in Light Mode */
-[data-theme="light"] .card-cell.free-cell {
-  background: linear-gradient(145deg, #ffd700 0%, #f59e0b 50%, #d97706 100%) !important;
-  box-shadow: 0 3px 12px rgba(245, 158, 11, 0.5), inset 0 1px 3px rgba(255,255,255,0.6) !important;
-  color: #1a0a2e !important;
+/* FREE center cell in Light Mode: Solid Emerald Green */
+[data-theme="light"] .card-cell.free-cell,
+[data-theme="light"] .free-space-v2 {
+  background: #059669 !important;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.35) !important;
+  color: #FFFFFF !important;
+  border-color: #047857 !important;
 }
 
 /* ── Waiting Lobby & Buy Cards in Light Mode ── */
 [data-theme="light"] .waiting-animation-section {
-  background: linear-gradient(165deg, #ffffff 0%, #fdf8ee 50%, #f6ecda 100%) !important;
-  border: 1.5px solid rgba(217, 119, 6, 0.25) !important;
-  box-shadow: 0 8px 24px rgba(180, 120, 30, 0.1) !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08) !important;
 }
 
 [data-theme="light"] .waiting-title {
-  color: #1e293b !important;
+  color: #0F172A !important;
 }
 
 [data-theme="light"] .waiting-player-count {
-  color: #64748b !important;
+  color: #475569 !important;
+}
+
+/* Automatic matchmaking info card in light mode */
+[data-theme="light"] [style*="surface-raised"],
+[data-theme="light"] .surface-raised {
+  background: #F8FAFC !important;
+  border-color: #CBD5E1 !important;
+  color: #475569 !important;
+}
+
+[data-theme="light"] .countdown-badge {
+  background: #EFF6FF !important;
+  border: 1px solid #BFDBFE !important;
+  color: #1D4ED8 !important;
 }
 
 [data-theme="light"] .buy-panel-body {
