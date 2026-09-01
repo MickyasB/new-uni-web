@@ -22,6 +22,8 @@ import {
   Sun,
   Moon,
   Plus,
+  FileSpreadsheet,
+  Download,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { dbService, DbUser, DbDeposit, DbWithdrawal, DbRoom } from '../dbService';
@@ -204,6 +206,109 @@ export default function AdminPortal() {
     showNotification(`➕ Created test withdrawal of 150 ETB for ${testUser.displayName}.`);
   };
 
+  // ─── CSV SPREADSHEET EXPORT ENGINE ───
+  const downloadCsv = (filename: string, rows: (string | number)[][]) => {
+    const csvContent = rows
+      .map((row) =>
+        row
+          .map((val) => {
+            const str = String(val ?? '');
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+              return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+          })
+          .join(',')
+      )
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${filename}_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showNotification(`📥 Exported ${filename}.csv successfully!`);
+  };
+
+  const handleExportAllData = () => {
+    const rows: (string | number)[][] = [
+      ['=== SUPER BINGO PLATFORM CONSOLIDATED DATA EXPORT ==='],
+      ['Exported At', new Date().toISOString()],
+      [],
+      ['--- REGISTERED USERS ---'],
+      ['User ID', 'Display Name', 'Phone', 'Wallet Balance (ETB)', 'KYC Status', 'Banned', 'Total Deposits (ETB)', 'Total Withdrawals (ETB)', 'Joined Date'],
+      ...users.map((u) => [
+        u.uid,
+        u.displayName,
+        u.phone,
+        (u.walletBalanceSantim / 100).toFixed(2),
+        u.kycStatus,
+        u.banned ? 'YES' : 'NO',
+        u.totalDepositsETB.toFixed(2),
+        u.totalWithdrawalsETB.toFixed(2),
+        u.createdAt,
+      ]),
+      [],
+      ['--- DEPOSITS ---'],
+      ['Deposit ID', 'Player Name', 'Phone', 'Amount (ETB)', 'FT Number', 'Status', 'Date'],
+      ...deposits.map((d) => [
+        d.id,
+        d.playerName,
+        d.playerPhone,
+        d.amountETB.toFixed(2),
+        d.ftNumber,
+        d.status,
+        d.createdAt,
+      ]),
+      [],
+      ['--- WITHDRAWALS ---'],
+      ['Withdrawal ID', 'Player Name', 'Phone', 'Amount (ETB)', 'Method', 'Account Number', 'Status', 'Date'],
+      ...withdrawals.map((w) => [
+        w.id,
+        w.playerName,
+        w.playerPhone,
+        w.amountETB.toFixed(2),
+        w.method,
+        w.accountNumber,
+        w.status,
+        w.createdAt,
+      ]),
+      [],
+      ['--- P2P TRANSFERS ---'],
+      ['Transfer ID', 'Sender Name', 'Sender Phone', 'Recipient Name', 'Recipient Phone', 'Amount (ETB)', 'Note', 'Status', 'Date'],
+      ...dbService.getTransfers().map((t) => [
+        t.id,
+        t.senderName,
+        t.senderPhone,
+        t.recipientName,
+        t.recipientPhone,
+        t.amountETB.toFixed(2),
+        t.note || '',
+        t.status,
+        t.createdAt,
+      ]),
+      [],
+      ['--- GAME ROUNDS & HISTORY ---'],
+      ['Game ID', 'Room Name', 'Tier', 'Prize Pot (ETB)', 'Entry Fee (ETB)', 'Winner', 'Pattern', 'Called Numbers Count', 'Date'],
+      ...dbService.getGameHistory().map((g) => [
+        g.id,
+        g.roomName,
+        g.tier,
+        g.potETB.toFixed(2),
+        g.entryFeeETB.toFixed(2),
+        g.winnerName,
+        g.winningPatternName,
+        g.calledNumbersCount,
+        g.playedAt,
+      ]),
+    ];
+
+    downloadCsv('SuperBingo_Consolidated_Spreadsheet', rows);
+  };
+
   /* ─── Login Screen ─── */
   if (!authenticated) {
     return (
@@ -368,6 +473,27 @@ export default function AdminPortal() {
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+
+          <button
+            onClick={handleExportAllData}
+            style={{
+              background: 'rgba(16, 185, 129, 0.15)',
+              border: '1px solid rgba(16, 185, 129, 0.4)',
+              color: '#10B981',
+              borderRadius: '8px',
+              padding: '0 10px',
+              height: '34px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+            title="Export All Data as Spreadsheet (.csv)"
+          >
+            <FileSpreadsheet size={15} /> Export
           </button>
 
           <button
