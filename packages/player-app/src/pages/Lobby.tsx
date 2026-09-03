@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../store';
 import { useTheme } from '../useTheme';
 import { api } from '../api';
-import { dbService, DbRoom } from '../dbService';
+import { dbService } from '../dbService';
 import { RoomRecord, RoomStatus, RoomTier } from '@bingo/shared';
 import { Button, Badge, CurrencyDisplay, Modal, Toast } from '../components/ui';
 import { Trophy, Users, Play, Plus, Sun, Moon } from 'lucide-react';
@@ -13,12 +13,10 @@ export default function Lobby() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, setActiveRoomId } = useAppStore();
-  const { theme, toggle } = useTheme();
+  const { theme, toggle: toggleTheme } = useTheme();
   const userRecord = user;
 
   const [rooms, setRooms] = useState<RoomRecord[]>([]);
-
-  // Buy Cards modal state
   const [selectedRoom, setSelectedRoom] = useState<RoomRecord | null>(null);
   const [cardCount, setCardCount] = useState(1);
   const [buyLoading, setBuyLoading] = useState(false);
@@ -29,7 +27,7 @@ export default function Lobby() {
     const mapped: RoomRecord[] = dbRooms.map((r, idx) => ({
       id: r.id,
       tier: (r.tier as RoomTier) || RoomTier.SILVER,
-      status: r.status === 'active' ? RoomStatus.IN_PROGRESS : RoomStatus.WAITING,
+      status: r.status === 'active' ? RoomStatus.ACTIVE : RoomStatus.WAITING,
       mode: 'auto',
       type: 'open',
       entryFeeSantim: Math.round(r.entryFeeETB * 100),
@@ -122,7 +120,7 @@ export default function Lobby() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           {/* Theme Toggle Button */}
           <button
-            onClick={toggle}
+            onClick={toggleTheme}
             className="theme-toggle-btn"
             aria-label="Toggle Light/Dark Theme"
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}

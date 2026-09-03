@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../store';
 import { useTheme } from '../useTheme';
 import { Button, Input, Toast } from '../components/ui';
-import { Sun, Moon, ArrowRight, UserPlus } from 'lucide-react';
+import { Sun, Moon, UserPlus } from 'lucide-react';
 
 export default function Register() {
   const { t } = useTranslation();

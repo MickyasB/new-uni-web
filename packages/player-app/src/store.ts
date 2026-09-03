@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { io, Socket } from 'socket.io-client';
 import { api, IS_NATIVE, DEFAULT_PROD_URL } from './api';
-import { dbService, DbUser } from './dbService';
+import { dbService } from './dbService';
 
 export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || (
   IS_NATIVE ? DEFAULT_PROD_URL : (

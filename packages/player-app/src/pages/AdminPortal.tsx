@@ -23,7 +23,6 @@ import {
   Moon,
   Plus,
   FileSpreadsheet,
-  Download,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { dbService, DbUser, DbDeposit, DbWithdrawal, DbRoom } from '../dbService';
@@ -56,6 +55,7 @@ export default function AdminPortal() {
   const [showAddRoom, setShowAddRoom] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
   const [newRoomFee, setNewRoomFee] = useState('10');
+  const [newRoomPot, setNewRoomPot] = useState('50');
   const [newRoomTier, setNewRoomTier] = useState<'bronze' | 'silver' | 'gold'>('silver');
 
   // Load and subscribe to dbService
@@ -141,16 +141,19 @@ export default function AdminPortal() {
     e.preventDefault();
     if (!newRoomName.trim()) return;
     const fee = parseInt(newRoomFee) || 10;
+    const pot = parseInt(newRoomPot) || (fee * 5);
     dbService.addRoom({
       name: newRoomName.trim(),
       tier: newRoomTier,
       entryFeeETB: fee,
-      potETB: fee * 5,
+      potETB: pot,
       playerCount: 0,
       maxPlayers: 20,
       status: 'waiting',
     });
     setNewRoomName('');
+    setNewRoomFee('10');
+    setNewRoomPot('50');
     setShowAddRoom(false);
     showNotification('🎮 New game room created successfully!');
   };
@@ -1295,7 +1298,28 @@ export default function AdminPortal() {
                     type="number"
                     placeholder="Entry Fee ETB"
                     value={newRoomFee}
-                    onChange={(e) => setNewRoomFee(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setNewRoomFee(val);
+                      const num = parseInt(val);
+                      if (!isNaN(num)) setNewRoomPot(String(num * 5));
+                    }}
+                    style={{
+                      flex: 1,
+                      background: 'var(--input-bg)',
+                      border: '1px solid var(--input-border)',
+                      borderRadius: '8px',
+                      padding: '0.6rem',
+                      color: 'var(--input-text)',
+                      fontSize: '0.85rem',
+                    }}
+                    required
+                  />
+                  <input
+                    type="number"
+                    placeholder="Prize Pot ETB"
+                    value={newRoomPot}
+                    onChange={(e) => setNewRoomPot(e.target.value)}
                     style={{
                       flex: 1,
                       background: 'var(--input-bg)',
@@ -1344,7 +1368,6 @@ export default function AdminPortal() {
             )}
 
             {rooms.map((r) => {
-              const autoConfig = dbService.getRooms().find((rm) => rm.id === r.id);
               return (
                 <div
                   key={r.id}

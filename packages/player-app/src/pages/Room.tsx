@@ -10,18 +10,16 @@ import {
   RoomRecord, 
   generateBingoCard,
   BingoPattern,
-  getPatternById,
-  assignRandomPatternForTier,
   verifyPatternMatch,
   formatUserDisplayId
 } from '@bingo/shared';
 import { getAutoRoomPatterns, RoomPatternConfig } from '../patterns';
-import { dbService, DbGameHistory } from '../dbService';
+import { dbService } from '../dbService';
 
 import GameHeader from '../components/GameHeader';
 import BingoCard from '../components/BingoCard';
 import PatternHintsModal from '../components/PatternHintsModal';
-import { Target, Zap, Volume2, VolumeX, Eye, Trophy, Sparkles, RotateCw, Boxes, Layers, Lock, Crown, Gamepad2, CheckCircle2, XCircle, Search, History, Clock } from 'lucide-react';
+import { Target, Volume2, VolumeX, Eye, Trophy, Sparkles, RotateCw, Boxes, Lock, Crown, Gamepad2, History, Clock, Zap, Layers, Search, CheckCircle2, XCircle } from 'lucide-react';
 import { soundFX } from '../utils/soundEffects';
 import { speakBingoCall } from '../utils/voiceCaller';
 
@@ -123,10 +121,6 @@ export default function Room() {
 
   const activeGamePattern: BingoPattern = useMemo(() => {
     return roomPatternConfig.primaryPattern;
-  }, [roomPatternConfig]);
-
-  const secondaryGamePattern: BingoPattern | undefined = useMemo(() => {
-    return roomPatternConfig.secondaryPattern;
   }, [roomPatternConfig]);
 
   const prevNumberRef = useRef<number | null>(null);
@@ -287,20 +281,44 @@ export default function Room() {
     // 1. Set active room ID in store (connects Socket.io)
     setActiveRoomId(roomId);
 
-    // 2. Fetch room, game, and cards data via REST
+    // 2. Fetch room, game, and cards data via REST & dbService
     const fetchRoomData = async () => {
+      const dbRooms = dbService.getRooms();
+      const dbRoom = dbRooms.find(r => r.id === roomId) || dbRooms.find(r => r.id.includes(roomId || '')) || dbRooms[0];
+      const fallbackFeeSantim = dbRoom ? Math.round(dbRoom.entryFeeETB * 100) : (roomId?.includes('gold') ? 5000 : 1000);
+      const fallbackPotSantim = dbRoom ? Math.round(dbRoom.potETB * 100) : (roomId?.includes('gold') ? 25000 : 5000);
+
       try {
         const data = await api.getRoom(roomId);
         if (data.room) {
+          const fee = parseInt(data.room.entry_fee_santim || data.room.entryFeeSantim || 0) || fallbackFeeSantim;
+          const pot = parseInt(data.room.pot_santim || data.room.potSantim || 0) || fallbackPotSantim;
           setRoomRecord({
             ...data.room,
-            entryFeeSantim: parseInt(data.room.entry_fee_santim || data.room.entryFeeSantim || 0),
-            potSantim: parseInt(data.room.pot_santim || data.room.potSantim || 0),
+            name: dbRoom?.name || data.room.name || (roomId?.includes('gold') ? 'Gold VIP Lounge' : 'Classic Hall'),
+            entryFeeSantim: fee,
+            potSantim: pot,
             minPlayers: data.room.min_players || data.room.minPlayers || 2,
             maxCards: data.room.max_cards || data.room.maxCards || 6,
             playerCount: data.room.player_count || data.room.playerCount || 0,
             createdAt: parseInt(data.room.created_at || data.room.createdAt || 0),
           } as any);
+        } else if (dbRoom) {
+          setRoomRecord((prev) => ({
+            ...(prev || {}),
+            id: dbRoom.id,
+            name: dbRoom.name,
+            tier: (dbRoom.tier as RoomTier) || RoomTier.SILVER,
+            status: dbRoom.status === 'active' ? RoomStatus.ACTIVE : RoomStatus.WAITING,
+            mode: 'auto',
+            type: 'open',
+            entryFeeSantim: fallbackFeeSantim,
+            potSantim: fallbackPotSantim,
+            minPlayers: 2,
+            maxCards: 6,
+            playerCount: dbRoom.playerCount || 1,
+            createdAt: Date.now(),
+          } as any));
         }
         if (data.game) {
           setGameRecord(data.game as any);
@@ -314,28 +332,20 @@ export default function Room() {
         }
       } catch (err) {
         console.warn('Failed to fetch room data:', err);
-        if (roomId?.includes('demo') || !roomRecord) {
-          setRoomRecord((prev) => prev || ({
-            id: roomId || 'room-bronze-demo',
-            tier: (roomId?.includes('gold') ? RoomTier.GOLD : roomId?.includes('silver') ? RoomTier.SILVER : RoomTier.BRONZE) as any,
-            status: RoomStatus.WAITING,
-            mode: 'auto',
-            type: 'open',
-            entryFeeSantim: roomId?.includes('gold') ? 10000 : roomId?.includes('silver') ? 5000 : 1000,
-            potSantim: roomId?.includes('gold') ? 50000 : roomId?.includes('silver') ? 25000 : 5000,
-            minPlayers: 2,
-            maxCards: 6,
-            playerCount: 1,
-            createdAt: Date.now(),
-          } as any));
-          setCards((prev) => {
-            if (prev.length > 0) return prev;
-            return [
-              { id: `card-demo-${Date.now()}-1`, numbers: generateBingoCard() },
-              { id: `card-demo-${Date.now()}-2`, numbers: generateBingoCard() }
-            ];
-          });
-        }
+        setRoomRecord((prev) => prev || ({
+          id: dbRoom?.id || roomId || 'room-classic-hall',
+          name: dbRoom?.name || (roomId?.includes('gold') ? 'Gold VIP Lounge' : 'Classic Hall'),
+          tier: (dbRoom?.tier as any) || (roomId?.includes('gold') ? RoomTier.GOLD : RoomTier.SILVER),
+          status: RoomStatus.WAITING,
+          mode: 'auto',
+          type: 'open',
+          entryFeeSantim: fallbackFeeSantim,
+          potSantim: fallbackPotSantim,
+          minPlayers: 2,
+          maxCards: 6,
+          playerCount: 1,
+          createdAt: Date.now(),
+        } as any));
       }
     };
 
@@ -884,22 +894,27 @@ export default function Room() {
               </div>
 
               {/* Card count selector & Custom Input */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '0.8rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                 {/* Stepper + Custom Number Input */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
                   <button
                     onClick={() => setBuyCardCount(Math.max(1, buyCardCount - 1))}
                     disabled={buyCardCount <= 1}
                     style={{
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '8px',
-                      border: '1px solid var(--card-border)',
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '12px',
+                      border: '1.5px solid var(--card-border)',
                       background: 'var(--surface-raised)',
                       color: 'var(--text-light)',
-                      fontSize: '1.2rem',
+                      fontSize: '1.3rem',
                       fontWeight: 800,
-                      cursor: buyCardCount <= 1 ? 'not-allowed' : 'pointer'
+                      cursor: buyCardCount <= 1 ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                      transition: 'all 0.15s ease',
                     }}
                   >
                     -
@@ -915,15 +930,17 @@ export default function Room() {
                       setBuyCardCount(Math.min(maxVal, Math.max(1, val)));
                     }}
                     style={{
-                      width: '70px',
-                      height: '36px',
+                      width: '84px',
+                      height: '42px',
                       textAlign: 'center',
-                      fontSize: '1.1rem',
-                      fontWeight: 800,
-                      borderRadius: '8px',
-                      border: '2px solid var(--primary-amber)',
+                      fontSize: '1.25rem',
+                      fontWeight: 900,
+                      borderRadius: '12px',
+                      border: '2px solid var(--primary-blue)',
                       background: 'var(--input-bg)',
-                      color: 'var(--input-text)'
+                      color: 'var(--input-text)',
+                      fontFamily: 'var(--font-mono)',
+                      outline: 'none',
                     }}
                   />
                   <button
@@ -933,24 +950,29 @@ export default function Room() {
                     }}
                     disabled={buyCardCount >= (roomRecord?.maxCards || 100)}
                     style={{
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '8px',
-                      border: '1px solid var(--card-border)',
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '12px',
+                      border: '1.5px solid var(--card-border)',
                       background: 'var(--surface-raised)',
                       color: 'var(--text-light)',
-                      fontSize: '1.2rem',
+                      fontSize: '1.3rem',
                       fontWeight: 800,
-                      cursor: buyCardCount >= (roomRecord?.maxCards || 100) ? 'not-allowed' : 'pointer'
+                      cursor: buyCardCount >= (roomRecord?.maxCards || 100) ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                      transition: 'all 0.15s ease',
                     }}
                   >
                     +
                   </button>
                 </div>
 
-                {/* Quick preset buttons */}
-                <div className="card-count-selector" style={{ flexWrap: 'wrap' }}>
-                  {[1, 2, 3, 4, 6, 10, 20, 50, 100].map((count) => {
+                {/* Quick preset buttons in balanced 4x2 grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.45rem' }}>
+                  {[1, 2, 3, 4, 6, 10, 20, 50].map((count) => {
                     const maxCards = roomRecord?.maxCards || 100;
                     const disabled = count > maxCards - cards.length;
                     const selected = buyCardCount === count;
@@ -959,8 +981,18 @@ export default function Room() {
                         key={count}
                         disabled={disabled}
                         onClick={() => setBuyCardCount(count)}
-                        className={`card-count-btn ${disabled ? 'disabled' : selected ? 'selected' : 'default'}`}
-                        style={{ minWidth: '38px' }}
+                        style={{
+                          height: '38px',
+                          borderRadius: '10px',
+                          border: selected ? '2px solid var(--primary-blue)' : '1px solid var(--card-border)',
+                          background: selected ? 'var(--primary-blue)' : 'var(--surface-raised)',
+                          color: selected ? '#ffffff' : 'var(--text-light)',
+                          fontWeight: 800,
+                          fontSize: '0.92rem',
+                          cursor: disabled ? 'not-allowed' : 'pointer',
+                          opacity: disabled ? 0.4 : 1,
+                          transition: 'all 0.15s ease',
+                        }}
                       >
                         {count}
                       </button>
@@ -969,26 +1001,26 @@ export default function Room() {
                 </div>
               </div>
 
-              {/* Price breakdown */}
-              <div className="price-breakdown">
-                <div>
-                  <div className="price-label">{t('lobby.pricePerCard') || 'Price per card'}</div>
-                  <div className="price-per-card">
-                    {roomRecord ? roomRecord.entryFeeSantim / 100 : 0} ETB
-                  </div>
+              {/* Modern Price Breakdown Receipt */}
+              <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--card-border)', borderRadius: '12px', padding: '0.75rem 0.9rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                  <span>Price per Card:</span>
+                  <span style={{ fontWeight: 700, color: 'var(--text-light)' }}>
+                    {roomRecord ? (roomRecord.entryFeeSantim / 100).toFixed(2) : '10.00'} ETB
+                  </span>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div className="price-total-label">{t('lobby.totalCost') || 'Total'}</div>
-                  <div className="price-total-value">
-                    {roomRecord ? (roomRecord.entryFeeSantim * buyCardCount) / 100 : 0} ETB
-                  </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.92rem', fontWeight: 800, borderTop: '1px dashed var(--card-border)', paddingTop: '0.45rem' }}>
+                  <span style={{ color: 'var(--text-light)' }}>Total Cost:</span>
+                  <span style={{ color: 'var(--primary-blue)', fontSize: '1.05rem', fontFamily: 'var(--font-mono)' }}>
+                    {roomRecord ? ((roomRecord.entryFeeSantim * buyCardCount) / 100).toFixed(2) : (10 * buyCardCount).toFixed(2)} ETB
+                  </span>
                 </div>
               </div>
 
               {/* Balance display */}
-              <div className="balance-display">
-                <span>{t('common.yourBalance') || 'Your balance:'}</span>
-                <span className={`balance-value ${(userRecord?.walletBalanceSantim || 0) >= (roomRecord ? roomRecord.entryFeeSantim * buyCardCount : 0) ? 'balance-sufficient' : 'balance-insufficient'}`}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', padding: '0 0.25rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>{t('common.yourBalance') || 'Your Available Balance:'}</span>
+                <span style={{ fontWeight: 800, color: (userRecord?.walletBalanceSantim || 0) >= (roomRecord ? roomRecord.entryFeeSantim * buyCardCount : 1000 * buyCardCount) ? 'var(--success)' : 'var(--danger)' }}>
                   {userRecord ? (userRecord.walletBalanceSantim / 100).toFixed(2) : '0.00'} ETB
                 </span>
               </div>
@@ -998,15 +1030,23 @@ export default function Room() {
                 className="btn btn-primary buy-btn-custom"
                 onClick={handleBuyCards}
                 disabled={buyLoading || cards.length >= (roomRecord?.maxCards || 100)}
+                style={{
+                  height: '48px',
+                  borderRadius: '12px',
+                  fontSize: '0.95rem',
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  boxShadow: '0 4px 16px rgba(37, 99, 235, 0.35)',
+                }}
               >
                 {buyLoading
-                  ? (t('common.purchasing') || 'Purchasing...')
+                  ? (t('common.purchasing') || 'Purchasing Cards...')
                   : cards.length >= (roomRecord?.maxCards || 100)
-                    ? (t('lobby.maxCardsReached') || 'Max Cards Reached')
-                    : t('lobby.buyCardsCountPrice', {
-                        count: buyCardCount,
-                        price: roomRecord ? (roomRecord.entryFeeSantim * buyCardCount) / 100 : 0
-                      }) || `Buy ${buyCardCount} Card${buyCardCount > 1 ? 's' : ''} — ${roomRecord ? (roomRecord.entryFeeSantim * buyCardCount) / 100 : 0} ETB`
+                    ? (t('lobby.maxCardsReached') || 'Max Cards Limit Reached')
+                    : `Buy ${buyCardCount} Card${buyCardCount > 1 ? 's' : ''} — ${roomRecord ? ((roomRecord.entryFeeSantim * buyCardCount) / 100).toFixed(2) : (10 * buyCardCount).toFixed(2)} ETB`
                 }
               </button>
             </div>

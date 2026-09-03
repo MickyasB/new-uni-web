@@ -10,7 +10,7 @@ import {
 } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from './store';
-import { Gamepad2, Wallet, User, Trophy } from 'lucide-react';
+import { Gamepad2, Wallet, User } from 'lucide-react';
 
 import Login from './pages/Login';
 import Register from './pages/Register';

@@ -16,11 +16,7 @@ import {
   Trash2, 
   FileText,
   Scale,
-  Info,
-  HelpCircle,
-  PhoneCall,
-  ChevronRight,
-  ShieldAlert
+  ChevronRight
 } from 'lucide-react';
 
 export default function Profile() {
