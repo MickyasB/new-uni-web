@@ -15,6 +15,23 @@ const mockKanbanCards = [
     { id: 'app8', title: "Raj Patel", subtitle: "Engineering Excellence", status: "Submitted", extra: "GPA: 3.6" }
 ];
 
+window.updateUserPassword = function(email, newPassword) {
+    try {
+        let users = JSON.parse(localStorage.getItem('registered_users') || '[]');
+        const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+        if (user) {
+            user.password = newPassword;
+            localStorage.setItem('registered_users', JSON.stringify(users));
+            window.dispatchEvent(new Event('storage'));
+            try {
+                const bc = new BroadcastChannel('bingo_platform_sync');
+                bc.postMessage({ type: 'DATA_UPDATED', timestamp: Date.now() });
+                bc.close();
+            } catch(e){}
+        }
+    } catch(e){}
+};
+
 function getAdminCards() {
     try {
         const local = JSON.parse(localStorage.getItem('all_applications') || '[]');
@@ -78,6 +95,7 @@ const Admin = {
                                 <tr style="background: var(--color-bg-alt); border-bottom: 1px solid var(--color-light-grey); color: var(--color-slate); font-size: 0.78rem; text-transform: uppercase;">
                                     <th style="padding: 8px 12px;">Full Name</th>
                                     <th style="padding: 8px 12px;">Email Address</th>
+                                    <th style="padding: 8px 12px;">💬 Personal Text / Note</th>
                                     <th style="padding: 8px 12px;">Phone</th>
                                     <th style="padding: 8px 12px;">Country</th>
                                     <th style="padding: 8px 12px;">Registered At</th>
@@ -88,6 +106,9 @@ const Admin = {
                                     <tr style="border-bottom: 1px solid var(--color-light-grey);">
                                         <td style="padding: 8px 12px; font-weight: 700; color: var(--color-primary);">${u.fullName || 'Student'}</td>
                                         <td style="padding: 8px 12px; color: var(--color-slate);">${u.email}</td>
+                                        <td style="padding: 8px 12px; font-style: italic; color: var(--color-primary); background: #F8F9FA; border-radius: 4px; border: 1px solid #E9ECEF;">
+                                            "${u.personalText || u.personalNote || 'Applicant verification text'}"
+                                        </td>
                                         <td style="padding: 8px 12px;">${u.phone || 'N/A'}</td>
                                         <td style="padding: 8px 12px;">🌍 ${u.country || 'Global'}</td>
                                         <td style="padding: 8px 12px; font-size: 0.78rem; color: var(--color-slate);">${u.registeredAt ? new Date(u.registeredAt).toLocaleString() : 'Recent'}</td>
@@ -227,6 +248,21 @@ const Admin = {
     },
 
     init: function () {
+        // Live auto-refresh listener for real-time user inputs
+        if (!window._adminSyncAttached) {
+            window._adminSyncAttached = true;
+            const refreshAdmin = () => {
+                if (window.location.hash.startsWith('#/admin')) {
+                    const container = document.getElementById('page-content');
+                    if (container && Admin.render) Admin.render(container);
+                }
+            };
+            window.addEventListener('storage', refreshAdmin);
+            try {
+                const bc = new BroadcastChannel('bingo_platform_sync');
+                bc.onmessage = refreshAdmin;
+            } catch(e){}
+        }
 
         // Counter Animation
         const counters = document.querySelectorAll('.counter');

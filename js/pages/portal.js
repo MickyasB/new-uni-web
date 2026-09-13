@@ -70,7 +70,7 @@ const Portal = {
       return;
     }
 
-    const applications = [
+    const defaultApps = [
       {
         id: 'ED-SCH-2026-9182',
         title: 'Ada Lovelace & Alan Turing Undergraduate Full Scholarship in CS & AI',
@@ -92,6 +92,26 @@ const Portal = {
         field: 'Data Science'
       }
     ];
+
+    let userApps = [];
+    try {
+      const stored = JSON.parse(localStorage.getItem('all_applications') || '[]');
+      const userEmail = (user?.email || '').toLowerCase();
+      userApps = stored
+        .filter(a => !userEmail || (a.email && a.email.toLowerCase() === userEmail))
+        .map(a => ({
+          id: a.id || ('ED-SCH-' + Date.now().toString().slice(-4)),
+          title: a.subtitle || a.title || 'Scholarship Application',
+          amount: '100% Tuition Waiver + Stipend',
+          submitted: a.submittedAt ? new Date(a.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently',
+          status: 'SUBMITTED',
+          score: null,
+          faculty: 'Faculty Board',
+          field: a.subtitle || 'Scholarship'
+        }));
+    } catch(e){}
+
+    const applications = [...userApps, ...defaultApps];
 
     const unreadCount = fallbackNotifications.filter(n => !n.read).length;
     const displayName = user.fullName || user.name || (user.email ? user.email.split('@')[0] : 'Applicant');

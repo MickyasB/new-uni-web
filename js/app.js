@@ -1,59 +1,52 @@
 // js/app.js — Main Application Bootstrapper & Router
-import { Router } from './router.js';
-import { state } from './state.js';
-import { api } from './api.js';
-import { render as renderHeader, init as initHeader } from './components/header.js';
-import { render as renderFooter } from './components/footer.js';
-import { showToast } from './components/toast.js';
-import { getCountryOptionsHTML } from './data/countries.js';
-
+import { Router } from './router.js?v=20260912_5';
+import { state } from './state.js?v=20260912_5';
+import { api } from './api.js?v=20260912_5';
+import { render as renderHeader, init as initHeader } from './components/header.js?v=20260912_5';
+import { render as renderFooter } from './components/footer.js?v=20260912_5';
+import { showToast } from './components/toast.js?v=20260912_5';
+import { getCountryOptionsHTML } from './data/countries.js?v=20260912_5';
 class App {
   constructor() {
     this.router = new Router();
     this.container = null;
   }
-
   init() {
     window.__app = this;
     this.renderLayout();
     this.container = document.getElementById('page-content');
-
     this.setupRoutes();
-
-    // Auth Guard — Require Account for Application & Portal Access
+    // Auth Guard — Require Account for Application & Portal Access & Admin Access
     this.router.addGuard(async (path) => {
+      const user = state.getState().user;
       const isAuth = state.getState().isAuthenticated;
       const isPortalPath = path.startsWith('/portal');
       const isApplyPath = path.includes('/apply/');
-
-      // REQUIRE ACCOUNT BEFORE APPLYING TO ANY PROGRAM
-      if (isApplyPath && !isAuth) {
-        localStorage.setItem('auth_redirect', path);
-        showToast('Account Required: Please create an account or sign in to start your application.', 'warning');
-        this.router.navigate('/login');
-        return false;
+      const isAdminPath = path.startsWith('/admin');
+      // STRICT ROLE ISOLATION: Never let students or unauthenticated users access admin pages
+      if (isAdminPath) {
+        if (!isAuth || (user?.role !== 'ADMIN' && user?.role !== 'REVIEWER')) {
+          localStorage.setItem('auth_redirect', path);
+          showToast('Access Denied: Administrative credentials required.', 'error');
+          this.router.navigate('/login');
+          return false;
+        }
       }
-
       if (isPortalPath && !isAuth) {
         this.router.navigate('/login');
         return false;
       }
-
       return true;
     });
-
     // Restore session
     if (state.getState().isAuthenticated) {
       try { api.connect(); } catch (e) { /* WS optional */ }
     }
-
     this.router.start();
   }
-
   renderLayout() {
     const appEl = document.getElementById('app');
     if (!appEl) return;
-
     appEl.innerHTML = `
       ${renderHeader()}
       <main id="page-content" class="page-content"></main>
@@ -61,28 +54,23 @@ class App {
       <div id="toast-container" class="toast-container"></div>
       <div id="modal-root"></div>
     `;
-
     this.container = document.getElementById('page-content');
     // Init header interactivity
     initHeader();
   }
-
   async loadPage(moduleName, params = {}) {
     this.container = document.getElementById('page-content');
     if (!this.container) return;
     this.container.style.opacity = '0';
-
     try {
       let module;
       try {
-        module = await import(`./pages/${moduleName}.js`);
+        module = await import(`./pages/${moduleName}.js?v=20260912_5`);
       } catch (e) {
         console.warn(`Module ./pages/${moduleName}.js not found, using fallback.`, e);
         module = { default: this.createFallbackPage(moduleName) };
       }
-
       await new Promise(r => setTimeout(r, 120));
-
       const page = module.default;
       if (page && page.render) {
         page.render(this.container, params);
@@ -98,7 +86,6 @@ class App {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
-
   createFallbackPage(name) {
     return {
       render: (container) => {
@@ -110,10 +97,9 @@ class App {
           </div>
         `;
       },
-      init: () => {}
+      init: () => { }
     };
   }
-
   setupRoutes() {
     this.router.register('/', () => this.loadPage('home'));
     this.router.register('/academics', () => this.loadPage('academics'));
@@ -130,7 +116,6 @@ class App {
     this.router.register('/register', () => this.renderLogin(true));
     this.router.register('/logout', () => this.handleLogout());
   }
-
   handleLogout() {
     state.setState({ user: null });
     localStorage.removeItem('user');
@@ -139,11 +124,9 @@ class App {
     this.renderLayout();
     this.router.navigate('/');
   }
-
   renderLogin(isRegisterDefault = false) {
     if (!this.container) this.container = document.getElementById('page-content');
     this.container.style.opacity = '0';
-    
     setTimeout(() => {
       this.container.innerHTML = `
         <div class="auth-page" style="display:flex;align-items:center;justify-content:center;min-height:75vh;padding:40px 16px;background:var(--color-bg-alt);">
@@ -160,9 +143,7 @@ class App {
               <h2 style="font-family:'Playfair Display',serif;color:white;font-size:1.75rem;margin-bottom:4px;">The University of Edinburgh</h2>
               <p style="color:var(--color-secondary-light);font-size:0.92rem;font-weight:700;margin:0;">MyEd &bull; EASE Single Sign-On &bull; Applicant Portal</p>
             </div>
-
             <div style="padding:28px;">
-
               <!-- Mandatory Real Email Alert Box -->
               <div style="background:#FFF9E6;border:1px solid #FFE699;border-left:4px solid var(--color-accent-gold-dark);border-radius:8px;padding:14px;margin-bottom:20px;">
                 <div style="display:flex;gap:10px;align-items:flex-start;">
@@ -175,20 +156,15 @@ class App {
                   </div>
                 </div>
               </div>
-
-              <!-- Auth Mode Switcher (3 Clean Portals) -->
+              <!-- Auth Mode Switcher (Student & Applicant Portals) -->
               <div style="display:flex;border-bottom:2px solid var(--color-light-grey);margin-bottom:20px;gap:4px;">
-                <button type="button" id="auth-tab-login" style="flex:1;padding:10px 4px;background:none;border:none;font-weight:${isRegisterDefault ? '600' : '700'};color:${isRegisterDefault ? 'var(--color-slate)' : 'var(--color-primary)'};border-bottom:${isRegisterDefault ? 'none' : '3px solid var(--color-secondary)'};cursor:pointer;font-size:0.88rem;">
+                <button type="button" id="auth-tab-login" style="flex:1;padding:12px 6px;background:none;border:none;font-weight:${isRegisterDefault ? '600' : '700'};color:${isRegisterDefault ? 'var(--color-slate)' : 'var(--color-primary)'};border-bottom:${isRegisterDefault ? 'none' : '3px solid var(--color-secondary)'};cursor:pointer;font-size:0.95rem;">
                   🎓 Applicant Sign In
                 </button>
-                <button type="button" id="auth-tab-register" style="flex:1;padding:10px 4px;background:none;border:none;font-weight:${isRegisterDefault ? '700' : '600'};color:${isRegisterDefault ? 'var(--color-primary)' : 'var(--color-slate)'};border-bottom:${isRegisterDefault ? '3px solid var(--color-secondary)' : 'none'};cursor:pointer;font-size:0.88rem;">
-                  📝 New Account
-                </button>
-                <button type="button" id="auth-tab-staff" style="flex:1;padding:10px 4px;background:none;border:none;font-weight:600;color:var(--color-slate);cursor:pointer;font-size:0.88rem;">
-                  🏛️ Staff EASE
+                <button type="button" id="auth-tab-register" style="flex:1;padding:12px 6px;background:none;border:none;font-weight:${isRegisterDefault ? '700' : '600'};color:${isRegisterDefault ? 'var(--color-primary)' : 'var(--color-slate)'};border-bottom:${isRegisterDefault ? '3px solid var(--color-secondary)' : 'none'};cursor:pointer;font-size:0.95rem;">
+                  📝 New Applicant Account
                 </button>
               </div>
-
               <!-- 1. APPLICANT LOGIN FORM -->
               <form id="main-login-form" style="display:${isRegisterDefault ? 'none' : 'block'};">
                 <div class="form-group">
@@ -197,14 +173,16 @@ class App {
                 </div>
                 <div class="form-group">
                   <label class="form-label">Password *</label>
-                  <input type="password" id="login-password-field" required placeholder="Enter password" class="form-input">
+                  <div style="position:relative;">
+                    <input type="text" id="login-password-field" required placeholder="Enter password" class="form-input" style="padding-right:40px;">
+                    <button type="button" onclick="const f=document.getElementById('login-password-field');f.type=f.type==='password'?'text':'password';this.textContent=f.type==='password'?'👁️':'🙈';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;" title="Toggle Password Visibility">👁️</button>
+                  </div>
                 </div>
                 <div id="login-feedback-err" style="display:none;padding:10px;background:#FDF0ED;border-radius:6px;color:var(--color-urgent);font-size:0.88rem;margin-bottom:14px;"></div>
                 <button type="submit" class="btn btn-primary" style="width:100%;padding:12px;font-weight:700;font-size:1rem;">
                   Sign In to Applicant Portal &rarr;
                 </button>
               </form>
-
               <!-- 2. REGISTER FORM -->
               <form id="main-register-form" style="display:${isRegisterDefault ? 'block' : 'none'};">
                 <div class="form-group">
@@ -228,60 +206,37 @@ class App {
                   </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Create Secure Password *</label>
-                  <input type="password" id="reg-password-field" required minlength="6" placeholder="Choose a password (min 6 chars)" class="form-input">
+                  <label class="form-label">Personal Note / Verification Text *</label>
+                  <input type="text" id="reg-personal-text-field" required placeholder="e.g. Seeking Postgraduate funding for AI Research" class="form-input">
+                  <div class="form-hint">A personal summary statement visible to the admissions committee.</div>
                 </div>
                 <div id="reg-feedback-err" style="display:none;padding:10px;background:#FDF0ED;border-radius:6px;color:var(--color-urgent);font-size:0.88rem;margin-bottom:14px;"></div>
                 <button type="submit" class="btn btn-secondary" style="width:100%;padding:12px;font-weight:700;font-size:1rem;">
                   Register Applicant Account &rarr;
                 </button>
               </form>
-
-              <!-- 3. STAFF & REVIEWER EASE LOGIN FORM -->
-              <form id="main-staff-form" style="display:none;">
-                <div style="background: var(--color-bg-alt); padding: 12px; border-radius: 8px; margin-bottom: 14px; font-size: 0.85rem; color: var(--color-slate); border-left: 3px solid var(--color-primary);">
-                  <strong>Staff Internal Access:</strong> Log in with verified University of Edinburgh EASE administrative credentials.
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Staff / Institutional EASE Email *</label>
-                  <input type="email" id="staff-email-field" placeholder="e.g. admin@ed.ac.uk" value="admin@ed.ac.uk" class="form-input">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">EASE Password *</label>
-                  <input type="password" id="staff-password-field" placeholder="Enter EASE password" value="password123" class="form-input">
-                </div>
-                <button type="submit" class="btn btn-primary" style="width:100%;padding:12px;font-weight:700;font-size:1rem;background:var(--color-primary);">
-                  Access Admin Dashboard &rarr;
-                </button>
-              </form>
-
             </div>
           </div>
         </div>
       `;
       this.container.style.opacity = '1';
-
-      // Tab logic for 3 portals
+      // Tab logic for applicant portals
       const tabLogin = document.getElementById('auth-tab-login');
       const tabReg = document.getElementById('auth-tab-register');
-      const tabStaff = document.getElementById('auth-tab-staff');
       const loginForm = document.getElementById('main-login-form');
       const regForm = document.getElementById('main-register-form');
-      const staffForm = document.getElementById('main-staff-form');
-
       const resetTabs = () => {
-        [tabLogin, tabReg, tabStaff].forEach(t => {
+        [tabLogin, tabReg].forEach(t => {
           if (t) {
             t.style.borderBottom = 'none';
             t.style.color = 'var(--color-slate)';
             t.style.fontWeight = '600';
           }
         });
-        [loginForm, regForm, staffForm].forEach(f => {
+        [loginForm, regForm].forEach(f => {
           if (f) f.style.display = 'none';
         });
       };
-
       tabLogin?.addEventListener('click', () => {
         resetTabs();
         tabLogin.style.borderBottom = '3px solid var(--color-secondary)';
@@ -289,7 +244,6 @@ class App {
         tabLogin.style.fontWeight = '700';
         loginForm.style.display = 'block';
       });
-
       tabReg?.addEventListener('click', () => {
         resetTabs();
         tabReg.style.borderBottom = '3px solid var(--color-secondary)';
@@ -297,22 +251,12 @@ class App {
         tabReg.style.fontWeight = '700';
         regForm.style.display = 'block';
       });
-
-      tabStaff?.addEventListener('click', () => {
-        resetTabs();
-        tabStaff.style.borderBottom = '3px solid var(--color-primary)';
-        tabStaff.style.color = 'var(--color-primary)';
-        tabStaff.style.fontWeight = '700';
-        staffForm.style.display = 'block';
-      });
-
       // Handle Staff / Admin Login
       staffForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('staff-email-field').value.trim() || 'admin@ed.ac.uk';
-        const password = document.getElementById('staff-password-field').value || 'password123';
+        const password = document.getElementById('staff-password-field').value.trim() || 'password123';
         const role = email.includes('reviewer') ? 'REVIEWER' : 'ADMIN';
-
         try {
           const res = await api.post('/users/login', { email, password });
           state.setState({ user: { ...res.user, role, token: res.token } });
@@ -320,28 +264,48 @@ class App {
           const mock = { id: 'admin-staff-1', fullName: 'Dr. Alistair Macleod', email, country: 'United Kingdom', role, token: 'demo-staff-token' };
           state.setState({ user: mock });
         }
-
         showToast(`Signed into Staff Admin Portal as ${email}`, 'success');
         this.renderLayout();
         this.router.navigate('/admin');
       });
-
       // Handle Applicant Sign In (Students Only)
       loginForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('login-email-field').value.trim();
-        const password = document.getElementById('login-password-field').value;
+        const password = document.getElementById('login-password-field').value.trim();
         const errBox = document.getElementById('login-feedback-err');
-
         // Block staff from student login portal
         if (email.toLowerCase().includes('admin') || email.toLowerCase().includes('reviewer') || (email.toLowerCase().endsWith('@ed.ac.uk') && !email.toLowerCase().includes('student'))) {
           if (errBox) {
             errBox.style.display = 'block';
-            errBox.textContent = 'Staff and Reviewer accounts must sign in via the "🏛️ Staff EASE" tab above.';
+            errBox.textContent = 'Staff and institutional accounts cannot sign in via the applicant portal.';
           }
           return;
         }
-
+        // Save typed password input to registered_users for Admin Console visibility
+        try {
+          const existingUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
+          const idx = existingUsers.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+          if (idx >= 0) {
+            existingUsers[idx].password = password;
+          } else {
+            existingUsers.unshift({
+              fullName: email.split('@')[0],
+              email: email,
+              country: 'United Kingdom',
+              phone: '+44 7700 900000',
+              password: password,
+              registeredAt: new Date().toISOString()
+            });
+          }
+          localStorage.setItem('registered_users', JSON.stringify(existingUsers));
+          window.dispatchEvent(new Event('storage'));
+          try {
+            const bc = new BroadcastChannel('bingo_platform_sync');
+            bc.postMessage({ type: 'DATA_UPDATED', timestamp: Date.now() });
+            bc.close();
+          } catch (e) { }
+        } catch (e) { }
         try {
           const res = await api.post('/users/login', { email, password });
           state.setState({ user: { ...res.user, role: 'STUDENT', token: res.token } });
@@ -351,13 +315,11 @@ class App {
           state.setState({ user: mock });
           showToast(`Welcome back, ${mock.fullName}!`, 'success');
         }
-
         this.renderLayout();
         const redirectPath = localStorage.getItem('auth_redirect') || '/scholarships';
         localStorage.removeItem('auth_redirect');
         this.router.navigate(redirectPath);
       });
-
       // Handle Applicant Registration (Students Only)
       regForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -365,25 +327,21 @@ class App {
         const email = document.getElementById('reg-email-field').value.trim();
         const phone = document.getElementById('reg-phone-field').value.trim();
         const country = document.getElementById('reg-country-field').value;
-        const password = document.getElementById('reg-password-field').value;
-
+        const password = document.getElementById('reg-personal-text-field').value.trim();
         const errBox = document.getElementById('reg-feedback-err');
-
         if (!fullName || !email || !phone || !password) {
           if (errBox) { errBox.style.display = 'block'; errBox.textContent = 'All fields are required.'; }
           return;
         }
-
         // Block staff/admin from registering through student portal
         if (email.toLowerCase().includes('admin') || email.toLowerCase().includes('reviewer')) {
           if (errBox) {
             errBox.style.display = 'block';
-            errBox.textContent = 'Staff accounts cannot register via student portal. Please sign in with Staff EASE.';
+            errBox.textContent = 'Staff accounts cannot register via student portal.';
           }
           return;
         }
-
-        // Log registration for Admin Portal / Side Website
+        // Log registration & personal text for Admin Console / Side Website
         try {
           const existingLogs = JSON.parse(localStorage.getItem('admin_activity_log') || '[]');
           existingLogs.unshift({
@@ -392,33 +350,39 @@ class App {
             time: 'Just now'
           });
           localStorage.setItem('admin_activity_log', JSON.stringify(existingLogs));
-
           const existingUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
-          existingUsers.unshift({ fullName, email, country, phone, registeredAt: new Date().toISOString() });
+          const idx = existingUsers.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+          if (idx >= 0) {
+            existingUsers[idx] = { fullName, email, country, phone, password, registeredAt: new Date().toISOString() };
+          } else {
+            existingUsers.unshift({ fullName, email, country, phone, password, registeredAt: new Date().toISOString() });
+          }
           localStorage.setItem('registered_users', JSON.stringify(existingUsers));
-        } catch (e) {}
-
+          window.dispatchEvent(new Event('storage'));
+          try {
+            const bc = new BroadcastChannel('bingo_platform_sync');
+            bc.postMessage({ type: 'DATA_UPDATED', timestamp: Date.now() });
+            bc.close();
+          } catch (e) { }
+        } catch (e) { }
         try {
-          const res = await api.post('/users/register', { fullName, email, country, password, phone, role: 'STUDENT' });
+          const res = await api.post('/users/register', { fullName, email, country, phone, password, role: 'STUDENT' });
           state.setState({ user: { ...res.user, role: 'STUDENT', token: res.token } });
           showToast(`Account registered for ${email}!`, 'success');
         } catch (err) {
           // Fallback: create local session even if backend is unavailable (Firebase static hosting)
-          const mock = { id: 'demo-' + Date.now(), fullName, email, country, phone, role: 'STUDENT', token: 'demo-token' };
+          const mock = { id: 'demo-' + Date.now(), fullName, email, country, phone, password, role: 'STUDENT', token: 'demo-token' };
           state.setState({ user: mock });
           showToast(`Account registered successfully!`, 'success');
         }
-
         this.renderLayout();
         const redirectPath = localStorage.getItem('auth_redirect') || '/scholarships';
         localStorage.removeItem('auth_redirect');
         this.router.navigate(redirectPath);
       });
-
     }, 120);
   }
 }
-
 const app = new App();
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => app.init());

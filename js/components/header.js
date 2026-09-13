@@ -54,10 +54,8 @@ export function render() {
               </a>
               <a href="#/logout" style="color: rgba(255,255,255,0.7); margin-left: 4px;">Sign Out</a>
             ` : `
-              <span class="topbar-divider">&bull;</span>
-              <a href="#/login?tab=staff" style="color: var(--color-accent-gold-light); font-weight: 700;" title="EASE Staff Access">
-                🏛️ Staff Portal
-              </a>
+              <span class="topbar-divider">|</span>
+              <a href="#/login" style="color: #FFF; font-weight: 600;">Sign In</a>
             `}
           </div>
         </div>
@@ -112,11 +110,8 @@ export function render() {
                 </a>
               ` : `
                 <div style="display: flex; gap: 8px;">
-                  <a href="#/login" class="btn btn-outline" style="font-size: 0.82rem; padding: 6px 12px;">
+                  <a href="#/login" class="btn btn-primary" style="font-size: 0.85rem; padding: 8px 16px; font-weight: 600;">
                     Applicant Sign In
-                  </a>
-                  <a href="#/login?tab=staff" class="btn btn-primary" style="font-size: 0.82rem; padding: 6px 12px; background: var(--color-primary);">
-                    Staff EASE
                   </a>
                 </div>
               `}

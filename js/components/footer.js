@@ -63,9 +63,6 @@ export function render() {
               <li><a href="#/scholarships" style="color: #CBD2D9;">Edinburgh Global Scholarship Portal</a></li>
               <li><a href="#/campus-life" style="color: #CBD2D9;">Pollock Halls &amp; Accommodation</a></li>
               <li><a href="#/research" style="color: #CBD2D9;">Bayes Centre &amp; Research Institutes</a></li>
-              <li style="margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
-                <a href="#/admin" style="color: #7B8794; font-size: 0.8rem;">Staff &amp; Reviewer EASE Login &rarr;</a>
-              </li>
             </ul>
           </div>
 

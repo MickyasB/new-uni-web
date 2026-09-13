@@ -1,11 +1,5 @@
 {
-  "projects": { "default": "bingo-platform-prod" },
-  "targets": {
-    "bingo-platform-prod": {
-      "hosting": {
-        "player": ["bingo-platform-player"],
-        "admin": ["bingo-platform-admin"]
-      }
-    }
+  "projects": {
+    "default": "uon-scholar-2026"
   }
 }
