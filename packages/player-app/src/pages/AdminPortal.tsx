@@ -1562,12 +1562,49 @@ export default function AdminPortal() {
                       ))}
                     </select>
 
-                    {r.winningPatternId && r.winningPatternId !== 'auto' && (() => {
-                      const activePat = BINGO_PATTERNS.find(p => p.id === r.winningPatternId);
-                      if (!activePat) return null;
+                    {(() => {
+                      const pid = r.winningPatternId && r.winningPatternId !== 'auto' ? r.winningPatternId : null;
+                      const activePat = pid ? BINGO_PATTERNS.find(p => p.id === pid) : null;
+                      if (!activePat) return (
+                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', padding: '3px 6px', borderRadius: '4px', fontStyle: 'italic' }}>
+                          ✨ Select a pattern above to preview its diagram
+                        </div>
+                      );
                       return (
-                        <div style={{ fontSize: '0.68rem', color: '#10B981', background: 'rgba(16, 185, 129, 0.08)', padding: '3px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span>✓ Active Admin Target: <strong>{activePat.name}</strong> — {activePat.description}</span>
+                        <div style={{ background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: '8px', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          {/* Pattern name & description */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#10B981' }}>✓ {activePat.name}</span>
+                            <span style={{ fontSize: '0.63rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>{activePat.description}</span>
+                            {activePat.isCrazy && <span style={{ fontSize: '0.6rem', background: 'rgba(245,158,11,0.18)', color: '#F59E0B', borderRadius: '3px', padding: '1px 4px', fontWeight: 700 }}>CRAZY (Any Rotation)</span>}
+                            {activePat.isAnywhereBlock && <span style={{ fontSize: '0.6rem', background: 'rgba(99,102,241,0.15)', color: '#818CF8', borderRadius: '3px', padding: '1px 4px', fontWeight: 700 }}>ANYWHERE BLOCK</span>}
+                          </div>
+                          {/* 5x5 grid diagram */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignSelf: 'center' }}>
+                            {/* Column headers B I N G O */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 22px)', gap: '2px', marginBottom: '1px' }}>
+                              {['B','I','N','G','O'].map(col => (
+                                <div key={col} style={{ width: '22px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', fontWeight: 900, color: 'var(--primary-amber)', letterSpacing: '0.05em' }}>{col}</div>
+                              ))}
+                            </div>
+                            {/* Grid rows */}
+                            {activePat.grid.map((row, ri) => (
+                              <div key={ri} style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 22px)', gap: '2px' }}>
+                                {row.map((cell, ci) => (
+                                  <div key={ci} style={{
+                                    width: '22px', height: '22px',
+                                    borderRadius: '4px',
+                                    background: cell ? 'linear-gradient(135deg, #F59E0B, #D97706)' : 'rgba(255,255,255,0.05)',
+                                    border: cell ? '1.5px solid #F59E0B' : '1px solid rgba(255,255,255,0.1)',
+                                    boxShadow: cell ? '0 0 6px rgba(245,158,11,0.4)' : 'none',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  }}>
+                                    {cell && <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)' }} />}
+                                  </div>
+                                ))}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       );
                     })()}
