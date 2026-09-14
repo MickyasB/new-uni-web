@@ -10,6 +10,7 @@ import {
   RoomRecord, 
   generateBingoCard,
   BingoPattern,
+  BINGO_PATTERNS,
   verifyPatternMatch,
   formatUserDisplayId
 } from '@bingo/shared';
@@ -113,15 +114,30 @@ export default function Room() {
     }
   }, [roomId, setActiveRoomId]);
 
-  // Automated pattern setup based strictly on room tier & house size (1 for small, 2 for big house)
+  const [dbTick, setDbTick] = useState(0);
+  useEffect(() => {
+    return dbService.subscribe(() => setDbTick(t => t + 1));
+  }, []);
+
+  // Automated pattern setup or Admin-designated winning pattern
   const roomPatternConfig: RoomPatternConfig = useMemo(() => {
     const feeETB = (roomRecord?.entryFeeSantim || 1000) / 100;
     return getAutoRoomPatterns(roomRecord?.tier || 'silver', feeETB);
   }, [roomRecord?.tier, roomRecord?.entryFeeSantim]);
 
   const activeGamePattern: BingoPattern = useMemo(() => {
+    const dbRoom = dbService.getRooms().find(r => r.id === roomId);
+    const patternId = (roomRecord as any)?.winningPatternId || (roomRecord as any)?.patternId || (dbRoom as any)?.winningPatternId;
+    if (patternId && patternId !== 'auto') {
+      const found = BINGO_PATTERNS.find(p => p.id === patternId);
+      if (found) return found;
+    }
     return roomPatternConfig.primaryPattern;
-  }, [roomPatternConfig]);
+  }, [roomPatternConfig, roomId, roomRecord, dbTick]);
+
+  const previousGameResult = useMemo(() => {
+    return dbService.getLastGameResult(roomId);
+  }, [roomId, dbTick]);
 
   const prevNumberRef = useRef<number | null>(null);
   const buyPanelRef = useRef<HTMLDivElement>(null);
@@ -162,6 +178,17 @@ export default function Room() {
     return unsub;
   }, [roomId, roomRecord, cards.length, localDemoGame.active]);
 
+  const handleReturnToRoom = useCallback(() => {
+    setCards([]);
+    setBlockedCards(new Set());
+    setManualMarks({});
+    setLocalDemoGame({ active: false, calledNumbers: [] });
+    setShowVictoryModal(false);
+    if (roomId) {
+      dbService.resetRoomToWaiting(roomId);
+    }
+  }, [roomId]);
+
   useEffect(() => {
     if (!localDemoGame.active) return;
     const timer = setInterval(() => {
@@ -169,7 +196,26 @@ export default function Room() {
         const remaining = Array.from({ length: 75 }, (_, i) => i + 1).filter(n => !prev.calledNumbers.includes(n));
         if (remaining.length === 0) {
           clearInterval(timer);
-          return prev;
+          const pot = roomRecord ? Math.floor((roomRecord.potSantim * 85) / 100 / 100) : 136;
+          const fee = roomRecord ? roomRecord.entryFeeSantim / 100 : 10;
+          const result = dbService.recordGameResult({
+            roomId: roomId || 'room-classic-hall',
+            roomName: (roomRecord as any)?.name || 'Live Bingo Hall',
+            tier: (roomRecord?.tier as any) || 'silver',
+            potETB: pot,
+            entryFeeETB: fee,
+            winnerId: user?.uid || 'usr-house',
+            winnerName: user?.displayName || 'Player',
+            winningPatternName: activeGamePattern.name,
+            winningCardId: 'pot-rollover',
+            calledNumbersCount: 75,
+            calledNumbers: [...prev.calledNumbers],
+          });
+          dbService.resetRoomToWaiting(roomId || 'room-classic-hall', result);
+          return {
+            active: false,
+            calledNumbers: prev.calledNumbers
+          };
         }
         const nextNum = remaining[Math.floor(Math.random() * remaining.length)];
         return {
@@ -179,7 +225,7 @@ export default function Room() {
       });
     }, 3000);
     return () => clearInterval(timer);
-  }, [localDemoGame.active]);
+  }, [localDemoGame.active, roomRecord, roomId, user, activeGamePattern.name]);
 
   const handleBuyCards = async () => {
     if (!roomId) return;
@@ -229,6 +275,23 @@ export default function Room() {
         return;
       }
 
+      const pot = roomRecord ? Math.floor((roomRecord.potSantim * 85) / 100 / 100) : 136;
+      const fee = roomRecord ? roomRecord.entryFeeSantim / 100 : 10;
+      const result = dbService.recordGameResult({
+        roomId: roomId || 'room-classic-hall',
+        roomName: (roomRecord as any)?.name || 'Live Bingo Hall',
+        tier: (roomRecord?.tier as any) || 'silver',
+        potETB: pot,
+        entryFeeETB: fee,
+        winnerId: user?.uid || 'usr-player',
+        winnerName: user?.displayName || 'Player',
+        winningPatternName: activeGamePattern.name,
+        winningCardId: cardId,
+        calledNumbersCount: localDemoGame.calledNumbers.length,
+        calledNumbers: [...localDemoGame.calledNumbers],
+      });
+      dbService.resetRoomToWaiting(roomId || 'room-classic-hall', result);
+
       setLocalDemoGame(prev => ({ ...prev, active: false }));
       soundFX.playBingoVictory();
       setShowVictoryModal(true);
@@ -240,6 +303,23 @@ export default function Room() {
     try {
       const res = await api.claimBingo(roomId, cardId, validTier);
       if (res?.success) {
+        const pot = roomRecord ? Math.floor((roomRecord.potSantim * 85) / 100 / 100) : 136;
+        const fee = roomRecord ? roomRecord.entryFeeSantim / 100 : 10;
+        const result = dbService.recordGameResult({
+          roomId: roomId || 'room-classic-hall',
+          roomName: (roomRecord as any)?.name || 'Live Bingo Hall',
+          tier: (roomRecord?.tier as any) || 'silver',
+          potETB: pot,
+          entryFeeETB: fee,
+          winnerId: user?.uid || 'usr-player',
+          winnerName: user?.displayName || 'Player',
+          winningPatternName: activeGamePattern.name,
+          winningCardId: cardId,
+          calledNumbersCount: calledNumbers.length,
+          calledNumbers: [...calledNumbers],
+        });
+        dbService.resetRoomToWaiting(roomId || 'room-classic-hall', result);
+
         soundFX.playBingoVictory();
         setShowVictoryModal(true);
         showToast(`🎉 CONGRATULATIONS! You won BINGO!`, 'success');
@@ -386,11 +466,38 @@ export default function Room() {
   // O(1) lookup set for called numbers (Fix #9)
   const calledSet = useMemo(() => new Set(calledNumbers), [calledNumbers]);
 
-  // Reset victory modal visibility when a new winner appears
+  // Reset victory modal visibility and record result when a new winner appears
   useEffect(() => {
     const winnerRecord = roomLiveState?.winner || gameRecord?.winners?.[0];
-    if (winnerRecord) setShowVictoryModal(true);
-  }, [roomLiveState?.winner, gameRecord?.winners]);
+    if (winnerRecord) {
+      setShowVictoryModal(true);
+      const pot = roomRecord ? Math.floor((roomRecord.potSantim * 85) / 100 / 100) : (winnerRecord.amountSantim ? Math.floor(winnerRecord.amountSantim / 100) : 136);
+      const fee = roomRecord ? roomRecord.entryFeeSantim / 100 : 10;
+      const result = dbService.recordGameResult({
+        roomId: roomId || 'room-classic-hall',
+        roomName: (roomRecord as any)?.name || 'Live Bingo Hall',
+        tier: (roomRecord?.tier as any) || 'silver',
+        potETB: pot,
+        entryFeeETB: fee,
+        winnerId: winnerRecord.userId || 'usr-winner',
+        winnerName: winnerRecord.displayName || 'Winner',
+        winningPatternName: winnerRecord.patternName || activeGamePattern.name,
+        winningCardId: winnerRecord.cardId || 'card-win',
+        calledNumbersCount: calledNumbers.length || 37,
+        calledNumbers: [...calledNumbers],
+      });
+      dbService.resetRoomToWaiting(roomId || 'room-classic-hall', result);
+    }
+  }, [roomLiveState?.winner, gameRecord?.winners, roomRecord, roomId, activeGamePattern.name, calledNumbers]);
+
+  // Auto-return to waiting room after finished round
+  useEffect(() => {
+    if (!isGameEnded) return;
+    const timer = setTimeout(() => {
+      handleReturnToRoom();
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [isGameEnded, handleReturnToRoom]);
 
   // Listen for miscall alerts from socket
   useEffect(() => {
@@ -817,6 +924,57 @@ export default function Room() {
         {/* ─── Waiting Lobby State — Buy Cards ─── */}
         {isGameWaiting && (
           <div className="waiting-lobby-container">
+            {/* ─── Previous Round Winner & Details Showcase ─── */}
+            {previousGameResult && (
+              <div className="previous-game-banner">
+                <div className="prev-game-header">
+                  <div className="prev-game-badge">
+                    <Trophy size={14} style={{ color: '#F59E0B' }} />
+                    <span>PREVIOUS GAME RESULT</span>
+                  </div>
+                  <span className="prev-game-time">
+                    <Clock size={11} style={{ marginRight: '3px' }} />
+                    {new Date(previousGameResult.playedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+
+                <div className="prev-game-body">
+                  <div className="prev-winner-row">
+                    <div className="prev-winner-avatar">
+                      <Crown size={22} style={{ color: '#F59E0B' }} />
+                    </div>
+                    <div className="prev-winner-info">
+                      <div className="prev-winner-name">{previousGameResult.winnerName}</div>
+                      <div className="prev-winner-id">
+                        <span>Player ID: </span>
+                        <strong className="mono-id">
+                          {previousGameResult.winnerId ? `SB-${previousGameResult.winnerId.slice(-5).toUpperCase()}` : 'SB-00000'}
+                        </strong>
+                      </div>
+                    </div>
+                    <div className="prev-prize-tag">
+                      <span className="prev-prize-label">WON</span>
+                      <span className="prev-prize-amount">+{previousGameResult.potETB} ETB</span>
+                    </div>
+                  </div>
+
+                  <div className="prev-meta-chips">
+                    <span className="prev-chip">
+                      <Target size={12} style={{ color: 'var(--primary-amber)' }} />
+                      Pattern: <strong>{previousGameResult.winningPatternName}</strong>
+                    </span>
+                    <span className="prev-chip">
+                      <Layers size={12} style={{ color: '#60A5FA' }} />
+                      Card: <strong>#{previousGameResult.winningCardId.slice(0, 8)}</strong>
+                    </span>
+                    <span className="prev-chip">
+                      🎱 Calls: <strong>{previousGameResult.calledNumbersCount}/75</strong>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Waiting animation & Action Center */}
             <div className="waiting-animation-section">
               <div className="waiting-spinner" />
@@ -1139,7 +1297,7 @@ export default function Room() {
                       return (
                         <div
                           key={num}
-                          className={`board-cell ${isCalled ? 'called' : ''} ${isLatest ? 'latest-called' : ''}`}
+                          className={`board-cell row-${row.letter.toLowerCase()} ${isCalled ? 'called' : ''} ${isLatest ? 'latest-called' : ''}`}
                           style={isCalled ? { backgroundColor: getRowColor(row.letter) } : undefined}
                         >
                           {num}
@@ -1297,8 +1455,31 @@ export default function Room() {
 
         {/* ─── Game Status Banners ─── */}
         {isGameEnded && (
-          <div className="game-status-banner finished" style={{ margin: '0.4rem 0', padding: '0.4rem' }}>
-            {t('game.finishedBanner') || 'Bingo round finished! Winner declared.'}
+          <div className="game-status-banner finished" style={{ margin: '0.5rem 0', padding: '0.7rem 0.85rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
+            <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>
+              {t('game.finishedBanner') || 'Bingo round finished! Winner declared.'}
+            </div>
+            <button
+              onClick={handleReturnToRoom}
+              className="btn btn-primary"
+              style={{
+                background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                color: '#ffffff',
+                border: 'none',
+                padding: '6px 16px',
+                borderRadius: '20px',
+                fontWeight: 800,
+                fontSize: '0.78rem',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                boxShadow: '0 2px 8px rgba(37, 99, 235, 0.35)',
+              }}
+            >
+              <RotateCw size={13} />
+              <span>Return to Live Waiting Room / Buy Cards</span>
+            </button>
           </div>
         )}
 
@@ -1581,7 +1762,7 @@ export default function Room() {
         const prizeEtb = (winnerRecord.amountSantim / 100).toFixed(0);
 
         return (
-          <div className="victory-modal-overlay" onClick={() => setShowVictoryModal(false)}>
+          <div className="victory-modal-overlay" onClick={handleReturnToRoom}>
             {/* Confetti Particles */}
             <div className="confetti-container">
               {Array.from({ length: 30 }).map((_, i) => (
@@ -1599,8 +1780,8 @@ export default function Room() {
             <div className={`victory-modal-card ${isCurrentWinner ? 'is-winner' : 'is-runner-up'}`} onClick={(e) => e.stopPropagation()}>
               {/* Close button */}
               <button
-                onClick={() => setShowVictoryModal(false)}
-                aria-label="Close victory modal"
+                onClick={handleReturnToRoom}
+                aria-label="Close victory modal and return to room"
                 style={{
                   position: 'absolute',
                   top: '12px',
@@ -1648,14 +1829,28 @@ export default function Room() {
                 <span>Calls: <strong>{calledNumbers.length}</strong> / 75</span>
               </div>
 
-              <button
-                className="btn btn-primary victory-play-again-btn"
-                onClick={() => navigate('/lobby')}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
-              >
-                <Gamepad2 size={18} />
-                <span>Play Again in Lobby</span>
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '0.5rem' }}>
+                <button
+                  className="btn btn-primary victory-play-again-btn"
+                  onClick={handleReturnToRoom}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' }}
+                >
+                  <RotateCw size={17} />
+                  <span>Next Round (Live Room)</span>
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => navigate('/lobby')}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', padding: '0 0.85rem' }}
+                >
+                  <Gamepad2 size={17} />
+                  <span>Lobby</span>
+                </button>
+              </div>
+
+              <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.35rem', textAlign: 'center' }}>
+                Auto-returning to waiting room in 10s...
+              </div>
             </div>
           </div>
         );

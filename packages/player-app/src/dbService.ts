@@ -86,6 +86,10 @@ export interface DbRoom {
   potETB: number;
   playerCount: number;
   maxPlayers: number;
+  minPlayers?: number;
+  winningPatternId?: string;
+  winningPatternName?: string;
+  lastGameResult?: DbGameHistory | null;
   status: 'waiting' | 'active' | 'completed';
   lastStartedAt?: string;
 }
@@ -635,13 +639,49 @@ class DatabaseService {
     return newRoom;
   }
 
-  public updateRoomPricing(roomId: string, entryFeeETB: number, potETB: number): boolean {
+  public updateRoomSettings(roomId: string, settings: {
+    entryFeeETB?: number;
+    potETB?: number;
+    minPlayers?: number;
+    maxPlayers?: number;
+    winningPatternId?: string;
+    winningPatternName?: string;
+  }): boolean {
     const room = this.rooms.find((r) => r.id === roomId);
     if (!room) return false;
-    room.entryFeeETB = Math.max(1, entryFeeETB);
-    room.potETB = Math.max(0, potETB);
+    if (settings.entryFeeETB !== undefined) room.entryFeeETB = Math.max(1, settings.entryFeeETB);
+    if (settings.potETB !== undefined) room.potETB = Math.max(0, settings.potETB);
+    if (settings.minPlayers !== undefined) room.minPlayers = Math.max(1, settings.minPlayers);
+    if (settings.maxPlayers !== undefined) room.maxPlayers = Math.max(1, settings.maxPlayers);
+    if (settings.winningPatternId !== undefined) room.winningPatternId = settings.winningPatternId;
+    if (settings.winningPatternName !== undefined) room.winningPatternName = settings.winningPatternName;
     this.save();
     return true;
+  }
+
+  public updateRoomPricing(roomId: string, entryFeeETB: number, potETB: number): boolean {
+    return this.updateRoomSettings(roomId, { entryFeeETB, potETB });
+  }
+
+  public resetRoomToWaiting(roomId: string, lastResult?: DbGameHistory): boolean {
+    const room = this.rooms.find((r) => r.id === roomId);
+    if (!room) return false;
+    room.status = 'waiting';
+    if (lastResult) {
+      room.lastGameResult = lastResult;
+    }
+    this.save();
+    return true;
+  }
+
+  public getLastGameResult(roomId?: string): DbGameHistory | null {
+    if (roomId) {
+      const room = this.rooms.find((r) => r.id === roomId);
+      if (room?.lastGameResult) return room.lastGameResult;
+      const match = this.gameHistory.find((g) => g.roomId === roomId);
+      if (match) return match;
+    }
+    return this.gameHistory.length > 0 ? this.gameHistory[0] : null;
   }
 
   public toggleRoomStatus(roomId: string): boolean {

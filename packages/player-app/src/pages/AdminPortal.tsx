@@ -23,9 +23,11 @@ import {
   Moon,
   Plus,
   FileSpreadsheet,
+  Target,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { dbService, DbUser, DbDeposit, DbWithdrawal, DbRoom } from '../dbService';
+import { BINGO_PATTERNS } from '@bingo/shared';
 import { useTheme } from '../useTheme';
 
 const ADMIN_PIN = '7777';
@@ -1406,10 +1408,10 @@ export default function AdminPortal() {
                     </button>
                   </div>
 
-                  {/* Pricing Controls: Entry Price & Winning Pot Only */}
+                  {/* Pricing Controls: Entry Price & Winning Pot */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', background: 'var(--surface-raised)', padding: '0.6rem', borderRadius: '8px' }}>
                     <div>
-                      <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>
+                      <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: 700 }}>
                         Entry Price (ETB)
                       </label>
                       <input
@@ -1417,7 +1419,7 @@ export default function AdminPortal() {
                         defaultValue={r.entryFeeETB}
                         onBlur={(e) => {
                           const val = parseFloat(e.target.value) || 10;
-                          dbService.updateRoomPricing(r.id, val, r.potETB);
+                          dbService.updateRoomSettings(r.id, { entryFeeETB: val });
                           showNotification(`Updated Entry Price to ${val} ETB`);
                         }}
                         style={{
@@ -1434,7 +1436,7 @@ export default function AdminPortal() {
                     </div>
 
                     <div>
-                      <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>
+                      <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: 700 }}>
                         Winning Pot (ETB)
                       </label>
                       <input
@@ -1442,7 +1444,7 @@ export default function AdminPortal() {
                         defaultValue={r.potETB}
                         onBlur={(e) => {
                           const val = parseFloat(e.target.value) || 50;
-                          dbService.updateRoomPricing(r.id, r.entryFeeETB, val);
+                          dbService.updateRoomSettings(r.id, { potETB: val });
                           showNotification(`Updated Winning Pot to ${val} ETB`);
                         }}
                         style={{
@@ -1459,28 +1461,141 @@ export default function AdminPortal() {
                     </div>
                   </div>
 
+                  {/* Player Limits Controls: Min Players & Max Capacity */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', background: 'var(--surface-raised)', padding: '0.6rem', borderRadius: '8px' }}>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: 700 }}>
+                        👥 Min Players to Start
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        defaultValue={r.minPlayers || 2}
+                        onBlur={(e) => {
+                          const val = parseInt(e.target.value) || 2;
+                          dbService.updateRoomSettings(r.id, { minPlayers: val });
+                          showNotification(`Updated Min Players to ${val}`);
+                        }}
+                        style={{
+                          width: '100%',
+                          background: 'var(--input-bg)',
+                          border: '1px solid var(--input-border)',
+                          borderRadius: '6px',
+                          padding: '4px 8px',
+                          color: 'var(--text-light)',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: 700 }}>
+                        👥 Max Room Capacity
+                      </label>
+                      <input
+                        type="number"
+                        min="2"
+                        max="500"
+                        defaultValue={r.maxPlayers || 20}
+                        onBlur={(e) => {
+                          const val = parseInt(e.target.value) || 20;
+                          dbService.updateRoomSettings(r.id, { maxPlayers: val });
+                          showNotification(`Updated Max Players to ${val}`);
+                        }}
+                        style={{
+                          width: '100%',
+                          background: 'var(--input-bg)',
+                          border: '1px solid var(--input-border)',
+                          borderRadius: '6px',
+                          padding: '4px 8px',
+                          color: 'var(--text-light)',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Admin Privilege: Decide Winning Pattern */}
+                  <div style={{ background: 'var(--surface-raised)', padding: '0.6rem', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <label style={{ fontSize: '0.72rem', color: 'var(--primary-amber)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Target size={13} /> Winning Pattern (Admin Privilege)
+                      </label>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                        Rule Locked Before Round
+                      </span>
+                    </div>
+
+                    <select
+                      value={r.winningPatternId || 'auto'}
+                      onChange={(e) => {
+                        const pid = e.target.value;
+                        const selectedPattern = BINGO_PATTERNS.find(p => p.id === pid);
+                        const pname = selectedPattern ? selectedPattern.name : 'Auto-Assigned';
+                        dbService.updateRoomSettings(r.id, {
+                          winningPatternId: pid,
+                          winningPatternName: pname
+                        });
+                        showNotification(`🎯 Winning pattern set to: ${pname}`);
+                      }}
+                      style={{
+                        width: '100%',
+                        background: 'var(--input-bg)',
+                        border: '1.5px solid var(--primary-blue)',
+                        borderRadius: '6px',
+                        padding: '6px 8px',
+                        color: 'var(--text-light)',
+                        fontWeight: 700,
+                        fontSize: '0.78rem',
+                        cursor: 'pointer',
+                        outline: 'none',
+                      }}
+                    >
+                      <option value="auto">✨ Auto-Assign Exciting Rule Based on Tier</option>
+                      {BINGO_PATTERNS.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.category.toUpperCase()}) — {p.description}
+                        </option>
+                      ))}
+                    </select>
+
+                    {r.winningPatternId && r.winningPatternId !== 'auto' && (() => {
+                      const activePat = BINGO_PATTERNS.find(p => p.id === r.winningPatternId);
+                      if (!activePat) return null;
+                      return (
+                        <div style={{ fontSize: '0.68rem', color: '#10B981', background: 'rgba(16, 185, 129, 0.08)', padding: '3px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span>✓ Active Admin Target: <strong>{activePat.name}</strong> — {activePat.description}</span>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
                   {/* Admin Start Game Button */}
                   <button
                     onClick={() => {
                       dbService.triggerRoomGameStart(r.id);
-                      showNotification(`🎮 Game started for ${r.name}! Calling numbers.`);
+                      showNotification(`🎮 Game started for ${r.name}! Rule: ${r.winningPatternName || 'Auto-Assigned'}`);
                     }}
                     style={{
                       background: 'var(--primary-blue)',
                       color: '#fff',
                       border: 'none',
-                      padding: '0.5rem',
+                      padding: '0.55rem',
                       borderRadius: '8px',
-                      fontSize: '0.78rem',
+                      fontSize: '0.8rem',
                       fontWeight: 800,
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '0.35rem',
+                      gap: '0.4rem',
+                      boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)',
                     }}
                   >
-                    <Gamepad2 size={14} /> Start Game Now
+                    <Gamepad2 size={15} /> Start Game with Designated Pattern
                   </button>
                 </div>
               );
